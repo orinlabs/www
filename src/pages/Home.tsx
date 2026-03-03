@@ -17,15 +17,11 @@ type Initiative = {
 const initiatives: Initiative[] = [
   {
     title: "Continual Learning",
-    description: "In-sample learning via experience.",
+    description: "Sample-efficient learning via first-person experience.",
   },
   {
-    title: "Memory",
+    title: "Long Horizons",
     description: "Letting agents run and learn for decades.",
-  },
-  {
-    title: "Planning",
-    description: "Verification loops for long-horizon tasks.",
   },
 ];
 
@@ -149,7 +145,7 @@ export default function Home() {
               className={cn(
                 "flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 w-full py-6 sm:py-8",
                 index !== initiatives.length - 1 &&
-                  "border-b border-neutral-200 dark:border-neutral-800"
+                  "border-b border-neutral-200 dark:border-neutral-800",
               )}
             >
               <span className="text-neutral-400 dark:text-neutral-600 text-3xl sm:text-4xl font-semibold font-mono shrink-0">
@@ -183,7 +179,7 @@ export default function Home() {
               <div
                 className={cn(
                   "group relative flex flex-col aspect-[4/3] sm:aspect-square rounded-xl overflow-hidden shadow-sm",
-                  "bg-primary hover:shadow-md transition-shadow cursor-pointer border dark:border-neutral-700"
+                  "bg-primary hover:shadow-md transition-shadow cursor-pointer border dark:border-neutral-700",
                 )}
               >
                 {/* Background image layer with screen blend */}
