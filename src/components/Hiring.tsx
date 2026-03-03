@@ -14,11 +14,6 @@ const roles: Role[] = [
     location: "San Francisco, CA",
   },
   {
-    title: "Product Engineer",
-    description: "Scaling our brands to millions of users.",
-    location: "San Francisco, CA",
-  },
-  {
     title: "Infrastructure Engineer",
     description: "Working on memory systems, long-horizon agent runtimes, etc.",
     location: "San Francisco, CA",
@@ -34,7 +29,7 @@ function ContactButton({ className }: { className?: string }) {
       className={cn(
         "bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-400 transition-colors cursor-pointer",
         "flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto text-sm sm:text-base",
-        className
+        className,
       )}
     >
       Contact
@@ -93,7 +88,7 @@ export function JoinUs({ compact = false }: JoinUsProps) {
             className={cn(
               "flex text-left flex-col items-start gap-1 w-full hover:bg-neutral-100",
               "dark:hover:bg-neutral-800",
-              "p-4 sm:p-5 md:-mx-4 transition-colors rounded-md group"
+              "p-4 sm:p-5 md:-mx-4 transition-colors rounded-md group",
             )}
           >
             <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
