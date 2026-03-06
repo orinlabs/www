@@ -235,19 +235,6 @@ export default function Home() {
 
       {/* Join Us */}
       <JoinUs />
-
-      <hr className="my-4" />
-
-      {/* Quote */}
-      <blockquote className="max-w-3xl mx-auto text-center">
-        <p className="text-2xl sm:text-3xl lg:text-4xl text-neutral-700 dark:text-neutral-300 leading-relaxed italic">
-          "A teacher is someone who stands with you in the dark and holds their
-          flashlight just long enough for you to find your own."
-        </p>
-        <cite className="block mt-6 text-base sm:text-lg text-neutral-500 dark:text-neutral-500 not-italic">
-          — Steve Jobs
-        </cite>
-      </blockquote>
     </>
   );
 }
