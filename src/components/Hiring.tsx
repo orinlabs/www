@@ -61,13 +61,16 @@ export function JoinUs({ compact = false }: JoinUsProps) {
 
   return (
     <div
-      className="flex flex-col gap-6 sm:gap-8 items-start w-full"
+      className="flex flex-col gap-2 sm:gap-8 items-start w-full"
       id="join-us"
     >
-      <div className="flex flex-col gap-4">
-        <h2 className="text-3xl sm:text-5xl font-semibold text-neutral-900 dark:text-neutral-100">
-          Join Us
-        </h2>
+      <div className="flex flex-col gap-4 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 w-full">
+          <h2 className="text-3xl sm:text-5xl font-semibold text-neutral-900 dark:text-neutral-100">
+            Join Us
+          </h2>
+          <hr className="flex-1 hidden sm:block" />
+        </div>
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
           We are a small, San Francisco-based team focused on building AI for
           consumer services. We are solving hard and important problems for real
@@ -75,13 +78,7 @@ export function JoinUs({ compact = false }: JoinUsProps) {
         </p>
       </div>
 
-      <ContactButton />
-
       <div className="flex flex-col items-stretch w-full">
-        <h2 className="text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4 px-0 sm:px-4 md:px-0">
-          Open Roles
-        </h2>
-
         {roles.map((role) => (
           <button
             key={role.title}
