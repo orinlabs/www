@@ -25,7 +25,7 @@ export default function Home() {
       <div className="text-xl sm:text-2xl text-neutral-800 dark:text-neutral-200 leading-[1.5] space-y-6 font-light w-full px-8 sm:px-12 lg:px-16 text-justify hyphens-auto">
 
       <p>
-      Orin Labs is building frontier systems to automate operations. We believe the most promising path to radical abundance is through intelligence that can act, rather than just answer.
+      AI's purpose isn't to write more code; it's to harness energy, terraform worlds, provide surplus, and grow civilization. We believe that the path to this isn't via models that know more, but agents that can participate autonomously in the world. 
       </p>
 
       <p>
