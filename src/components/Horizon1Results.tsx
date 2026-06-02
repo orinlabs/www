@@ -338,11 +338,21 @@ export function Horizon1Chart({
 
     measure();
     const raf = requestAnimationFrame(measure);
+    // recharts renders/labels its surface asynchronously, so the first measures
+    // can run before any label nodes exist. Re-measure on a few delays, when the
+    // container resizes, and whenever nodes are added/removed in the subtree.
+    const timers = [50, 150, 350, 700].map((t) =>
+      window.setTimeout(measure, t),
+    );
     const ro = new ResizeObserver(() => requestAnimationFrame(measure));
     ro.observe(el);
+    const mo = new MutationObserver(() => requestAnimationFrame(measure));
+    mo.observe(el, { childList: true, subtree: true });
     return () => {
       cancelAnimationFrame(raf);
+      timers.forEach((t) => window.clearTimeout(t));
       ro.disconnect();
+      mo.disconnect();
     };
   }, [metricId, scaleType]);
 
