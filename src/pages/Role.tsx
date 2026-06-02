@@ -1,4 +1,5 @@
 import { ArrowLeftIcon } from 'lucide-react';
+import { type ReactNode } from 'react';
 import {
   Link,
   Navigate,
@@ -59,9 +60,11 @@ export default function Role() {
       {/* Body */}
       <div className="flex flex-col gap-12 px-8 sm:px-12 lg:px-16">
         {/* Tagline */}
-        <p className="text-lg sm:text-xl text-neutral-700 dark:text-neutral-300 leading-relaxed max-w-3xl">
-          {role.tagline}
-        </p>
+        {role.tagline && (
+          <p className="text-lg sm:text-xl text-neutral-700 dark:text-neutral-300 leading-relaxed max-w-3xl">
+            {role.tagline}
+          </p>
+        )}
 
         {/* Content sections */}
         <div className="flex flex-col gap-10">
@@ -112,10 +115,57 @@ function RoleSection({ section }: { section: RoleType["sections"][number] }) {
           {section.body
             .split(/\n\s*\n/)
             .map((para, i) => (
-              <p key={i}>{para.trim()}</p>
+              <p key={i}>{renderWithLinks(para.trim())}</p>
             ))}
         </div>
       )}
     </section>
   );
+}
+
+const LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)/g;
+
+function renderWithLinks(text: string) {
+  const nodes: ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  LINK_PATTERN.lastIndex = 0;
+  while ((match = LINK_PATTERN.exec(text)) !== null) {
+    const [full, label, href] = match;
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index));
+    }
+
+    const linkClass =
+      "text-neutral-900 dark:text-neutral-100 underline underline-offset-4 decoration-neutral-300 dark:decoration-neutral-600 hover:decoration-neutral-900 dark:hover:decoration-neutral-100 transition-colors";
+
+    if (href.startsWith("/")) {
+      nodes.push(
+        <Link key={match.index} to={href} className={linkClass}>
+          {label}
+        </Link>,
+      );
+    } else {
+      nodes.push(
+        <a
+          key={match.index}
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          className={linkClass}
+        >
+          {label}
+        </a>,
+      );
+    }
+
+    lastIndex = match.index + full.length;
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+
+  return nodes;
 }
