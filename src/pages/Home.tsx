@@ -1,6 +1,4 @@
 import { JoinUs } from '../components/Hiring';
-import { Link } from 'react-router-dom';
-import { ArrowRightIcon } from 'lucide-react';
 
 export default function Home() {
   return (
