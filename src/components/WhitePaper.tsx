@@ -42,11 +42,7 @@ export function ResearchArticle({
 
       {/* Title Block */}
       <header className="mb-12">
-        <h1
-          className={`text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 leading-tight${
-            image ? " md:hidden" : ""
-          }`}
-        >
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 leading-tight">
           {title}
         </h1>
         <p className="mb-5 text-base text-neutral-600/80 dark:text-neutral-400/80 leading-normal tracking-wide">
