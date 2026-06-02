@@ -43,7 +43,7 @@ const RESULTS: ResultRow[] = [
 
 // Color per agent type, with light/dark variants.
 const AGENT_TYPE_COLORS: Record<string, { light: string; dark: string }> = {
-  RAG: { light: "#00845e", dark: "#8be0c3" },
+  RAG: { light: "#00845e", dark: "#10b981" },
   "Claude Code": { light: "#c2410c", dark: "#fb923c" },
 };
 
