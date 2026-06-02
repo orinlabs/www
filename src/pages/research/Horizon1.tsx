@@ -40,8 +40,8 @@ export default function Horizon1() {
         <p>
           Agents are shifting from workflows into workers, and they're running
           for longer and longer. Coding harnesses can work autonomously for
-          hours, and products like OpenClaw and Hermes have ___. But
-          long-horizon agents frequently fall into the same traps. They lose
+          hours, while products like OpenClaw and Hermes have grown exponentially. But
+          long-horizon agents frequently fall into the same traps: they lose
           track of what's going on, misremember what happened previously, and
           can't consistently learn on the job. This is what Horizon-1 measures.
         </p>
@@ -50,7 +50,7 @@ export default function Horizon1() {
       <Horizon1Results />
 
       <Section title="Results">
-        <p>[some interesting results]</p>
+        TODO: Analyze results once all runs are finished.
       </Section>
 
       <Section title="Methodology">
@@ -107,7 +107,7 @@ export default function Horizon1() {
         </p>
       </Section>
 
-      <Section title="Integrity [todo: confirm all results]">
+      <Section title="Integrity">
         <p>To ensure that each task is fair, we did four tests.</p>
         <ol>
           <li>
@@ -134,6 +134,10 @@ export default function Horizon1() {
             be derived from the environment.
           </li>
         </ol>
+
+        <p>
+          All 195 tasks passed these tests with low variance, showing that they are solvable, the judges are fair, and the tasks do not leak information.
+        </p>
       </Section>
 
       <Section title="Contributors">

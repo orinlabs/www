@@ -8,7 +8,7 @@ export function JoinUs({ padded = true }: { padded?: boolean }) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 sm:gap-8 items-start w-full",
+        "flex flex-col gap-2 sm:gap-4 items-start w-full",
         padded && "px-8 sm:px-12 lg:px-16",
       )}
       id="join-us"
@@ -22,6 +22,10 @@ export function JoinUs({ padded = true }: { padded?: boolean }) {
         </div>
       </div>
 
+      <p>
+      We are a small group of engineers and researchers working to solve a short list of fundamental societal bottlenecks. If this sounds interesting, please reach out.
+      </p>
+
       <div className="flex flex-col items-stretch w-full divide-y dark:divide-neutral-700">
         {ROLES.map((role) => (
           <Link
@@ -29,7 +33,7 @@ export function JoinUs({ padded = true }: { padded?: boolean }) {
             to={`/roles/${role.slug}`}
             className={cn(
               "flex items-center justify-between gap-1 flex-1",
-              "px-2 -pl-2 py-1 group cursor-pointer",
+              "py-1 group cursor-pointer",
             )}
           >
             <p className="text-lg text-neutral-900 dark:text-neutral-400 shrink-0 group-hover:text-primary group-hover:dark:text-primary-200 transition-colors">

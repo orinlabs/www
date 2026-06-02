@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 
-import { cn } from "slate-ui";
+import { cn, Switch } from "slate-ui";
 import {
   CartesianGrid,
   Cell,
@@ -451,23 +451,15 @@ export function Horizon1Chart({
         </div>
 
         <div className="flex flex-col items-end gap-2 shrink-0">
-          <div className="flex items-center gap-1">
-            {(["linear", "log"] as ScaleType[]).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setScaleType(s)}
-                className={cn(
-                  "px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer capitalize",
-                  s === scaleType
-                    ? "bg-primary text-anti-primary"
-                    : "bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-700",
-                )}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
+          <Switch
+            checked={scaleType === "log"}
+            onCheckedChange={(checked) =>
+              setScaleType(checked ? "log" : "linear")
+            }
+            label="Log scale"
+            withBody
+          />
+          
           <div className="flex items-center gap-1">
             {METRIC_DEFS.map((m) => (
               <button
