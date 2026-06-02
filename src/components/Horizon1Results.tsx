@@ -226,7 +226,8 @@ export function Horizon1Chart({
   );
 
   const gridStroke = isDark ? "#404040" : "#e5e5e5";
-  const axisStroke = isDark ? "#a0aec0" : "#171717";
+  // Border-toned but two steps more visible (neutral-400 / neutral-600).
+  const axisStroke = isDark ? "#737373" : "#a3a3a3";
   const labelFill = isDark ? "#e5e5e5" : "#171717";
 
   // Pixel positions of the rendered points, collected during render so a hover
@@ -495,8 +496,8 @@ export function Horizon1Chart({
               ticks={axis.ticks}
               tickFormatter={(v) => metric.format(Number(v))}
               allowDataOverflow
-              axisLine={{ stroke: axisStroke, strokeWidth: 2 }}
-              tickLine={{ stroke: axisStroke, strokeWidth: 2 }}
+              axisLine={{ stroke: axisStroke, strokeWidth: 1.5 }}
+              tickLine={{ stroke: axisStroke, strokeWidth: 1.5 }}
               tick={{ fontSize: 12, fill: axisStroke }}
             />
             <YAxis
@@ -507,8 +508,8 @@ export function Horizon1Chart({
               ticks={[0, 25, 50, 75, 100]}
               unit="%"
               width={38}
-              axisLine={{ stroke: axisStroke, strokeWidth: 2 }}
-              tickLine={{ stroke: axisStroke, strokeWidth: 2 }}
+              axisLine={{ stroke: axisStroke, strokeWidth: 1.5 }}
+              tickLine={{ stroke: axisStroke, strokeWidth: 1.5 }}
               tick={{ fontSize: 12, fill: axisStroke }}
             />
             <Scatter
@@ -595,7 +596,7 @@ export function Horizon1Table({
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b-2 border-neutral-300 dark:border-neutral-700 text-left">
-            <th className="py-2 pr-4 font-semibold text-neutral-800 dark:text-neutral-200">
+            <th className="py-2 pl-4 pr-4 font-semibold text-neutral-800 dark:text-neutral-200">
               Agent
             </th>
             <th className="py-2 px-4 font-semibold text-neutral-800 dark:text-neutral-200">
@@ -610,7 +611,7 @@ export function Horizon1Table({
             <th className="py-2 px-4 font-semibold text-neutral-800 dark:text-neutral-200 text-right">
               Time / task
             </th>
-            <th className="py-2 pl-4 font-semibold text-neutral-800 dark:text-neutral-200 text-right">
+            <th className="py-2 pl-4 pr-4 font-semibold text-neutral-800 dark:text-neutral-200 text-right">
               Tokens / task
             </th>
           </tr>
@@ -628,7 +629,7 @@ export function Horizon1Table({
                 hoveredId != null && hoveredId !== row.id && "opacity-40",
               )}
             >
-              <td className="py-2 pr-4 text-neutral-700 dark:text-neutral-300">
+              <td className="py-2 pl-4 pr-4 text-neutral-700 dark:text-neutral-300">
                 <span className="flex items-center gap-2">
                   <span
                     className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
@@ -649,7 +650,7 @@ export function Horizon1Table({
               <td className="py-2 px-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
                 {fmtTime(row.timeSec)}
               </td>
-              <td className="py-2 pl-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
+              <td className="py-2 pl-4 pr-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
                 {fmtTokens(row.tokens)}
               </td>
             </tr>
