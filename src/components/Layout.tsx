@@ -111,7 +111,7 @@ export default function Layout({ children }: LayoutProps) {
 
       <div
         key={pathname}
-        className="page-transition w-full max-w-3xl xl:max-w-4xl flex-1 flex flex-col gap-16 sm:gap-24"
+        className="page-transition w-full max-w-3xl xl:max-w-4xl flex-1 flex flex-col gap-12 sm:gap-18"
       >
         {children}
       </div>

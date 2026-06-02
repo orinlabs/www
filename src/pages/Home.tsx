@@ -26,7 +26,7 @@ export default function Home() {
         </Link>*/}
 
         {/* Hero */}
-        <div className="relative overflow-hidden rounded-xl border border-neutral-200 dark:border-transparent bg-[#f4f5f0] dark:bg-neutral-900 min-h-[480px] sm:min-h-[560px] lg:min-h-[640px]">
+        <div className="relative overflow-hidden rounded-xl border border-neutral-200 dark:border-transparent bg-[#f4f5f0] dark:bg-neutral-900 min-h-[400px] sm:min-h-[480px] lg:min-h-[560px]">
           <div
             className="absolute inset-0 bg-cover bg-center block dark:hidden"
             style={{ backgroundImage: "url(/tree_color.jpeg)" }}
