@@ -176,15 +176,29 @@ function useIsDark() {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    setIsDark(document.documentElement.classList.contains("dark"));
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    });
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const compute = () =>
+      document.documentElement.classList.contains("dark") ||
+      document.body.classList.contains("dark") ||
+      mq.matches;
+    const update = () => setIsDark(compute());
+
+    update();
+    const observer = new MutationObserver(update);
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
     });
-    return () => observer.disconnect();
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    mq.addEventListener("change", update);
+
+    return () => {
+      observer.disconnect();
+      mq.removeEventListener("change", update);
+    };
   }, []);
 
   return isDark;

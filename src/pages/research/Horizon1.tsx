@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import Prism from 'prismjs';
 
 import CodeBlock from '../../components/CodeBlock';
+import { JoinUs } from '../../components/Hiring';
 import { Horizon1Results } from '../../components/Horizon1Results';
 import {
   ResearchArticle,
@@ -30,6 +31,7 @@ export default function Horizon1() {
       date="June 2026"
       image={{
         src: "/horizon-1-benchmark.png",
+        darkSrc: "/horizon-1-benchmark-dark.png",
         alt: "Horizon-1 — building agents that learn",
       }}
       abstract="We're releasing a preview of Horizon-1, our benchmark that measures an agent's ability to acquire learnings from a long history and apply them to a task."
@@ -141,9 +143,12 @@ export default function Horizon1() {
         </p>
       </Section>
 
-      <p className="research-prose text-sm italic">
+      <p className="research-prose text-sm italic mb-12">
         *All data was collected with proper user permissions.
       </p>
+
+
+      <JoinUs padded={false} />
     </ResearchArticle>
   );
 }

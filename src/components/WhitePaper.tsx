@@ -1,3 +1,5 @@
+import { Fragment } from 'react';
+
 import { Link } from 'react-router-dom';
 
 interface ResearchArticleProps {
@@ -5,7 +7,7 @@ interface ResearchArticleProps {
   authors?: string[];
   date: string;
   abstract: string;
-  image?: { src: string; alt: string };
+  image?: { src: string; darkSrc?: string; alt: string };
   children: React.ReactNode;
 }
 
@@ -24,8 +26,17 @@ export function ResearchArticle({
           <img
             src={image.src}
             alt={image.alt}
-            className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800"
+            className={`w-full rounded-xl border border-neutral-200 dark:border-neutral-800 ${
+              image.darkSrc ? "block dark:hidden" : ""
+            }`}
           />
+          {image.darkSrc && (
+            <img
+              src={image.darkSrc}
+              alt={image.alt}
+              className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 hidden dark:block"
+            />
+          )}
         </figure>
       )}
 
@@ -39,7 +50,7 @@ export function ResearchArticle({
         </p>
         <div className="flex flex-wrap items-center gap-2 text-neutral-600 dark:text-neutral-400 text-base">
           {authors.map((author, i) => (
-            <span key={author}>
+            <Fragment key={author}>
               {author === "Orin Labs" ? (
                 <Link
                   to="/"
@@ -48,17 +59,19 @@ export function ResearchArticle({
                   {author}
                 </Link>
               ) : (
-                author
+                <span>{author}</span>
               )}
               {i < authors.length - 1 && (
-                <span className="text-neutral-400 dark:text-neutral-500">
-                  {" "}
-                  ·{" "}
+                <span
+                  aria-hidden
+                  className="text-neutral-400 dark:text-neutral-500 select-none leading-none"
+                >
+                  ·
                 </span>
               )}
-            </span>
+            </Fragment>
           ))}
-          <span className="text-neutral-400 dark:text-neutral-500 mx-2">|</span>
+          <span className="text-neutral-400 dark:text-neutral-500">|</span>
           <span className="italic">{date}</span>
         </div>
       </header>
