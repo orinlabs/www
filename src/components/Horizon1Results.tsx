@@ -526,8 +526,6 @@ export function Horizon1Chart({
                   const dimmed =
                     hoveredId != null && row != null && hoveredId !== row.id;
                   const visible = row != null && isLabelVisible(row.id);
-                  const collides =
-                    row != null && collidingWithDot.has(row.id);
                   return (
                     <text
                       x={x}
@@ -542,11 +540,7 @@ export function Horizon1Chart({
                           ? isDark
                             ? "#525252"
                             : "#cbd5e1"
-                          : collides
-                            ? isDark
-                              ? "#f87171"
-                              : "#dc2626"
-                            : labelFill,
+                          : labelFill,
                         opacity: visible ? 1 : 0,
                         transition: "fill 0.2s ease, opacity 0.2s ease",
                       }}
