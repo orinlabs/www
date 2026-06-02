@@ -39,12 +39,15 @@ const RESULTS: ResultRow[] = [
   { id: "rag-sonnet", agentType: "RAG", model: "claude-sonnet-4.5", completion: 33.3, costUsd: 0.529, tokens: 169_467, timeSec: 155.3 },
   { id: "rag-gpt55", agentType: "RAG", model: "gpt-5.5", completion: 39.5, costUsd: 0.672, tokens: 214_835, timeSec: 202.2 },
   { id: "rag-opus", agentType: "RAG", model: "claude-opus-4.8", completion: 36.9, costUsd: 1.016, tokens: 191_429, timeSec: 184.2 },
+  { id: "codex-gpt5", agentType: "Codex", model: "gpt-5-codex", completion: 46.2, costUsd: 0.342, tokens: 1_000_000, timeSec: 350 },
+  { id: "codex-gpt53", agentType: "Codex", model: "gpt-5.3-codex", completion: 48.5, costUsd: 0.424, tokens: 824_000, timeSec: 357 },
 ];
 
 // Color per agent type, with light/dark variants.
 const AGENT_TYPE_COLORS: Record<string, { light: string; dark: string }> = {
   RAG: { light: "#00845e", dark: "#10b981" },
   "Claude Code": { light: "#c2410c", dark: "#fb923c" },
+  Codex: { light: "#1d4ed8", dark: "#60a5fa" },
 };
 
 const FALLBACK_COLOR = { light: "#525252", dark: "#a3a3a3" };
