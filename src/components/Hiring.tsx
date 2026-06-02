@@ -1,29 +1,8 @@
-import { ExternalLink } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { cn } from 'slate-ui';
 
-type Role = {
-  title: string;
-  location: string;
-};
-
-const roles: Role[] = [
-  {
-    title: "Research Engineer",
-    location: "San Francisco, CA",
-  },
-  {
-    title: "Infrastructure Engineer",
-    location: "San Francisco, CA",
-  },
-  {
-    title: "Operations Lead",
-    location: "San Francisco, CA"
-  },
-  {
-    title: "[Pitch Yourself]",
-    location: "San Francisco, CA"
-  }
-];
+import { ROLES } from '../data/roles';
 
 export function JoinUs() {
   return (
@@ -41,25 +20,25 @@ export function JoinUs() {
       </div>
 
       <div className="flex flex-col items-stretch w-full divide-y">
-        {roles.map((role) => (
-          <a
-            key={role.title}
+        {ROLES.map((role) => (
+          <Link
+            key={role.slug}
+            to={`/roles/${role.slug}`}
             className={cn(
               "flex items-center justify-between gap-1 flex-1 hover:bg-neutral-100",
               "px-2 -pl-2 py-1 transition-colors group dark:border-neutral-700",
               "dark:hover:bg-neutral-800 cursor-pointer",
             )}
-            href="mailto:bryan@orinlabs.ai"
           >
-              <p className="text-lg text-neutral-900 dark:text-neutral-100 shrink-0 group-hover:text-primary group-hover:dark:text-primary-200 transition-colors">
-                {role.title}
-              </p>
+            <p className="text-lg text-neutral-900 dark:text-neutral-100 shrink-0 group-hover:text-primary group-hover:dark:text-primary-200 transition-colors">
+              {role.title}
+            </p>
 
-              <p className="text-base flex items-center gap-2 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-600 dark:group-hover:text-neutral-400 transition-colors shrink-0 w-fit leading-relaxed">
-                {role.location}
-                <ExternalLink className='w-3 h-3' />
-              </p>
-          </a>
+            <p className="text-base flex items-center gap-2 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-600 dark:group-hover:text-neutral-400 transition-colors shrink-0 w-fit leading-relaxed">
+              {role.location}
+              <ArrowRight className="w-3 h-3" />
+            </p>
+          </Link>
         ))}
       </div>
     </div>

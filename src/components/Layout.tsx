@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { LinkedinIcon, Menu, TwitterIcon, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "slate-ui";
 
 import { Logo } from "./Logo";
@@ -17,6 +17,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { pathname } = useLocation();
 
   useEffect(() => {
     const hash = window.location.hash.slice(1);
@@ -108,7 +109,10 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </nav>
 
-      <div className="w-full max-w-3xl xl:max-w-4xl flex-1 flex flex-col gap-16 sm:gap-24">
+      <div
+        key={pathname}
+        className="page-transition w-full max-w-3xl xl:max-w-4xl flex-1 flex flex-col gap-16 sm:gap-24"
+      >
         {children}
       </div>
 

@@ -119,6 +119,58 @@ html {
   overscroll-behavior-y: none;
 }
 
+@keyframes beacon-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  22% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+.beacon-badge {
+  position: relative;
+  isolation: isolate;
+}
+
+.beacon-badge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 9999px;
+  border: 3px solid var(--color-primary);
+  animation: beacon-pulse 2.4s ease-out infinite;
+}
+
+@keyframes page-transition {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  animation: page-transition 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beacon-badge::after,
+  .page-transition {
+    animation: none;
+  }
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -344,6 +396,24 @@ pre {
 
 .research-prose li {
   color: inherit;
+}
+
+.research-prose li::marker {
+  font-family: "Body", system-ui, sans-serif;
+  font-weight: 500;
+}
+
+.recharts-wrapper:focus,
+.recharts-wrapper:focus-visible,
+.recharts-surface:focus,
+.recharts-surface:focus-visible,
+.recharts-wrapper *:focus,
+.recharts-wrapper *:focus-visible {
+  outline: none !important;
+}
+
+.recharts-scatter-symbol .recharts-symbols {
+  transition: fill-opacity 0.2s ease;
 }
 
 .research-prose strong {

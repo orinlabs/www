@@ -5,6 +5,7 @@ interface ResearchArticleProps {
   authors?: string[];
   date: string;
   abstract: string;
+  image?: { src: string; alt: string };
   children: React.ReactNode;
 }
 
@@ -13,15 +14,29 @@ export function ResearchArticle({
   authors = ["Orin Labs"],
   date,
   abstract,
+  image,
   children,
 }: ResearchArticleProps) {
   return (
     <article className="research-article pt-8 sm:pt-12">
+      {image && (
+        <figure className="hidden md:block mb-8 sm:mb-10">
+          <img
+            src={image.src}
+            alt={image.alt}
+            className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800"
+          />
+        </figure>
+      )}
+
       {/* Title Block */}
       <header className="mb-12">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 dark:text-neutral-100 mb-6 leading-tight">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 leading-tight">
           {title}
         </h1>
+        <p className="mb-5 text-base text-neutral-600/80 dark:text-neutral-400/80 leading-normal tracking-wide">
+          {abstract}
+        </p>
         <div className="flex flex-wrap items-center gap-2 text-neutral-600 dark:text-neutral-400 text-base">
           {authors.map((author, i) => (
             <span key={author}>
@@ -47,11 +62,6 @@ export function ResearchArticle({
           <span className="italic">{date}</span>
         </div>
       </header>
-
-      {/* Abstract */}
-      <p className="mb-12 text-base text-neutral-600/80 dark:text-neutral-400/80 leading-normal tracking-wide">
-        {abstract}
-      </p>
 
       {/* Content */}
       <div className="research-content">{children}</div>

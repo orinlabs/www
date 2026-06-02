@@ -1,5 +1,9 @@
-import { useEffect } from 'react';
+import {
+  useEffect,
+  useRef,
+} from 'react';
 
+import Lenis from 'lenis';
 import {
   Route,
   Routes,
@@ -8,26 +12,57 @@ import {
 
 import Layout from './components/Layout';
 import Home from './pages/Home';
-import Research from './pages/Research';
 import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
+import Research from './pages/Research';
+import Horizon1 from './pages/research/Horizon1';
 import LongHorizonAgents from './pages/research/LongHorizonAgents';
 import ProactiveVoiceAgents from './pages/research/ProactiveVoiceAgents';
+import Role from './pages/Role';
+import TermsOfService from './pages/TermsOfService';
 
-function ScrollToTop() {
+function useSmoothScroll() {
+  const lenisRef = useRef<Lenis | null>(null);
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
 
-  return null;
+    const lenis = new Lenis({
+      // Higher lerp = snappier catch-up = even less smoothing.
+      lerp: 0.4,
+    });
+    lenisRef.current = lenis;
+
+    let rafId = 0;
+    function raf(time: number) {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    }
+    rafId = requestAnimationFrame(raf);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+      lenisRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(0, { immediate: true });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname]);
 }
 
 function App() {
+  useSmoothScroll();
+
   return (
     <>
-      <ScrollToTop />
       <Routes>
         <Route
           path="/"
@@ -58,6 +93,30 @@ function App() {
           element={
             <Layout>
               <ProactiveVoiceAgents />
+            </Layout>
+          }
+        />
+        <Route
+          path="/research/horizon-1"
+          element={
+            <Layout>
+              <Horizon1 />
+            </Layout>
+          }
+        />
+        <Route
+          path="/research/horizon-1"
+          element={
+            <Layout>
+              <Horizon1 />
+            </Layout>
+          }
+        />
+        <Route
+          path="/roles/:slug"
+          element={
+            <Layout>
+              <Role />
             </Layout>
           }
         />
