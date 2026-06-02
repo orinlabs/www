@@ -7,6 +7,8 @@ import {
 import Prism from 'prismjs';
 import { cn } from 'slate-ui';
 
+import CopyButton from './CopyButton';
+
 interface CodeTab {
   label: string;
   language: string;
@@ -51,7 +53,7 @@ export default function CodeBlock({
         className,
       )}
     >
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-neutral-800">
+      <div className="flex items-center gap-2 px-4 pr-2 py-3 border-b border-neutral-800">
         <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
         <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
         <span className="w-3 h-3 rounded-full bg-[#28c840]" />
@@ -80,6 +82,8 @@ export default function CodeBlock({
             </span>
           )
         )}
+
+        <CopyButton text={activeCode.trim()} className="ml-auto -my-1" />
       </div>
 
       <pre
