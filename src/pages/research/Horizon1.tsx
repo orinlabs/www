@@ -45,6 +45,10 @@ export default function Horizon1() {
           track of what's going on, misremember what happened previously, and
           can't consistently learn on the job. This is what Horizon-1 measures.
         </p>
+
+        <p>
+          Horizon-1 makes no distinction between models and harnesses: the target is the utility of the learning system, regardless of how it is crafted.
+        </p>
       </div>
 
       <Horizon1Results />
