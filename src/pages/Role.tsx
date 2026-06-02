@@ -59,7 +59,7 @@ export default function Role() {
       {/* Body */}
       <div className="flex flex-col gap-12 px-8 sm:px-12 lg:px-16">
         {/* Tagline */}
-        <p className="text-lg sm:text-xl text-neutral-700 dark:text-neutral-300 leading-relaxed max-w-2xl">
+        <p className="text-lg sm:text-xl text-neutral-700 dark:text-neutral-300 leading-relaxed max-w-3xl">
           {role.tagline}
         </p>
 

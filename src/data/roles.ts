@@ -49,20 +49,22 @@ export const ROLES: Role[] = [
     location: "San Francisco, CA",
     headerImage: "/tree_color.jpeg",
     tagline:
-      "Push the frontier of long-horizon agent training, architectures, and evaluation.",
+      "Make agents that can multi-task, learn, remember, and operate reliably over long horizons.",
     sections: [
       {
         heading: "What you'll do",
         body:
-          "TODO(content): a paragraph on the kind of research this person owns — the open questions you want them attacking, the systems they'll touch, and what shipping looks like.\n\nTODO(content): a second paragraph on how they'll work with the rest of the team, the cadence of experiments to deployments, and what 'good' looks like in their first year.",
+          "The research that matters most to us comes straight out of deployment: getting agents to multi-task, learn, remember, and operate reliably over long stretches of time. You'll own that work end to end, building agents, training models, and designing the benchmarks, environments, and evals that tell us whether it's working. You'll set research direction with our founders, grounded in real deployment and test data, and translate what we learn into production.",
+      },
+      {
+        heading: "What you'll work on",
+        body:
+          "Agents forget what they've committed to and what users teach them, so we're building long-horizon learning benchmarks (starting from our Horizon-1 work) for memory once history overflows the context window. Real work also comes in bursts — give an agent three tasks at once and it drops most of them — so we need environments for multi-tasking, stakeholder management, requirements-gathering, and scaled caution around irreversible actions. Underneath it all sit open problems we have to crack: temporal reasoning and planning, and a verifiable, evidence-backed model of the state of the world.",
       },
       {
         heading: "What we're looking for",
-        body: [
-          "TODO: requirement 1",
-          "TODO: requirement 2",
-          "TODO: requirement 3",
-        ],
+        body:
+          "You've built agents, trained models, and created benchmarks, environments, or evals — ideally all of the above — and you can connect your own work to the long-term goal of getting AI to build in the real world. We're especially excited about current PhDs and post-docs in continual learning, test-time training, long-context architectures, and long-horizon tasks, but we care more about what you've shipped than your credentials.",
       },
     ],
   },
@@ -77,38 +79,12 @@ export const ROLES: Role[] = [
       {
         heading: "What you'll do",
         body:
-          "TODO(content): describe the surface area — training infra, evaluation harness, agent runtime, deployment, observability — and which pieces this person will own end-to-end.\n\nTODO(content): a second paragraph on the bar for reliability and performance, how the role interacts with research, and what shipping looks like.",
+          "Our agents have been running for years, acting independently in the real world — and that only works if the systems underneath them are rock solid. You'll own large parts of that surface area: the training infrastructure that turns research ideas into models, the evaluation harness that tells us whether they're better, the runtime that keeps long-lived agents executing safely, and the deployment and observability layers that let us see what they're doing and why.\n\nReliability here isn't a nice-to-have. An agent that drops a commitment, loses state, or silently fails mid-task is worse than no agent at all, so the bar is high and the failure modes are subtle. You'll work hand in hand with research — most of what we learn only shows up at scale and over long horizons — and shipping looks like infrastructure that makes the whole team faster while quietly getting more dependable over time.",
       },
       {
         heading: "What we're looking for",
-        body: [
-          "TODO: requirement 1",
-          "TODO: requirement 2",
-          "TODO: requirement 3",
-        ],
-      },
-    ],
-  },
-  {
-    slug: "operations-lead",
-    title: "Operations Lead",
-    location: "San Francisco, CA",
-    headerImage: "/tree_color.jpeg",
-    tagline:
-      "Own the day-to-day operations of a small, ambitious team shipping autonomous systems.",
-    sections: [
-      {
-        heading: "What you'll do",
         body:
-          "TODO(content): scope of ownership — finance, hiring, legal, vendors, office, recruiting, anything else that isn't research or engineering.\n\nTODO(content): how the role evolves as the team grows, who they work with, and what success looks like in the first six months.",
-      },
-      {
-        heading: "What we're looking for",
-        body: [
-          "TODO: requirement 1",
-          "TODO: requirement 2",
-          "TODO: requirement 3",
-        ],
+          "You've built and operated production systems that other people depend on, and you care about the unglamorous parts — observability, failure handling, and the long tail of things that break at 3am. You're comfortable owning a problem end to end, from the infrastructure design down to the on-call reality of keeping it healthy.\n\nExperience with ML or agent infrastructure — training pipelines, inference, eval harnesses, orchestration of long-running stateful workloads — is a strong plus, but we care more about judgment, ownership, and a track record of making complex systems boringly reliable.",
       },
     ],
   },
