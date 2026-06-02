@@ -605,7 +605,6 @@ export function Horizon1Results() {
         hoveredId={hoveredId}
         onHover={setHoveredId}
         hoveredType={hoveredType}
-        onHoverType={setHoveredType}
       />
     </>
   );
@@ -615,12 +614,10 @@ export function Horizon1Table({
   hoveredId,
   onHover,
   hoveredType,
-  onHoverType,
 }: {
   hoveredId?: string | null;
   onHover?: (id: string | null) => void;
   hoveredType?: string | null;
-  onHoverType?: (type: string | null) => void;
 }) {
   const isDark = useIsDark();
   return (
