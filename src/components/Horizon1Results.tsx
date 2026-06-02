@@ -207,9 +207,13 @@ function useIsDark() {
 export function Horizon1Chart({
   hoveredId,
   onHover,
+  hoveredType,
+  onHoverType,
 }: {
   hoveredId?: string | null;
   onHover?: (id: string | null) => void;
+  hoveredType?: string | null;
+  onHoverType?: (type: string | null) => void;
 }) {
   const isDark = useIsDark();
   const [metricId, setMetricId] = useState<MetricKey>("costUsd");
@@ -385,6 +389,13 @@ export function Horizon1Chart({
     return id === winner;
   };
 
+  // A row is dimmed when something is hovered and it's neither the hovered
+  // point nor a member of the hovered agent type.
+  const isDimmed = (row: ResultRow) =>
+    (hoveredId != null || hoveredType != null) &&
+    hoveredId !== row.id &&
+    hoveredType !== row.agentType;
+
   const handleMove = (e: ReactMouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const mx = e.clientX - rect.left;
@@ -438,7 +449,12 @@ export function Horizon1Chart({
             {AGENT_TYPES.map((type) => (
               <div
                 key={type}
-                className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300"
+                onMouseEnter={() => onHoverType?.(type)}
+                onMouseLeave={() => onHoverType?.(null)}
+                className={cn(
+                  "flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 cursor-pointer transition-opacity",
+                  hoveredType != null && hoveredType !== type && "opacity-40",
+                )}
               >
                 <span
                   className="inline-block w-2.5 h-2.5 rounded-full"
@@ -523,7 +539,7 @@ export function Horizon1Chart({
                 <Cell
                   key={row.id}
                   fill={agentColor(row.agentType, isDark)}
-                  fillOpacity={hoveredId && hoveredId !== row.id ? 0.15 : 1}
+                  fillOpacity={isDimmed(row) ? 0.15 : 1}
                 />
               ))}
               <LabelList
@@ -540,8 +556,7 @@ export function Horizon1Chart({
                     return null;
                   const row =
                     typeof index === "number" ? RESULTS[index] : undefined;
-                  const dimmed =
-                    hoveredId != null && row != null && hoveredId !== row.id;
+                  const dimmed = row != null && isDimmed(row);
                   const visible = row != null && isLabelVisible(row.id);
                   return (
                     <text
@@ -577,10 +592,21 @@ export function Horizon1Chart({
 
 export function Horizon1Results() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [hoveredType, setHoveredType] = useState<string | null>(null);
   return (
     <>
-      <Horizon1Chart hoveredId={hoveredId} onHover={setHoveredId} />
-      <Horizon1Table hoveredId={hoveredId} onHover={setHoveredId} />
+      <Horizon1Chart
+        hoveredId={hoveredId}
+        onHover={setHoveredId}
+        hoveredType={hoveredType}
+        onHoverType={setHoveredType}
+      />
+      <Horizon1Table
+        hoveredId={hoveredId}
+        onHover={setHoveredId}
+        hoveredType={hoveredType}
+        onHoverType={setHoveredType}
+      />
     </>
   );
 }
@@ -588,9 +614,13 @@ export function Horizon1Results() {
 export function Horizon1Table({
   hoveredId,
   onHover,
+  hoveredType,
+  onHoverType,
 }: {
   hoveredId?: string | null;
   onHover?: (id: string | null) => void;
+  hoveredType?: string | null;
+  onHoverType?: (type: string | null) => void;
 }) {
   const isDark = useIsDark();
   return (
@@ -628,7 +658,10 @@ export function Horizon1Table({
               onMouseLeave={() => onHover?.(null)}
               className={cn(
                 "border-b border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition",
-                hoveredId != null && hoveredId !== row.id && "opacity-40",
+                (hoveredId != null || hoveredType != null) &&
+                  hoveredId !== row.id &&
+                  hoveredType !== row.agentType &&
+                  "opacity-40",
               )}
             >
               <td className="py-2 pl-4 pr-4 text-neutral-700 dark:text-neutral-300">
