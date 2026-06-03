@@ -47,7 +47,7 @@ const RESULTS: ResultRow[] = [
   { id: "hermes-sonnet", agentType: "Hermes", model: "claude-sonnet-4.5", completion: 29.2, costUsd: 3.780, tokens: 198_000, timeSec: 130, tokensLabel: "~198k*" },
   { id: "rlm-gpt5-mini", agentType: "RLM", model: "gpt-5-mini", completion: 24.6, costUsd: 0.076, tokens: 340_000, timeSec: 203, tokensLabel: "340k" },
   { id: "rlm-opus", agentType: "RLM", model: "claude-opus-4.8", completion: 55.9, costUsd: 0.785, tokens: 376_000, timeSec: 212, tokensLabel: "376k" },
-  { id: "rlm-sonnet", agentType: "RLM", model: "claude-sonnet-4.6", completion: 49.7, costUsd: 0.954, tokens: 1_101_000, timeSec: 353, tokensLabel: "1101k" },
+  { id: "rlm-sonnet", agentType: "RLM", model: "claude-sonnet-4.6", completion: 49.7, costUsd: 0.954, tokens: 1_101_000, timeSec: 353 },
   { id: "rlm-haiku", agentType: "RLM", model: "claude-haiku-4.5", completion: 38.1, costUsd: 0.157, tokens: 516_000, timeSec: 191, tokensLabel: "516k" },
 ];
 
