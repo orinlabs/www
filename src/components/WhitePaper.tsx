@@ -81,7 +81,7 @@ export function ResearchArticle({
             </Fragment>
           ))}
           <span className="text-neutral-400 dark:text-neutral-500">|</span>
-          <span className="italic">{date}</span>
+          <span>{date}</span>
         </div>
       </header>
 
