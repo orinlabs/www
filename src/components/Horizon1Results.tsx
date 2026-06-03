@@ -44,6 +44,7 @@ const RESULTS: ResultRow[] = [
   { id: "codex-gpt5", agentType: "Codex", model: "gpt-5-codex", completion: 46.2, costUsd: 0.342, tokens: 1_000_000, timeSec: 350 },
   { id: "codex-gpt53", agentType: "Codex", model: "gpt-5.3-codex", completion: 48.5, costUsd: 0.424, tokens: 824_000, timeSec: 357 },
   { id: "hermes-gpt55", agentType: "Hermes", model: "gpt-5.5", completion: 30.0, costUsd: 2.734, tokens: 100_000, timeSec: 145, tokensLabel: "~100k*" },
+  { id: "rlm-gpt5-mini", agentType: "RLM", model: "gpt-5-mini", completion: 20.0, costUsd: 0.035, tokens: 212_000, timeSec: 268, tokensLabel: "~212k" },
 ];
 
 // Color per agent type, with light/dark variants.
@@ -52,6 +53,7 @@ const AGENT_TYPE_COLORS: Record<string, { light: string; dark: string }> = {
   "Claude Code": { light: "#c2410c", dark: "#fb923c" },
   Codex: { light: "#1d4ed8", dark: "#60a5fa" },
   Hermes: { light: "#171717", dark: "#fafafa" },
+  RLM: { light: "#7c3aed", dark: "#a78bfa" },
 };
 
 const FALLBACK_COLOR = { light: "#525252", dark: "#a3a3a3" };
