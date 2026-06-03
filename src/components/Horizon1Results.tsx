@@ -27,6 +27,8 @@ interface ResultRow {
   costUsd: number;
   tokens: number;
   timeSec: number;
+  // Optional override for the tokens cell (e.g. approximate/footnoted values).
+  tokensLabel?: string;
 }
 
 // Preview run results. Each row is one (agent type × model) configuration.
@@ -41,6 +43,7 @@ const RESULTS: ResultRow[] = [
   { id: "rag-opus", agentType: "RAG", model: "claude-opus-4.8", completion: 36.9, costUsd: 1.016, tokens: 191_429, timeSec: 184.2 },
   { id: "codex-gpt5", agentType: "Codex", model: "gpt-5-codex", completion: 46.2, costUsd: 0.342, tokens: 1_000_000, timeSec: 350 },
   { id: "codex-gpt53", agentType: "Codex", model: "gpt-5.3-codex", completion: 48.5, costUsd: 0.424, tokens: 824_000, timeSec: 357 },
+  { id: "hermes-gpt55", agentType: "Hermes", model: "gpt-5.5", completion: 30.0, costUsd: 2.734, tokens: 100_000, timeSec: 145, tokensLabel: "~100k*" },
 ];
 
 // Color per agent type, with light/dark variants.
@@ -48,6 +51,7 @@ const AGENT_TYPE_COLORS: Record<string, { light: string; dark: string }> = {
   RAG: { light: "#00845e", dark: "#10b981" },
   "Claude Code": { light: "#c2410c", dark: "#fb923c" },
   Codex: { light: "#1d4ed8", dark: "#60a5fa" },
+  Hermes: { light: "#171717", dark: "#fafafa" },
 };
 
 const FALLBACK_COLOR = { light: "#525252", dark: "#a3a3a3" };
@@ -686,7 +690,7 @@ export function Horizon1Table({
                 {fmtTime(row.timeSec)}
               </td>
               <td className="py-2 pl-4 pr-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
-                {fmtTokens(row.tokens)}
+                {row.tokensLabel ?? fmtTokens(row.tokens)}
               </td>
             </tr>
           ))}
