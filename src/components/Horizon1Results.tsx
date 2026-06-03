@@ -46,6 +46,8 @@ const RESULTS: ResultRow[] = [
   { id: "hermes-gpt55", agentType: "Hermes", model: "gpt-5.5", completion: 30.0, costUsd: 3.96, tokens: 100_000, timeSec: 145, tokensLabel: "~100k*" },
   { id: "hermes-sonnet", agentType: "Hermes", model: "claude-sonnet-4.5", completion: 29.2, costUsd: 3.780, tokens: 198_000, timeSec: 130, tokensLabel: "~198k*" },
   { id: "rlm-gpt5-mini", agentType: "RLM", model: "gpt-5-mini", completion: 20.0, costUsd: 0.035, tokens: 212_000, timeSec: 268, tokensLabel: "~212k" },
+  { id: "rlm-sonnet", agentType: "RLM", model: "claude-sonnet-4.6", completion: 49.7, costUsd: 0.954, tokens: 1_101_000, timeSec: 353, tokensLabel: "~1101k" },
+  { id: "rlm-haiku", agentType: "RLM", model: "claude-haiku-4.5", completion: 39.2, costUsd: 0.607, tokens: 579_000, timeSec: 594, tokensLabel: "~579k" },
 ];
 
 // Color per agent type, with light/dark variants.
@@ -105,41 +107,19 @@ interface MetricDef {
   id: MetricKey;
   label: string;
   format: (v: number) => string;
-  tickCandidates: number[];
+  // Snap an arbitrary tick value to the nearest clean value for this metric
+  // (e.g. whole seconds for time, cents for cost) so labels stay tidy.
+  snap: (v: number) => number;
 }
 
 // Pad the axis so the first/last point sits at least this fraction of the
-// data's range away from each edge.
+// data's range away from each edge. Recharts handles tick placement itself.
 const AXIS_PAD_FRAC = 0.1;
 
-// Round, evenly-spaced ticks from 0 up past `maxVal` (so the axis ends on a
-// clean number rather than an arbitrary data-derived value).
-function niceLinearTicks(maxVal: number): number[] {
-  if (!(maxVal > 0)) return [0];
-  const target = 5;
-  const rawStep = maxVal / target;
-  const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
-  const norm = rawStep / mag;
-  const step =
-    (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) *
-    mag;
-  const ticks: number[] = [];
-  for (let v = 0; v <= maxVal + step * 1e-9; v += step) {
-    ticks.push(Number((Math.round(v / step) * step).toPrecision(12)));
-  }
-  if (ticks[ticks.length - 1] < maxVal) {
-    ticks.push(Number((ticks[ticks.length - 1] + step).toPrecision(12)));
-  }
-  return ticks;
-}
-
-// Compute an axis domain (and visible ticks) dynamically from the data, so axis
-// edges are always padded away from the extreme points, for either scale.
-function computeAxis(
-  values: number[],
-  tickCandidates: number[],
-  scale: ScaleType,
-): { domain: [number, number]; ticks: number[] | undefined } {
+// Compute a padded axis domain from the data so the extreme points always sit
+// ~10% in from each edge. For log scales the padding is applied in log space
+// (and the domain stays strictly positive, which Recharts requires).
+function computeDomain(values: number[], scale: ScaleType): [number, number] {
   const min = Math.min(...values);
   const max = Math.max(...values);
 
@@ -147,18 +127,33 @@ function computeAxis(
     const logMin = Math.log10(min);
     const logMax = Math.log10(max);
     const pad = (logMax - logMin) * AXIS_PAD_FRAC || AXIS_PAD_FRAC;
-    const domainMin = Math.pow(10, logMin - pad);
-    const domainMax = Math.pow(10, logMax + pad);
-    return {
-      domain: [domainMin, domainMax],
-      ticks: tickCandidates.filter((t) => t >= domainMin && t <= domainMax),
-    };
+    return [Math.pow(10, logMin - pad), Math.pow(10, logMax + pad)];
   }
 
   const pad = (max - min) * AXIS_PAD_FRAC || AXIS_PAD_FRAC;
-  const ticks = niceLinearTicks(max + pad);
-  // Anchor at 0 and end on the last round tick so spacing is always clean.
-  return { domain: [0, ticks[ticks.length - 1]], ticks };
+  return [min - pad, max + pad];
+}
+
+// Place `count` evenly-spaced ticks across the domain (in log space when the
+// axis is log, so they're visually even), then snap each to a clean value for
+// the metric. Even spacing keeps the axis smooth; snapping keeps labels tidy.
+function makeTicks(
+  [lo, hi]: [number, number],
+  scale: ScaleType,
+  snap: (v: number) => number,
+  count = 6,
+): number[] {
+  const ticks: number[] = [];
+  for (let i = 0; i < count; i++) {
+    const f = i / (count - 1);
+    const v =
+      scale === "log"
+        ? Math.pow(10, Math.log10(lo) + (Math.log10(hi) - Math.log10(lo)) * f)
+        : lo + (hi - lo) * f;
+    ticks.push(snap(v));
+  }
+  // Snapping can collapse neighbors into duplicates; keep them unique.
+  return Array.from(new Set(ticks));
 }
 
 const METRIC_DEFS: MetricDef[] = [
@@ -166,19 +161,19 @@ const METRIC_DEFS: MetricDef[] = [
     id: "costUsd",
     label: "Cost",
     format: fmtCostAxis,
-    tickCandidates: [0.02, 0.05, 0.1, 0.25, 0.5, 1, 2, 5],
+    snap: (v) => Math.round(v * 100) / 100,
   },
   {
     id: "timeSec",
     label: "Time",
     format: fmtTime,
-    tickCandidates: [50, 75, 100, 125, 150, 175, 200, 250, 300],
+    snap: (v) => Math.round(v),
   },
   {
     id: "tokens",
     label: "Tokens",
     format: fmtTokens,
-    tickCandidates: [50_000, 100_000, 250_000, 500_000, 1_000_000, 2_000_000],
+    snap: (v) => Math.round(v / 1000) * 1000,
   },
 ];
 
@@ -229,15 +224,20 @@ export function Horizon1Chart({
   const [metricId, setMetricId] = useState<MetricKey>("costUsd");
   const [scaleType, setScaleType] = useState<ScaleType>("log");
   const metric = METRIC_DEFS.find((m) => m.id === metricId)!;
-  const axis = useMemo(
-    () =>
-      computeAxis(
-        RESULTS.map((r) => r[metricId]),
-        metric.tickCandidates,
-        scaleType,
-      ),
-    [metricId, metric.tickCandidates, scaleType],
-  );
+  const { domain, ticks } = useMemo(() => {
+    const values = RESULTS.map((r) => r[metricId]);
+    const d = computeDomain(values, scaleType);
+    // Space ticks across the data extent (not the padded domain edges), so each
+    // snapped tick stays within the domain and the end ticks sit on real data.
+    const dataExtent: [number, number] = [
+      Math.min(...values),
+      Math.max(...values),
+    ];
+    return {
+      domain: d,
+      ticks: makeTicks(dataExtent, scaleType, metric.snap),
+    };
+  }, [metricId, scaleType, metric.snap]);
 
   const gridStroke = isDark ? "#404040" : "#e5e5e5";
   // Border-toned but two steps more visible (neutral-400 / neutral-600).
@@ -532,8 +532,8 @@ export function Horizon1Chart({
               dataKey={metric.id}
               name={metric.label}
               scale={scaleType}
-              domain={axis.domain}
-              ticks={axis.ticks}
+              domain={domain}
+              ticks={ticks}
               tickFormatter={(v) => metric.format(Number(v))}
               allowDataOverflow
               axisLine={{ stroke: axisStroke, strokeWidth: 1.5 }}
@@ -712,7 +712,7 @@ export function Horizon1Table({
         </tbody>
       </table>
       <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400 italic">
-        Preview run, subject to change.
+        Preview run, subject to change. Specific agents may incur a cost of data ingestion.
       </p>
     </div>
   );
