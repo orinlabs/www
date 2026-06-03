@@ -43,7 +43,7 @@ const RESULTS: ResultRow[] = [
   { id: "rag-opus", agentType: "RAG", model: "claude-opus-4.8", completion: 36.9, costUsd: 1.016, tokens: 191_429, timeSec: 184.2 },
   { id: "codex-gpt5", agentType: "Codex", model: "gpt-5-codex", completion: 46.2, costUsd: 0.342, tokens: 1_000_000, timeSec: 350 },
   { id: "codex-gpt53", agentType: "Codex", model: "gpt-5.3-codex", completion: 48.5, costUsd: 0.424, tokens: 824_000, timeSec: 357 },
-  { id: "hermes-gpt55", agentType: "Hermes", model: "gpt-5.5", completion: 30.0, costUsd: 3.96, tokens: 100_000, timeSec: 145, tokensLabel: "~100k*" },
+  { id: "hermes-gpt55", agentType: "Hermes", model: "gpt-5.5", completion: 36.4, costUsd: 3.96, tokens: 100_000, timeSec: 145, tokensLabel: "~100k*" },
   { id: "hermes-sonnet", agentType: "Hermes", model: "claude-sonnet-4.5", completion: 29.2, costUsd: 3.780, tokens: 198_000, timeSec: 130, tokensLabel: "~198k*" },
   { id: "rlm-gpt5-mini", agentType: "RLM", model: "gpt-5-mini", completion: 24.6, costUsd: 0.076, tokens: 340_000, timeSec: 203, tokensLabel: "340k" },
   { id: "rlm-opus", agentType: "RLM", model: "claude-opus-4.8", completion: 55.9, costUsd: 0.785, tokens: 376_000, timeSec: 212, tokensLabel: "376k" },
