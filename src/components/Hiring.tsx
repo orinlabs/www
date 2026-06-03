@@ -22,7 +22,7 @@ export function JoinUs({ padded = true }: { padded?: boolean }) {
         </div>
       </div>
 
-      <p>
+      <p className="text-neutral-700 dark:text-neutral-300">
       We are a small group of engineers and researchers working to solve a short list of fundamental societal bottlenecks. If this sounds interesting, please reach out.
       </p>
 
