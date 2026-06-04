@@ -18,7 +18,15 @@ import {
   YAxis,
 } from "recharts";
 
-import { agentColor, useIsDark } from "./horizon1Theme";
+import {
+  ADVERSARIAL_ROBUSTNESS,
+  ARCHITECTURE_SPREAD,
+  CONTENT_FLAGS,
+  CONVERGENCE,
+  DIFFICULTY_AXES,
+  DIFFICULTY_FAMILIES,
+} from "./data";
+import { agentColor, useIsDark } from "./theme";
 
 // ---------------------------------------------------------------------------
 // Shared primitives: a figure frame with caption, plus recharts axis/grid
@@ -811,14 +819,7 @@ function useAgentColor() {
 
 export function ArchitectureSpreadFigure() {
   const { gridStroke, axisProps, ink, muted, pos } = useChartStyle();
-  const rows = [
-    { model: "claude-opus-4.8", worstH: "Hermes", low: 35.9, bestH: "RLM", high: 55.9 },
-    { model: "claude-haiku-4.5", worstH: "Hermes", low: 21.5, bestH: "RLM", high: 38.1 },
-    { model: "gpt-5-mini", worstH: "RAG", low: 19.5, bestH: "RLM", high: 24.6 },
-    { model: "claude-sonnet-4.5", worstH: "Hermes", low: 29.2, bestH: "RLM", high: 39.2 },
-    { model: "gpt-5.5", worstH: "Hermes", low: 36.4, bestH: "RLM", high: 51.8 },
-  ];
-  const data = rows.map((r) => ({
+  const data = ARCHITECTURE_SPREAD.map((r) => ({
     ...r,
     span: Number((r.high - r.low).toFixed(1)),
   }));
@@ -996,57 +997,6 @@ export function ArchitectureSpreadFigure() {
   );
 }
 
-// Per-harness pass rate at each level of each difficulty axis. "ALL" is the
-// across-the-board mean (drawn as the dashed reference line per panel).
-const DIFFICULTY_FAMILIES = [
-  { id: "RLM", label: "RLM", colorKey: "RLM" },
-  { id: "ClaudeCode", label: "Claude Code", colorKey: "Claude Code" },
-  { id: "RAG", label: "RAG", colorKey: "RAG" },
-  { id: "Hermes", label: "Hermes", colorKey: "Hermes" },
-] as const;
-
-const DIFFICULTY_AXES = [
-  {
-    key: "n_hops",
-    title: "Reasoning hops",
-    drop: "−18.4pp",
-    data: [
-      { level: "1-hop", RLM: 65.8, ClaudeCode: 53.8, RAG: 50.6, Hermes: 46.8, ALL: 54.3 },
-      { level: "2-hop", RLM: 47.8, ClaudeCode: 38.5, RAG: 29.3, Hermes: 29.3, ALL: 36.2 },
-      { level: "3-hop", RLM: 56.5, ClaudeCode: 39.1, RAG: 21.7, Hermes: 26.1, ALL: 35.9 },
-    ],
-  },
-  {
-    key: "sd",
-    title: "Semantic distance",
-    drop: "−9.5pp",
-    data: [
-      { level: "near", RLM: 59.7, ClaudeCode: 51.4, RAG: 47.2, Hermes: 50.0, ALL: 52.1 },
-      { level: "mid", RLM: 50.6, ClaudeCode: 36.8, RAG: 31.2, Hermes: 23.4, ALL: 35.5 },
-      { level: "far", RLM: 58.7, ClaudeCode: 46.7, RAG: 30.4, Hermes: 34.8, ALL: 42.6 },
-    ],
-  },
-  {
-    key: "md",
-    title: "Memory depth",
-    drop: "−6.6pp",
-    data: [
-      { level: "low", RLM: 59.7, ClaudeCode: 47.5, RAG: 38.7, Hermes: 41.9, ALL: 47.0 },
-      { level: "mid", RLM: 58.1, ClaudeCode: 41.9, RAG: 39.5, Hermes: 37.2, ALL: 44.2 },
-      { level: "high", RLM: 52.2, ClaudeCode: 43.8, RAG: 34.4, Hermes: 31.1, ALL: 40.4 },
-    ],
-  },
-  {
-    key: "adv",
-    title: "Adversarial",
-    drop: "−5.6pp",
-    data: [
-      { level: "non-adv", RLM: 57.9, ClaudeCode: 45.3, RAG: 37.9, Hermes: 38.6, ALL: 44.9 },
-      { level: "adversarial", RLM: 50.9, ClaudeCode: 42.6, RAG: 34.5, Hermes: 29.1, ALL: 39.3 },
-    ],
-  },
-];
-
 export function DifficultyAxesFigure() {
   const { gridStroke, axisStroke, axisProps } = useChartStyle();
   const color = useAgentColor();
@@ -1156,43 +1106,7 @@ export function DifficultyAxesFigure() {
 
 export function ContentFlagsFigure() {
   const { gridStroke, axisStroke, axisProps, pos, neg } = useChartStyle();
-  const flags = [
-    {
-      label: "Synthetic Patch",
-      value: -21.6,
-      desc: 'A fact stated earlier in the trace is later changed or contradicted.',
-    },
-    {
-      label: "Family Confusion",
-      value: -20.3,
-      desc: "Several confusable entities (e.g. family members or similarly-named people/things).",
-    },
-    {
-      label: "Compositional",
-      value: -9.4,
-      desc: "The answer requires combining/chaining multiple facts from different points in the trace, not just recalling a single one.",
-    },
-    {
-      label: "Wrong Confident",
-      value: -4.3,
-      desc: "Someone in the trace states something confidently but incorrectly. The agent has to not trust the confident-sounding claim.",
-    },
-    {
-      label: "New Stakeholder",
-      value: 9.5,
-      desc: "A new person/actor is introduced.",
-    },
-    {
-      label: "Constrained Selection",
-      value: 15.1,
-      desc: "The task limits the answer to a small, well-defined set of options instead of being open ended.",
-    },
-    {
-      label: "Session Length",
-      value: 17.9,
-      desc: "Tasks tied to a dedicated/long session where the relevant info is concentrated in one place.",
-    },
-  ];
+  const flags = CONTENT_FLAGS;
   const renderValue = (props: LabelRenderProps) => {
     const { x, y, width, height, value } = props;
     if (
@@ -1290,14 +1204,7 @@ export function ContentFlagsFigure() {
 export function AdversarialRobustnessFigure() {
   const { gridStroke, axisProps, ink, muted, neg } = useChartStyle();
   const [hovered, setHovered] = useState<number | null>(null);
-  const rows = [
-    { family: "RAG", clean: 44.3, adv: 27.3 },
-    { family: "Codex", clean: 50.7, adv: 34.5 },
-    { family: "Hermes", clean: 40.7, adv: 25.5 },
-    { family: "RLM", clean: 57.9, adv: 50.9 },
-    { family: "Claude Code", clean: 45.3, adv: 42.6 },
-  ];
-  const data = rows.map((r) => ({
+  const data = ADVERSARIAL_ROBUSTNESS.map((r) => ({
     ...r,
     low: r.adv,
     high: r.clean,
@@ -1476,11 +1383,7 @@ export function AdversarialRobustnessFigure() {
 
 export function ConvergenceFigure() {
   const { gridStroke, axisProps, ink, neg } = useChartStyle();
-  const data = [
-    { x: "near", nonadv: 46.7, adv: 32.8 },
-    { x: "mid", nonadv: 35.4, adv: 28.4 },
-    { x: "far", nonadv: 29.9, adv: 31.1 },
-  ];
+  const data = CONVERGENCE;
   return (
     <Figure
       title="The adversarial gap collapses as memories get harder to find"

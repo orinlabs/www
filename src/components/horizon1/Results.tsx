@@ -18,71 +18,20 @@ import {
   YAxis,
 } from "recharts";
 
-import { agentColor, useIsDark } from "./horizon1Theme";
-
-interface ResultRow {
-  id: string;
-  agentType: string;
-  model: string;
-  completion: number;
-  costUsd: number;
-  tokens: number;
-  timeSec?: number;
-  // Model release date as a millisecond timestamp (derived from MODEL_RELEASE_DATES).
-  releaseDate: number;
-  // Optional override for the tokens cell (e.g. approximate/footnoted values).
-  tokensLabel?: string;
-  // When set, excluded from the Time chart and shown in the table instead of fmtTime.
-  timeLabel?: string;
-}
-
-// Public release date per model, ISO yyyy-mm-dd. Used to plot completion
-// against model recency and to show a release column in the table.
-const MODEL_RELEASE_DATES: Record<string, string> = {
-  "gpt-5": "2025-08-07",
-  "gpt-5-mini": "2025-08-07",
-  "gpt-5-codex": "2025-09-15",
-  "claude-sonnet-4.5": "2025-09-29",
-  "claude-haiku-4.5": "2025-10-15",
-  "gemini-3.5-flash": "2025-11-18",
-  "gpt-5.3-codex": "2026-01-20",
-  "claude-opus-4.8": "2026-02-24",
-  "gpt-5.5": "2026-03-10",
-  "claude-sonnet-4.6": "2026-04-14",
-};
-
-// Preview run results. Each row is one (agent type × model) configuration.
-const RAW_RESULTS: Omit<ResultRow, "releaseDate">[] = [
-  { id: "cc-sonnet", agentType: "Claude Code", model: "claude-sonnet-4.5", completion: 31.6, costUsd: 0.454, tokens: 907_196, timeSec: 130.4 },
-  { id: "cc-opus", agentType: "Claude Code", model: "claude-opus-4.8", completion: 44.8, costUsd: 2.519, tokens: 1_011_333, timeSec: 123.4 },
-  { id: "rag-gpt5-mini", agentType: "RAG", model: "gpt-5-mini", completion: 19.5, costUsd: 0.023, tokens: 83_114, timeSec: 151.5 },
-  { id: "rag-haiku", agentType: "RAG", model: "claude-haiku-4.5", completion: 31.8, costUsd: 0.189, tokens: 181_134, timeSec: 135.2 },
-  { id: "rag-gemini", agentType: "RAG", model: "gemini-3.5-flash", completion: 12.8, costUsd: 0.273, tokens: 268_724, timeSec: 146.6 },
-  { id: "rlm-gemini", agentType: "RLM", model: "gemini-3.5-flash", completion: 9.8, costUsd: 0.25, tokens: 247_101, timeSec: 278 },
-  { id: "rag-sonnet", agentType: "RAG", model: "claude-sonnet-4.5", completion: 33.3, costUsd: 0.529, tokens: 169_467, timeSec: 155.3 },
-  { id: "rlm-sonnet45", agentType: "RLM", model: "claude-sonnet-4.5", completion: 39.2, costUsd: 1.19, tokens: 490_595, timeSec: 228 },
-  { id: "rag-gpt55", agentType: "RAG", model: "gpt-5.5", completion: 39.5, costUsd: 0.672, tokens: 214_835, timeSec: 202.2 },
-  { id: "rag-opus", agentType: "RAG", model: "claude-opus-4.8", completion: 36.9, costUsd: 1.016, tokens: 191_429, timeSec: 184.2 },
-  { id: "codex-gpt5", agentType: "Codex", model: "gpt-5-codex", completion: 46.2, costUsd: 0.342, tokens: 1_000_000, timeSec: 350 },
-  { id: "codex-gpt53", agentType: "Codex", model: "gpt-5.3-codex", completion: 48.5, costUsd: 0.424, tokens: 824_000, timeSec: 357 },
-  { id: "hermes-gpt55", agentType: "Hermes", model: "gpt-5.5", completion: 36.4, costUsd: 3.96, tokens: 100_000, timeSec: 145, tokensLabel: "~100k*" },
-  { id: "hermes-opus", agentType: "Hermes", model: "claude-opus-4.8", completion: 35.9, costUsd: 4.25, tokens: 207_000, timeSec: 147, tokensLabel: "~207k" },
-  { id: "hermes-sonnet", agentType: "Hermes", model: "claude-sonnet-4.5", completion: 29.2, costUsd: 3.780, tokens: 198_000, timeSec: 130, tokensLabel: "~198k*" },
-  { id: "hermes-haiku", agentType: "Hermes", model: "claude-haiku-4.5", completion: 21.5, costUsd: 3.33, tokens: 129_000, timeSec: 145.5, tokensLabel: "~129k*" },
-  { id: "rlm-gpt5-mini", agentType: "RLM", model: "gpt-5-mini", completion: 24.6, costUsd: 0.076, tokens: 340_000, timeSec: 203, tokensLabel: "340k" },
-  { id: "rlm-opus", agentType: "RLM", model: "claude-opus-4.8", completion: 55.9, costUsd: 0.785, tokens: 376_000, timeSec: 212, tokensLabel: "376k" },
-  { id: "rlm-sonnet", agentType: "RLM", model: "claude-sonnet-4.6", completion: 49.7, costUsd: 0.954, tokens: 1_101_000, timeSec: 353 },
-  { id: "rlm-haiku", agentType: "RLM", model: "claude-haiku-4.5", completion: 38.1, costUsd: 0.157, tokens: 516_000, timeSec: 191, tokensLabel: "516k" },
-  { id: "rlm-gpt5", agentType: "RLM", model: "gpt-5", completion: 50.8, costUsd: 0.400, tokens: 473_000, timeSec: 374, tokensLabel: "473k" },
-  { id: "rlm-gpt55", agentType: "RLM", model: "gpt-5.5", completion: 51.8, costUsd: 0.673, tokens: 298_086, timeSec: 169.4 },
-];
-
-const RESULTS: ResultRow[] = RAW_RESULTS.map((r) => ({
-  ...r,
-  releaseDate: Date.parse(MODEL_RELEASE_DATES[r.model] ?? "2025-08-07"),
-}));
-
-const AGENT_TYPES = Array.from(new Set(RESULTS.map((r) => r.agentType)));
+import {
+  AGENT_TYPES,
+  fmtCost,
+  fmtDate,
+  fmtPct,
+  fmtTime,
+  fmtTokens,
+  METRIC_DEFS,
+  type MetricKey,
+  RESULTS,
+  type ResultRow,
+  type ScaleType,
+} from "./data";
+import { agentColor, useIsDark } from "./theme";
 
 // Stable, arbitrary ordering used to pick which label wins within an overlap
 // cluster (deterministic so the choice doesn't flicker between renders).
@@ -90,66 +39,6 @@ function hashStr(s: string): number {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
   return h;
-}
-
-function fmtCost(v: number) {
-  return `$${v.toFixed(3)}`;
-}
-
-function fmtCostAxis(v: number) {
-  return `$${v.toFixed(2)}`;
-}
-
-function fmtPct(v: number) {
-  return `${v.toFixed(1)}%`;
-}
-
-function fmtTime(v: number) {
-  const m = Math.floor(v / 60);
-  const s = Math.round(v % 60);
-  return m > 0 ? `${m}m ${s.toString().padStart(2, "0")}s` : `${s}s`;
-}
-
-function fmtTokens(v: number) {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${Math.round(v / 1_000)}k`;
-  return `${v}`;
-}
-
-function fmtDateAxis(v: number) {
-  return new Date(v).toLocaleDateString("en-US", {
-    month: "short",
-    year: "2-digit",
-  });
-}
-
-function fmtDate(v: number) {
-  return new Date(v).toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-  });
-}
-
-// Snap a timestamp down to the first of its month so date ticks stay tidy.
-function snapToMonth(v: number) {
-  const d = new Date(v);
-  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
-}
-
-type MetricKey = "costUsd" | "timeSec" | "tokens" | "releaseDate";
-type ScaleType = "linear" | "log";
-
-interface MetricDef {
-  id: MetricKey;
-  label: string;
-  format: (v: number) => string;
-  // Snap an arbitrary tick value to the nearest clean value for this metric
-  // (e.g. whole seconds for time, cents for cost) so labels stay tidy.
-  snap: (v: number) => number;
-  // Number of axis ticks to render (defaults to 6).
-  tickCount?: number;
-  // Metrics that can't sensibly use a log scale (e.g. dates) force linear.
-  forceLinear?: boolean;
 }
 
 // Pad the axis so the first/last point sits at least this fraction of the
@@ -195,35 +84,6 @@ function makeTicks(
   // Snapping can collapse neighbors into duplicates; keep them unique.
   return Array.from(new Set(ticks));
 }
-
-const METRIC_DEFS: MetricDef[] = [
-  {
-    id: "costUsd",
-    label: "Cost",
-    format: fmtCostAxis,
-    snap: (v) => Math.round(v * 100) / 100,
-  },
-  {
-    id: "timeSec",
-    label: "Time",
-    format: fmtTime,
-    snap: (v) => Math.round(v),
-  },
-  {
-    id: "tokens",
-    label: "Tokens",
-    format: fmtTokens,
-    snap: (v) => Math.round(v / 1000) * 1000,
-  },
-  {
-    id: "releaseDate",
-    label: "Release date",
-    format: fmtDateAxis,
-    snap: snapToMonth,
-    tickCount: 5,
-    forceLinear: true,
-  },
-];
 
 export function Horizon1Chart({
   hoveredId,
