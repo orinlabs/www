@@ -60,6 +60,7 @@ const RAW_RESULTS: Omit<ResultRow, "releaseDate">[] = [
   { id: "rag-gemini", agentType: "RAG", model: "gemini-3.5-flash", completion: 12.8, costUsd: 0.273, tokens: 268_724, timeSec: 146.6 },
   { id: "rlm-gemini", agentType: "RLM", model: "gemini-3.5-flash", completion: 9.8, costUsd: 0.25, tokens: 247_101, timeSec: 278 },
   { id: "rag-sonnet", agentType: "RAG", model: "claude-sonnet-4.5", completion: 33.3, costUsd: 0.529, tokens: 169_467, timeSec: 155.3 },
+  { id: "rlm-sonnet45", agentType: "RLM", model: "claude-sonnet-4.5", completion: 39.2, costUsd: 1.19, tokens: 490_595, timeSec: 228 },
   { id: "rag-gpt55", agentType: "RAG", model: "gpt-5.5", completion: 39.5, costUsd: 0.672, tokens: 214_835, timeSec: 202.2 },
   { id: "rag-opus", agentType: "RAG", model: "claude-opus-4.8", completion: 36.9, costUsd: 1.016, tokens: 191_429, timeSec: 184.2 },
   { id: "codex-gpt5", agentType: "Codex", model: "gpt-5-codex", completion: 46.2, costUsd: 0.342, tokens: 1_000_000, timeSec: 350 },

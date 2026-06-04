@@ -815,7 +815,7 @@ export function ArchitectureSpreadFigure() {
     { model: "claude-opus-4.8", worstH: "Hermes", low: 35.9, bestH: "RLM", high: 55.9 },
     { model: "claude-haiku-4.5", worstH: "Hermes", low: 21.5, bestH: "RLM", high: 38.1 },
     { model: "gpt-5-mini", worstH: "RAG", low: 19.5, bestH: "RLM", high: 24.6 },
-    { model: "claude-sonnet-4.5", worstH: "Hermes", low: 29.2, bestH: "RAG", high: 33.3 },
+    { model: "claude-sonnet-4.5", worstH: "Hermes", low: 29.2, bestH: "RLM", high: 39.2 },
     { model: "gpt-5.5", worstH: "Hermes", low: 36.4, bestH: "RLM", high: 51.8 },
   ];
   const data = rows.map((r) => ({
@@ -919,7 +919,7 @@ export function ArchitectureSpreadFigure() {
           (gray) to its best (green), so the arrow length is purely the harness
           effect. The best harness is RLM on the Claude models, gpt-5-mini, and
           gpt-5.5;
-          on sonnet-4.5 (no RLM run) the best is RAG. The gain is largest
+          on sonnet-4.5. The gain is largest
           on the strongest model (claude-opus-4.8, +20pp).
         </>
       }
