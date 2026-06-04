@@ -3,7 +3,12 @@
 export * from "./data";
 export * from "./theme";
 export * from "./figures";
-export { Horizon1Chart, Horizon1Results, Horizon1Table } from "./Results";
+export {
+  Horizon1Chart,
+  Horizon1ModelChart,
+  Horizon1Results,
+  Horizon1Table,
+} from "./Results";
 export {
   ContributorsSection,
   IntegritySection,

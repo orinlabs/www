@@ -7,6 +7,7 @@ import Prism from 'prismjs';
 import { JoinUs } from '../../components/Hiring';
 import {
   ContributorsSection,
+  Horizon1ModelChart,
   Horizon1Results,
   IntegritySection,
   IntroSection,
@@ -30,13 +31,15 @@ export default function Horizon1() {
         darkSrc: "/horizon-1-benchmark-dark.png",
         alt: "Horizon-1 — building agents that learn",
       }}
-      abstract="We're releasing a preview of Horizon-1, our benchmark that measures an agent's ability to acquire learnings from a long history and apply them to a task."
+      abstract="We're releasing a preview of Horizon-1, our benchmark that measures an agent's ability to acquire learnings from a long history and apply them to a task. The first thing it reveals: for long-horizon learning, the harness around a model matters more than the model itself."
     >
       <IntroSection />
 
-      <Horizon1Results />
+      <Horizon1ModelChart />
 
       <ResultsSection />
+
+      <Horizon1Results />
 
       <MethodologySection />
 

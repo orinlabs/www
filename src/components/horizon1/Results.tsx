@@ -20,6 +20,7 @@ import {
 
 import {
   AGENT_TYPES,
+  type AgentType,
   fmtCost,
   fmtDate,
   fmtPct,
@@ -497,6 +498,209 @@ export function Horizon1Chart({
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+    </div>
+  );
+}
+
+// Headline chart: one row per model (run on >= 2 harnesses), one dot per
+// harness, colored by harness, on a single completion axis. Holding the model
+// fixed (a row) and varying only the harness swings the score 10–20+ points,
+// and RLM is the rightmost dot in nearly every row — the harness, not the
+// model, is the dominant and most consistent lever.
+export function Horizon1ModelChart() {
+  const isDark = useIsDark();
+  const [hoveredHarness, setHoveredHarness] = useState<string | null>(null);
+
+  const ink = isDark ? "#e5e5e5" : "#171717";
+  const grid = isDark ? "#404040" : "#e5e5e5";
+  const axis = isDark ? "#737373" : "#a3a3a3";
+  const faint = isDark ? "#404040" : "#e5e5e5";
+
+  // Group by model, keep only models tried on multiple harnesses (so each row
+  // shows a real within-model spread), sort strongest-first.
+  const rows = useMemo(() => {
+    const byModel = new Map<string, ResultRow[]>();
+    for (const r of RESULTS) {
+      const g = byModel.get(r.model) ?? [];
+      g.push(r);
+      byModel.set(r.model, g);
+    }
+    return [...byModel.entries()]
+      .filter(([, rs]) => rs.length >= 2)
+      .map(([model, rs]) => {
+        const dots = [...rs].sort((a, b) => a.completion - b.completion);
+        return {
+          model,
+          dots,
+          min: dots[0].completion,
+          max: dots[dots.length - 1].completion,
+        };
+      })
+      .sort((a, b) => b.max - a.max);
+  }, []);
+
+  const harnesses = useMemo(() => {
+    const order: AgentType[] = ["RLM", "Codex", "Claude Code", "RAG", "Hermes"];
+    const present = new Set(rows.flatMap((r) => r.dots.map((d) => d.agentType)));
+    return order.filter((h) => present.has(h));
+  }, [rows]);
+
+  const W = 720;
+  const Lx = 140;
+  const x0 = Lx;
+  const x1 = W - 56;
+  const rh = 42;
+  const top = 12;
+  const bottom = 30;
+  const H = top + rows.length * rh + bottom;
+  const ticks = [0, 20, 40, 60];
+  const dmax = 60;
+  const sx = (v: number) => x0 + (v / dmax) * (x1 - x0);
+
+  const dimOf = (harness: string) =>
+    hoveredHarness != null && hoveredHarness !== harness ? 0.15 : 1;
+
+  return (
+    <div className="my-8">
+      <h4 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+        The harness matters more than the model
+      </h4>
+      <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-3">
+        Task completion for each model, split by harness. Hold the model fixed
+        (one row) and the harness alone swings the score 10–20+ points.
+      </p>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+        {harnesses.map((h) => (
+          <div
+            key={h}
+            onMouseEnter={() => setHoveredHarness(h)}
+            onMouseLeave={() => setHoveredHarness(null)}
+            className={cn(
+              "flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 cursor-pointer transition-opacity",
+              hoveredHarness != null && hoveredHarness !== h && "opacity-40",
+            )}
+          >
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full"
+              style={{ background: agentColor(h, isDark) }}
+            />
+            {h}
+          </div>
+        ))}
+      </div>
+
+      <div className="w-full overflow-hidden">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          width="100%"
+          role="img"
+          style={{ fontFamily: "Body, system-ui, sans-serif" }}
+        >
+          {ticks.map((t) => (
+            <line
+              key={`g${t}`}
+              x1={sx(t)}
+              x2={sx(t)}
+              y1={top}
+              y2={H - bottom + 6}
+              stroke={grid}
+              strokeWidth={1}
+              strokeDasharray="3 3"
+            />
+          ))}
+          <line
+            x1={x0}
+            x2={x1}
+            y1={H - bottom + 6}
+            y2={H - bottom + 6}
+            stroke={axis}
+            strokeWidth={1.5}
+          />
+          {ticks.map((t) => (
+            <g key={t}>
+              <line
+                x1={sx(t)}
+                x2={sx(t)}
+                y1={H - bottom + 6}
+                y2={H - bottom + 11}
+                stroke={axis}
+                strokeWidth={1.5}
+              />
+              <text
+                x={sx(t)}
+                y={H - bottom + 24}
+                fontSize={12}
+                fill={axis}
+                textAnchor="middle"
+              >
+                {t}%
+              </text>
+            </g>
+          ))}
+
+          {rows.map((row, i) => {
+            const cy = top + i * rh + rh / 2;
+            return (
+              <g key={row.model}>
+                <text
+                  x={Lx - 12}
+                  y={cy + 4}
+                  fontSize={12.5}
+                  fontWeight={600}
+                  fill={ink}
+                  textAnchor="end"
+                >
+                  {row.model}
+                </text>
+                <line
+                  x1={sx(row.min)}
+                  x2={sx(row.max)}
+                  y1={cy}
+                  y2={cy}
+                  stroke={faint}
+                  strokeWidth={3}
+                />
+                {row.dots.map((d) => (
+                  <g
+                    key={d.id}
+                    onMouseEnter={() => setHoveredHarness(d.agentType)}
+                    onMouseLeave={() => setHoveredHarness(null)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <circle
+                      cx={sx(d.completion)}
+                      cy={cy}
+                      r={6}
+                      fill={agentColor(d.agentType, isDark)}
+                      fillOpacity={dimOf(d.agentType)}
+                      style={{ transition: "fill-opacity 0.2s ease" }}
+                    />
+                    {hoveredHarness === d.agentType && (
+                      <text
+                        x={sx(d.completion)}
+                        y={cy - 11}
+                        fontSize={11}
+                        fontWeight={600}
+                        fill={ink}
+                        textAnchor="middle"
+                      >
+                        {d.completion.toFixed(1)}
+                      </text>
+                    )}
+                  </g>
+                ))}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      <p className="mt-2 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+        Each row is one model run on multiple harnesses; dot color is the
+        harness. Hover a harness to trace it across models — RLM is the rightmost
+        dot in nearly every row. Preview run, subject to change.
+      </p>
     </div>
   );
 }

@@ -4,11 +4,7 @@
 import CodeBlock from "../CodeBlock";
 import { Section, Subsection } from "../WhitePaper";
 import { EXAMPLE_TRACE } from "./data";
-import {
-  ArchitectureSpreadFigure,
-  ContentFlagsFigure,
-  DifficultyAxesFigure,
-} from "./figures";
+import { ContentFlagsFigure, DifficultyAxesFigure } from "./figures";
 
 export function IntroSection() {
   return (
@@ -40,8 +36,6 @@ export function ResultsSection() {
         . Using a different harness with the same model can increase scores by up
         to 20 percentage points.
       </p>
-
-      <ArchitectureSpreadFigure />
 
       <p>
         A strong harness on a small model beats a weak harness on a frontier one.
