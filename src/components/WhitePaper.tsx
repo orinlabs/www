@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 
 import { Link } from 'react-router-dom';
+import { cn } from 'slate-ui';
 
 interface ResearchArticleProps {
   title: string;
@@ -8,6 +9,9 @@ interface ResearchArticleProps {
   date: string;
   abstract: string;
   image?: { src: string; darkSrc?: string; alt: string };
+  // When true, the in-article image + title block are omitted (e.g. when a
+  // full-width hero renders them instead).
+  hideHeader?: boolean;
   children: React.ReactNode;
 }
 
@@ -17,8 +21,17 @@ export function ResearchArticle({
   date,
   abstract,
   image,
+  hideHeader = false,
   children,
 }: ResearchArticleProps) {
+  if (hideHeader) {
+    return (
+      <article className="research-article">
+        <div className="research-content">{children}</div>
+      </article>
+    );
+  }
+
   return (
     <article className="research-article pt-8 sm:pt-12">
       {image && (
@@ -93,19 +106,22 @@ export function ResearchArticle({
 
 interface SectionProps {
   number?: string;
-  title: string;
+  title?: string;
+  className?: string;
   children: React.ReactNode;
 }
 
-export function Section({ number, title, children }: SectionProps) {
+export function Section({ number, title, children, className }: SectionProps) {
   return (
-    <section className="mb-12">
-      <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-6 flex items-baseline gap-3">
-        {number && (
-          <span className="text-primary font-mono text-lg">{number}.</span>
-        )}
-        {title}
-      </h2>
+    <section className={cn("mb-12 max-w-5xl", className)}>
+      {title && (
+        <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-6 flex items-baseline gap-3">
+          {number && (
+            <span className="text-primary font-mono text-lg">{number}.</span>
+          )}
+          {title}
+        </h2>
+      )}
       <div className="research-prose">{children}</div>
     </section>
   );

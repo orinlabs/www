@@ -14,7 +14,7 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Research from './pages/Research';
-import Horizon1 from './pages/research/Horizon1';
+import Horizon1, { Horizon1Hero } from './pages/research/Horizon1';
 import LongHorizonAgents from './pages/research/LongHorizonAgents';
 import ProactiveVoiceAgents from './pages/research/ProactiveVoiceAgents';
 import Role from './pages/Role';
@@ -99,15 +99,7 @@ function App() {
         <Route
           path="/research/horizon-1"
           element={
-            <Layout>
-              <Horizon1 />
-            </Layout>
-          }
-        />
-        <Route
-          path="/research/horizon-1"
-          element={
-            <Layout>
+            <Layout hero={<Horizon1Hero />}>
               <Horizon1 />
             </Layout>
           }

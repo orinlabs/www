@@ -1,6 +1,5 @@
 import {
   type MouseEvent as ReactMouseEvent,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -21,6 +20,8 @@ import {
 import {
   AGENT_TYPES,
   type AgentType,
+  DIFFICULTY_BUCKETS,
+  type DifficultyBucket,
   fmtCost,
   fmtDate,
   fmtPct,
@@ -33,14 +34,6 @@ import {
   type ScaleType,
 } from "./data";
 import { agentColor, useIsDark } from "./theme";
-
-// Stable, arbitrary ordering used to pick which label wins within an overlap
-// cluster (deterministic so the choice doesn't flicker between renders).
-function hashStr(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  return h;
-}
 
 // Pad the axis so the first/last point sits at least this fraction of the
 // data's range away from each edge. Recharts handles tick placement itself.
@@ -86,35 +79,56 @@ function makeTicks(
   return Array.from(new Set(ticks));
 }
 
+// y-axis difficulty buckets: overall ("all") plus the per-difficulty splits.
+const Y_BUCKETS: { id: DifficultyBucket | "all"; label: string }[] = [
+  { id: "all", label: "All" },
+  ...DIFFICULTY_BUCKETS,
+];
+
+// Interactive results scatter: pass rate vs. a selectable x metric (cost / time
+// / tokens / release date), split by difficulty bucket (All / Easy / Medium /
+// Hard). Dots are colored by harness; a point's model + values are revealed on
+// hover. With `showTable`, the full leaderboard renders below and shares the
+// hover highlight.
 export function Horizon1Chart({
-  hoveredId,
-  onHover,
-  hoveredType,
-  onHoverType,
+  showTable = false,
+  axisControls = true,
+  difficultyControls = true,
+  defaultAxis = "costUsd",
+  defaultDifficulty = "all",
+  defaultScale = "log",
 }: {
-  hoveredId?: string | null;
-  onHover?: (id: string | null) => void;
-  hoveredType?: string | null;
-  onHoverType?: (type: string | null) => void;
+  showTable?: boolean;
+  defaultScale?: ScaleType;
+  defaultDifficulty?: DifficultyBucket | "all";
+  defaultAxis?: MetricKey;
+  axisControls?: boolean;
+  difficultyControls?: boolean;
 }) {
   const isDark = useIsDark();
-  const [metricId, setMetricId] = useState<MetricKey>("costUsd");
-  const [scaleType, setScaleType] = useState<ScaleType>("log");
+  const [metricId, setMetricId] = useState<MetricKey>(defaultAxis);
+  const [scaleType, setScaleType] = useState<ScaleType>(defaultScale);
+  const [bucket, setBucket] = useState<DifficultyBucket | "all">(defaultDifficulty);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [hoveredType, setHoveredType] = useState<string | null>(null);
   const metric = METRIC_DEFS.find((m) => m.id === metricId)!;
   // Dates (and any forceLinear metric) can't use a log scale.
   const effectiveScale: ScaleType = metric.forceLinear ? "linear" : scaleType;
-  const chartData = useMemo(
+
+  const data = useMemo(
     () =>
       RESULTS.filter(
         (r) => r[metricId] != null && Number.isFinite(r[metricId] as number),
-      ),
-    [metricId],
+      ).map((r) => ({
+        ...r,
+        y: bucket === "all" ? r.completion : r.difficulty[bucket],
+      })),
+    [metricId, bucket],
   );
+
   const { domain, ticks } = useMemo(() => {
-    const values = chartData.map((r) => r[metricId] as number);
+    const values = data.map((r) => r[metricId] as number);
     const d = computeDomain(values, effectiveScale);
-    // Space ticks across the data extent (not the padded domain edges), so each
-    // snapped tick stays within the domain and the end ticks sit on real data.
     const dataExtent: [number, number] = [
       Math.min(...values),
       Math.max(...values),
@@ -123,170 +137,18 @@ export function Horizon1Chart({
       domain: d,
       ticks: makeTicks(dataExtent, effectiveScale, metric.snap, metric.tickCount),
     };
-  }, [metricId, effectiveScale, metric.snap, metric.tickCount, chartData]);
+  }, [metricId, effectiveScale, metric.snap, metric.tickCount, data]);
 
   const gridStroke = isDark ? "#404040" : "#e5e5e5";
-  // Border-toned but two steps more visible (neutral-400 / neutral-600).
   const axisStroke = isDark ? "#737373" : "#a3a3a3";
   const labelFill = isDark ? "#e5e5e5" : "#171717";
 
-  // Pixel positions of the rendered points, collected during render so a hover
-  // anywhere on the chart can snap to the closest point within SNAP_RADIUS.
+  // Pixel positions of rendered dots, collected during render so a hover
+  // anywhere can snap to the closest point within SNAP_RADIUS.
   const pointsRef = useRef<{ x: number; y: number; id: string }[]>([]);
   pointsRef.current = [];
   const SNAP_RADIUS = 100;
 
-  // Runtime detection of overlapping data labels: measure each label's bounding
-  // box, group intersecting labels into clusters, and show only one label per
-  // cluster (see isLabelVisible). Geometry is measured from every label
-  // regardless of visibility, so the clustering stays stable.
-  const chartRef = useRef<HTMLDivElement>(null);
-  const [clusters, setClusters] = useState<string[][]>([]);
-  // Labels whose box collides with a dot other than their own.
-  const [collidingWithDot, setCollidingWithDot] = useState<Set<string>>(
-    new Set(),
-  );
-
-  useLayoutEffect(() => {
-    const el = chartRef.current;
-    if (!el) return;
-
-    const measure = () => {
-      const texts = Array.from(
-        el.querySelectorAll<SVGTextElement>("text[data-label-id]"),
-      );
-      const items = texts.map((t) => ({
-        id: t.getAttribute("data-label-id") ?? "",
-        r: t.getBoundingClientRect(),
-      }));
-
-      // Union-find over pairwise intersections to build overlap clusters.
-      const parent = new Map<string, string>();
-      const find = (x: string): string => {
-        let root = x;
-        while (parent.get(root) !== root) root = parent.get(root)!;
-        return root;
-      };
-      const union = (a: string, b: string) => {
-        parent.set(find(a), find(b));
-      };
-      for (const it of items) parent.set(it.id, it.id);
-      for (let i = 0; i < items.length; i++) {
-        for (let j = i + 1; j < items.length; j++) {
-          const a = items[i].r;
-          const b = items[j].r;
-          const intersects =
-            a.left < b.right &&
-            a.right > b.left &&
-            a.top < b.bottom &&
-            a.bottom > b.top;
-          if (intersects) union(items[i].id, items[j].id);
-        }
-      }
-
-      const groups = new Map<string, string[]>();
-      for (const it of items) {
-        const root = find(it.id);
-        const g = groups.get(root) ?? [];
-        g.push(it.id);
-        groups.set(root, g);
-      }
-      const next = [...groups.values()].filter((g) => g.length > 1);
-
-      setClusters((prev) => {
-        const key = (cs: string[][]) =>
-          cs
-            .map((c) => [...c].sort().join(","))
-            .sort()
-            .join("|");
-        return key(prev) === key(next) ? prev : next;
-      });
-
-      // Detect labels overlapping a dot that isn't their own.
-      const dots = Array.from(
-        el.querySelectorAll<SVGCircleElement>("circle[data-dot-id]"),
-      ).map((c) => ({
-        id: c.getAttribute("data-dot-id") ?? "",
-        r: c.getBoundingClientRect(),
-      }));
-      const collide = new Set<string>();
-      for (const lab of items) {
-        for (const d of dots) {
-          if (d.id === lab.id) continue;
-          const a = lab.r;
-          const b = d.r;
-          if (
-            a.left < b.right &&
-            a.right > b.left &&
-            a.top < b.bottom &&
-            a.bottom > b.top
-          ) {
-            collide.add(lab.id);
-            break;
-          }
-        }
-      }
-      setCollidingWithDot((prev) => {
-        if (
-          prev.size === collide.size &&
-          [...collide].every((id) => prev.has(id))
-        )
-          return prev;
-        return collide;
-      });
-    };
-
-    measure();
-    const raf = requestAnimationFrame(measure);
-    // recharts renders/labels its surface asynchronously, so the first measures
-    // can run before any label nodes exist. Re-measure on a few delays, when the
-    // container resizes, and whenever nodes are added/removed in the subtree.
-    const timers = [50, 150, 350, 700].map((t) =>
-      window.setTimeout(measure, t),
-    );
-    const ro = new ResizeObserver(() => requestAnimationFrame(measure));
-    ro.observe(el);
-    const mo = new MutationObserver(() => requestAnimationFrame(measure));
-    mo.observe(el, { childList: true, subtree: true });
-    return () => {
-      cancelAnimationFrame(raf);
-      timers.forEach((t) => window.clearTimeout(t));
-      ro.disconnect();
-      mo.disconnect();
-    };
-  }, [metricId, scaleType]);
-
-  // Map each label id to its overlap cluster (clusters have >= 2 members).
-  const clusterById = useMemo(() => {
-    const m = new Map<string, string[]>();
-    for (const c of clusters) for (const id of c) m.set(id, c);
-    return m;
-  }, [clusters]);
-
-  // Within a cluster show exactly one label: the hovered one if the cluster
-  // contains it, otherwise prefer a member that doesn't collide with a dot
-  // (so the shown label is conflict-free), falling back to a stable pick.
-  const isLabelVisible = (id: string) => {
-    const cluster = clusterById.get(id);
-    if (!cluster) return true;
-    if (hoveredId != null && cluster.includes(hoveredId))
-      return id === hoveredId;
-    const clean = cluster.filter((m) => !collidingWithDot.has(m));
-    const pool = clean.length > 0 ? clean : cluster;
-    let winner = pool[0];
-    let best = hashStr(winner);
-    for (const member of pool) {
-      const h = hashStr(member);
-      if (h > best) {
-        best = h;
-        winner = member;
-      }
-    }
-    return id === winner;
-  };
-
-  // A row is dimmed when something is hovered and it's neither the hovered
-  // point nor a member of the hovered agent type.
   const isDimmed = (row: ResultRow) =>
     (hoveredId != null || hoveredType != null) &&
     hoveredId !== row.id &&
@@ -305,7 +167,7 @@ export function Horizon1Chart({
         best = p;
       }
     }
-    onHover?.(best && bestDist <= SNAP_RADIUS ? best.id : null);
+    setHoveredId(best && bestDist <= SNAP_RADIUS ? best.id : null);
   };
 
   const renderDot = (props: {
@@ -325,28 +187,36 @@ export function Horizon1Chart({
         r={6}
         fill={fill}
         fillOpacity={fillOpacity}
-        data-dot-id={payload?.id}
         style={{ transition: "fill-opacity 0.2s ease" }}
       />
     );
   };
 
+  const btn = (active: boolean) =>
+    cn(
+      "px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer",
+      active
+        ? "bg-primary text-anti-primary"
+        : "bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-700",
+    );
+
   return (
-    <div className="my-8">
-      <div className="flex items-end justify-between gap-4 mb-4">
+    <div className="my-8 -ml-10">
+      <div className="flex items-end justify-between gap-4 mb-4 ml-10">
         <div>
           <h4 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
-            Task Completion vs. {metric.label}
+            Score vs. {metric.label}
           </h4>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Horizon-1 (195 tasks), preview run
+            Horizon-1 (195 tasks), preview run — hover a point to reveal its
+            model
           </p>
           <div className="flex items-center gap-4 mt-2">
             {AGENT_TYPES.map((type) => (
               <div
                 key={type}
-                onMouseEnter={() => onHoverType?.(type)}
-                onMouseLeave={() => onHoverType?.(null)}
+                onMouseEnter={() => setHoveredType(type)}
+                onMouseLeave={() => setHoveredType(null)}
                 className={cn(
                   "flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 cursor-pointer transition-opacity",
                   hoveredType != null && hoveredType !== type && "opacity-40",
@@ -387,35 +257,44 @@ export function Horizon1Chart({
               },
             }}
           />
-          
-          <div className="flex items-center gap-1">
+
+          {axisControls && (
+            <div className="flex items-center gap-1">
             {METRIC_DEFS.map((m) => (
               <button
                 key={m.id}
                 type="button"
                 onClick={() => setMetricId(m.id)}
-                className={cn(
-                  "px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer",
-                  m.id === metricId
-                    ? "bg-primary text-anti-primary"
-                    : "bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-700",
-                )}
+                className={btn(m.id === metricId)}
               >
                 {m.label}
               </button>
             ))}
-          </div>
+          </div>)}
+
+          {difficultyControls && (
+            <div className="flex items-center gap-1">
+            {Y_BUCKETS.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => setBucket(b.id)}
+                className={btn(b.id === bucket)}
+              >
+                {b.label}
+              </button>
+            ))}
+          </div>)}
         </div>
       </div>
 
       <div
-        ref={chartRef}
         className="h-[380px]"
         onMouseMove={handleMove}
-        onMouseLeave={() => onHover?.(null)}
+        onMouseLeave={() => setHoveredId(null)}
       >
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart margin={{ top: 24, right: 8, left: 0, bottom: 8 }}>
+          <ComposedChart margin={{ top: 24, right: 8, left: 12, bottom: 28 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
             <XAxis
               type="number"
@@ -429,25 +308,37 @@ export function Horizon1Chart({
               axisLine={{ stroke: axisStroke, strokeWidth: 1.5 }}
               tickLine={{ stroke: axisStroke, strokeWidth: 1.5 }}
               tick={{ fontSize: 12, fill: axisStroke }}
+              label={{
+                value: metric.label,
+                position: "insideBottom",
+                offset: -12,
+                fill: axisStroke,
+                fontSize: 12,
+              }}
             />
             <YAxis
               type="number"
-              dataKey="completion"
-              name="Task completion"
+              dataKey="y"
+              name="Pass rate"
               domain={[0, 100]}
               ticks={[0, 25, 50, 75, 100]}
               unit="%"
-              width={38}
+              width={56}
               axisLine={{ stroke: axisStroke, strokeWidth: 1.5 }}
               tickLine={{ stroke: axisStroke, strokeWidth: 1.5 }}
               tick={{ fontSize: 12, fill: axisStroke }}
+              label={{
+                value: "Pass rate (%)",
+                angle: -90,
+                position: "insideLeft",
+                offset: 6,
+                fill: axisStroke,
+                fontSize: 12,
+                style: { textAnchor: "middle" },
+              }}
             />
-            <Scatter
-              data={chartData}
-              isAnimationActive={false}
-              shape={renderDot}
-            >
-              {chartData.map((row) => (
+            <Scatter data={data} isAnimationActive={false} shape={renderDot}>
+              {data.map((row) => (
                 <Cell
                   key={row.id}
                   fill={agentColor(row.agentType, isDark)}
@@ -458,38 +349,33 @@ export function Horizon1Chart({
                 dataKey="model"
                 position="top"
                 content={(props) => {
-                  const { x, y, value, index } = props as {
+                  const { x, y, index } = props as {
                     x?: number;
                     y?: number;
-                    value?: string | number;
                     index?: number;
                   };
                   if (typeof x !== "number" || typeof y !== "number")
                     return null;
                   const row =
-                    typeof index === "number" ? chartData[index] : undefined;
-                  const dimmed = row != null && isDimmed(row);
-                  const visible = row != null && isLabelVisible(row.id);
+                    typeof index === "number" ? data[index] : undefined;
+                  if (row == null || row.id !== hoveredId) return null;
                   return (
                     <text
                       x={x}
                       y={y}
-                      dy={-4}
                       textAnchor="middle"
-                      data-label-id={row?.id}
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        fill: dimmed
-                          ? isDark
-                            ? "#525252"
-                            : "#cbd5e1"
-                          : labelFill,
-                        opacity: visible ? 1 : 0,
-                        transition: "fill 0.2s ease, opacity 0.2s ease",
-                      }}
+                      style={{ fontSize: 11, fontWeight: 600, fill: labelFill }}
                     >
-                      {String(value ?? "")}
+                      <tspan x={x} dy={-18}>
+                        {`${row.agentType} - ${row.model}`}
+                      </tspan>
+                      <tspan
+                        x={x}
+                        dy={13}
+                        style={{ fontWeight: 400, fontSize: 10 }}
+                      >
+                        {`${fmtPct(row.y)} · ${metric.format(row[metric.id] as number)}`}
+                      </tspan>
                     </text>
                   );
                 }}
@@ -498,6 +384,14 @@ export function Horizon1Chart({
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+
+      {showTable && (
+        <Horizon1Table
+          hoveredId={hoveredId}
+          onHover={setHoveredId}
+          hoveredType={hoveredType}
+        />
+      )}
     </div>
   );
 }
@@ -706,23 +600,7 @@ export function Horizon1ModelChart() {
 }
 
 export function Horizon1Results() {
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [hoveredType, setHoveredType] = useState<string | null>(null);
-  return (
-    <>
-      <Horizon1Chart
-        hoveredId={hoveredId}
-        onHover={setHoveredId}
-        hoveredType={hoveredType}
-        onHoverType={setHoveredType}
-      />
-      <Horizon1Table
-        hoveredId={hoveredId}
-        onHover={setHoveredId}
-        hoveredType={hoveredType}
-      />
-    </>
-  );
+  return <Horizon1Chart showTable />;
 }
 
 export function Horizon1Table({

@@ -6,6 +6,9 @@
 // the shared formatting helpers here so a new run only ever edits one place.
 // ===========================================================================
 
+import { aggregateRuns } from "./combined";
+import { COMBINED } from "./combinedResults";
+
 // ---------------------------------------------------------------------------
 // Shared types
 // ---------------------------------------------------------------------------
@@ -21,6 +24,22 @@ export type ScaleType = "linear" | "log";
 
 export type MetricKey = "costUsd" | "timeSec" | "tokens" | "releaseDate";
 
+// Difficulty buckets for the per-difficulty cost-vs-completion chart.
+export type DifficultyBucket = "easy" | "medium" | "hard";
+
+export const DIFFICULTY_BUCKETS: { id: DifficultyBucket; label: string }[] = [
+  { id: "easy", label: "Easy" },
+  { id: "medium", label: "Medium" },
+  { id: "hard", label: "Hard" },
+];
+
+// Pass rate (%) for one config split by task difficulty.
+export interface DifficultyBreakdown {
+  easy: number;
+  medium: number;
+  hard: number;
+}
+
 export interface ResultRow {
   id: string;
   agentType: AgentType;
@@ -31,6 +50,9 @@ export interface ResultRow {
   timeSec?: number;
   // Model release date as a millisecond timestamp (derived from MODEL_RELEASE_DATES).
   releaseDate: number;
+  // Pass rate split by task difficulty (easy/medium/hard). Currently seeded with
+  // SAMPLE data — see sampleDifficulty — to be replaced with the real numbers.
+  difficulty: DifficultyBreakdown;
   // Optional override for the tokens cell (e.g. approximate/footnoted values).
   tokensLabel?: string;
   // When set, excluded from the Time chart and shown in the table instead of fmtTime.
@@ -170,37 +192,20 @@ export const MODEL_RELEASE_DATES: Record<string, string> = {
   "claude-sonnet-4.6": "2026-02-17",
 };
 
-// Preview run results. Each row is one (agent type × model) configuration.
-const RAW_RESULTS: Omit<ResultRow, "releaseDate">[] = [
-  { id: "cc-sonnet", agentType: "Claude Code", model: "claude-sonnet-4.5", completion: 31.6, costUsd: 0.454, tokens: 907_196, timeSec: 130.4 },
-  { id: "cc-opus", agentType: "Claude Code", model: "claude-opus-4.8", completion: 44.8, costUsd: 2.519, tokens: 1_011_333, timeSec: 123.4 },
-  { id: "rag-gpt5-mini", agentType: "RAG", model: "gpt-5-mini", completion: 19.5, costUsd: 0.023, tokens: 83_114, timeSec: 151.5 },
-  { id: "rag-haiku", agentType: "RAG", model: "claude-haiku-4.5", completion: 31.8, costUsd: 0.189, tokens: 181_134, timeSec: 135.2 },
-  { id: "rag-gemini", agentType: "RAG", model: "gemini-3.5-flash", completion: 12.8, costUsd: 0.273, tokens: 268_724, timeSec: 146.6 },
-  { id: "rlm-gemini", agentType: "RLM", model: "gemini-3.5-flash", completion: 9.8, costUsd: 0.25, tokens: 247_101, timeSec: 278 },
-  { id: "rag-sonnet", agentType: "RAG", model: "claude-sonnet-4.5", completion: 33.3, costUsd: 0.529, tokens: 169_467, timeSec: 155.3 },
-  { id: "rlm-sonnet45", agentType: "RLM", model: "claude-sonnet-4.5", completion: 39.2, costUsd: 1.19, tokens: 490_595, timeSec: 228 },
-  { id: "rag-gpt55", agentType: "RAG", model: "gpt-5.5", completion: 39.5, costUsd: 0.672, tokens: 214_835, timeSec: 202.2 },
-  { id: "rag-opus", agentType: "RAG", model: "claude-opus-4.8", completion: 36.9, costUsd: 1.016, tokens: 191_429, timeSec: 184.2 },
-  { id: "codex-gpt5", agentType: "Codex", model: "gpt-5-codex", completion: 46.2, costUsd: 0.342, tokens: 1_000_000, timeSec: 350 },
-  { id: "codex-gpt53", agentType: "Codex", model: "gpt-5.3-codex", completion: 48.5, costUsd: 0.424, tokens: 824_000, timeSec: 357 },
-  { id: "hermes-gpt55", agentType: "Hermes", model: "gpt-5.5", completion: 36.4, costUsd: 3.96, tokens: 100_000, timeSec: 145, tokensLabel: "~100k" },
-  { id: "hermes-opus", agentType: "Hermes", model: "claude-opus-4.8", completion: 35.9, costUsd: 4.25, tokens: 207_000, timeSec: 147, tokensLabel: "~207k" },
-  { id: "hermes-sonnet", agentType: "Hermes", model: "claude-sonnet-4.5", completion: 29.2, costUsd: 3.780, tokens: 198_000, timeSec: 130, tokensLabel: "~198k" },
-  { id: "hermes-haiku", agentType: "Hermes", model: "claude-haiku-4.5", completion: 21.5, costUsd: 3.33, tokens: 171_000, timeSec: 100, tokensLabel: "~171k" },
-  { id: "hermes-gemini", agentType: "Hermes", model: "gemini-3.5-flash", completion: 40.5, costUsd: 5.071, tokens: 1_191_000, timeSec: 228, tokensLabel: "~1.2M" },
-  { id: "hermes-gpt5-mini", agentType: "Hermes", model: "gpt-5-mini", completion: 6.2, costUsd: 3.202, tokens: 208_000, timeSec: 178, tokensLabel: "~208k" },
-  { id: "rlm-gpt5-mini", agentType: "RLM", model: "gpt-5-mini", completion: 24.6, costUsd: 0.076, tokens: 340_000, timeSec: 203, tokensLabel: "340k" },
-  { id: "rlm-opus", agentType: "RLM", model: "claude-opus-4.8", completion: 55.9, costUsd: 0.785, tokens: 376_000, timeSec: 212, tokensLabel: "376k" },
-  { id: "rlm-sonnet", agentType: "RLM", model: "claude-sonnet-4.6", completion: 49.7, costUsd: 0.954, tokens: 1_101_000, timeSec: 353 },
-  { id: "rlm-haiku", agentType: "RLM", model: "claude-haiku-4.5", completion: 38.1, costUsd: 0.157, tokens: 516_000, timeSec: 191, tokensLabel: "516k" },
-  { id: "rlm-gpt5", agentType: "RLM", model: "gpt-5", completion: 50.8, costUsd: 0.400, tokens: 473_000, timeSec: 374, tokensLabel: "473k" },
-  { id: "rlm-gpt55", agentType: "RLM", model: "gpt-5.5", completion: 51.8, costUsd: 0.673, tokens: 298_086, timeSec: 169.4 },
-];
-
-export const RESULTS: ResultRow[] = RAW_RESULTS.map((r) => ({
-  ...r,
+// Preview run results, derived at runtime from the trimmed per-case data in
+// combinedResults.ts (one row per included run). completion, cost, tokens,
+// time, and the easy/medium/hard splits are all computed from the source — see
+// ./combined — so a new benchmark run only ever regenerates combinedResults.ts.
+export const RESULTS: ResultRow[] = aggregateRuns(COMBINED).map((r) => ({
+  id: r.runKey,
+  agentType: r.agentType,
+  model: r.model,
+  completion: r.completion,
+  costUsd: r.costUsd,
+  tokens: r.tokens,
+  timeSec: r.timeSec,
   releaseDate: Date.parse(MODEL_RELEASE_DATES[r.model] ?? "2025-08-07"),
+  difficulty: r.difficulty,
 }));
 
 export const AGENT_TYPES: AgentType[] = Array.from(
