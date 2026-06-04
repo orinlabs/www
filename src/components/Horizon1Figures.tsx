@@ -1,0 +1,1566 @@
+import { type Key, useState } from "react";
+
+import { cn } from "slate-ui";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ComposedChart,
+  LabelList,
+  Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Scatter,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import { agentColor, useIsDark } from "./horizon1Theme";
+
+// ---------------------------------------------------------------------------
+// Shared primitives: a figure frame with caption, plus recharts axis/grid
+// styling so every figure matches the scatter charts (Horizon1Chart) exactly.
+// ---------------------------------------------------------------------------
+
+// Shared chart constants matching the recharts charts.
+const GRID_DASH = "3 3";
+const AXIS_WIDTH = 1.5;
+const TICK_FONT = 12;
+
+// TODO(remove): only referenced by the legacy hand-drawn charts below.
+function usePalette() {
+  const isDark = useIsDark();
+  return {
+    isDark,
+    ink: isDark ? "#e5e5e5" : "#171717",
+    muted: isDark ? "#a3a3a3" : "#737373",
+    faint: isDark ? "#404040" : "#e5e5e5",
+    ref: isDark ? "#525252" : "#cbd5e1",
+    neg: isDark ? "#f87171" : "#dc2626",
+    pos: isDark ? "#34d399" : "#059669",
+    surface: isDark ? "#0a0a0a" : "#ffffff",
+    grid: isDark ? "#404040" : "#e5e5e5",
+    axis: isDark ? "#737373" : "#a3a3a3",
+  };
+}
+
+// Axis/grid styling shared by every recharts figure (identical to Horizon1Chart).
+function useChartStyle() {
+  const isDark = useIsDark();
+  const gridStroke = isDark ? "#404040" : "#e5e5e5";
+  const axisStroke = isDark ? "#737373" : "#a3a3a3";
+  return {
+    isDark,
+    gridStroke,
+    axisStroke,
+    ink: isDark ? "#e5e5e5" : "#171717",
+    muted: isDark ? "#a3a3a3" : "#737373",
+    neg: isDark ? "#f87171" : "#dc2626",
+    pos: isDark ? "#34d399" : "#059669",
+    axisProps: {
+      axisLine: { stroke: axisStroke, strokeWidth: AXIS_WIDTH },
+      tickLine: { stroke: axisStroke, strokeWidth: AXIS_WIDTH },
+      tick: { fontSize: TICK_FONT, fill: axisStroke },
+    } as const,
+  };
+}
+
+// Solid r=6 dot, identical to the scatter charts' dots.
+function dotShape(fill: string, opacity = 1, r = 6) {
+  return function Dot(props: {
+    cx?: number;
+    cy?: number;
+    key?: Key | null;
+  }) {
+    const { cx, cy, key } = props;
+    if (typeof cx !== "number" || typeof cy !== "number")
+      return <g key={key} />;
+    return (
+      <circle
+        key={key}
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill={fill}
+        fillOpacity={opacity}
+      />
+    );
+  };
+}
+
+interface LabelRenderProps {
+  x?: number | string;
+  y?: number | string;
+  width?: number | string;
+  height?: number | string;
+  value?: number | string;
+  index?: number;
+}
+
+function Figure({
+  title,
+  caption,
+  children,
+}: {
+  title: string;
+  caption?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <figure className="my-8">
+      <figcaption className="mb-1 text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+        {title}
+      </figcaption>
+      {children}
+      {caption && (
+        <figcaption className="mt-2 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+          {caption}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
+// Inherit the page font so SVG text matches the recharts charts exactly.
+const FONT = "Body, system-ui, sans-serif";
+
+// ---------------------------------------------------------------------------
+// Dumbbell / range chart. Each row is a category with two points on a shared
+// axis; the connecting segment's LENGTH is the effect (lie factor ~1). Used for
+// the harness spread and for clean-vs-adversarial robustness.
+// ---------------------------------------------------------------------------
+
+export interface DumbbellPoint {
+  value: number;
+  color: string;
+  filled: boolean;
+  // 0–1; applied to both fill and stroke so a point can be a faded version of
+  // its color (e.g. adversarial dots at 50%).
+  opacity?: number;
+  tag?: string;
+}
+
+export interface DumbbellRow {
+  label: string;
+  a: DumbbellPoint;
+  b: DumbbellPoint;
+  delta: string;
+}
+
+export function DumbbellChart({
+  rows,
+  domain,
+  ticks,
+  legend,
+}: {
+  rows: DumbbellRow[];
+  domain: [number, number];
+  ticks: number[];
+  legend?: {
+    label: string;
+    color: string;
+    filled: boolean;
+    opacity?: number;
+  }[];
+}) {
+  const p = usePalette();
+  const W = 720;
+  const Lx = 116; // left gutter for row labels
+  const x0 = Lx;
+  const x1 = W - 64;
+  const rh = 46;
+  const top = legend ? 30 : 12;
+  const bottom = 30;
+  const H = top + rows.length * rh + bottom;
+  const [dmin, dmax] = domain;
+  const sx = (v: number) => x0 + ((v - dmin) / (dmax - dmin)) * (x1 - x0);
+
+  return (
+    <div className="w-full overflow-hidden">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        role="img"
+        style={{ fontFamily: FONT }}
+      >
+        {/* direct-labeled legend */}
+        {legend && (
+          <g transform={`translate(${x0}, 16)`}>
+            {legend.map((l, i) => (
+              <g key={l.label} transform={`translate(${i * 180}, 0)`}>
+                <circle
+                  cx={6}
+                  cy={-4}
+                  r={5}
+                  fill={l.filled ? l.color : p.surface}
+                  fillOpacity={l.opacity ?? 1}
+                  stroke={l.color}
+                  strokeOpacity={l.opacity ?? 1}
+                  strokeWidth={1.5}
+                />
+                <text x={18} y={0} fontSize={12} fill={p.muted}>
+                  {l.label}
+                </text>
+              </g>
+            ))}
+          </g>
+        )}
+
+        {/* gridlines + axis baseline with sparse ticks */}
+        {ticks.map((t) => (
+          <line
+            key={`g${t}`}
+            x1={sx(t)}
+            x2={sx(t)}
+            y1={top}
+            y2={H - bottom + 6}
+            stroke={p.grid}
+            strokeWidth={1}
+            strokeDasharray={GRID_DASH}
+          />
+        ))}
+        <line
+          x1={x0}
+          x2={x1}
+          y1={H - bottom + 6}
+          y2={H - bottom + 6}
+          stroke={p.axis}
+          strokeWidth={AXIS_WIDTH}
+        />
+        {ticks.map((t) => (
+          <g key={t}>
+            <line
+              x1={sx(t)}
+              x2={sx(t)}
+              y1={H - bottom + 6}
+              y2={H - bottom + 11}
+              stroke={p.axis}
+              strokeWidth={AXIS_WIDTH}
+            />
+            <text
+              x={sx(t)}
+              y={H - bottom + 24}
+              fontSize={TICK_FONT}
+              fill={p.axis}
+              textAnchor="middle"
+            >
+              {t}%
+            </text>
+          </g>
+        ))}
+
+        {rows.map((row, i) => {
+          const cy = top + i * rh + rh / 2;
+          const lo = row.a.value <= row.b.value ? row.a : row.b;
+          const hi = row.a.value <= row.b.value ? row.b : row.a;
+          const xLo = sx(lo.value);
+          const xHi = sx(hi.value);
+          return (
+            <g key={row.label}>
+              {/* row label */}
+              <text
+                x={8}
+                y={cy + 4}
+                fontSize={12.5}
+                fontWeight={600}
+                fill={p.ink}
+              >
+                {row.label}
+              </text>
+              {/* connecting range */}
+              <line
+                x1={xLo}
+                x2={xHi}
+                y1={cy}
+                y2={cy}
+                stroke={p.faint}
+                strokeWidth={3}
+              />
+              {/* delta annotation above the segment midpoint */}
+              <text
+                x={(xLo + xHi) / 2}
+                y={cy - 12}
+                fontSize={11}
+                fontWeight={600}
+                fill={p.muted}
+                textAnchor="middle"
+              >
+                {row.delta}
+              </text>
+              {/* low point + outer label */}
+              <circle
+                cx={xLo}
+                cy={cy}
+                r={6}
+                fill={lo.filled ? lo.color : p.surface}
+                fillOpacity={lo.opacity ?? 1}
+                stroke={lo.color}
+                strokeOpacity={lo.opacity ?? 1}
+                strokeWidth={1.5}
+              />
+              <text
+                x={xLo - 11}
+                y={cy + 4}
+                fontSize={11.5}
+                fill={p.ink}
+                textAnchor="end"
+              >
+                {lo.tag ? `${lo.tag} ` : ""}
+                {lo.value.toFixed(lo.value % 1 === 0 ? 0 : 1)}%
+              </text>
+              {/* high point + outer label */}
+              <circle
+                cx={xHi}
+                cy={cy}
+                r={6}
+                fill={hi.filled ? hi.color : p.surface}
+                fillOpacity={hi.opacity ?? 1}
+                stroke={hi.color}
+                strokeOpacity={hi.opacity ?? 1}
+                strokeWidth={1.5}
+              />
+              <text
+                x={xHi + 11}
+                y={cy + 4}
+                fontSize={11.5}
+                fill={p.ink}
+                textAnchor="start"
+              >
+                {hi.tag ? `${hi.tag} ` : ""}
+                {hi.value.toFixed(hi.value % 1 === 0 ? 0 : 1)}%
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Small multiples: one slope panel per difficulty axis, on a shared y-scale,
+// with the overall mean drawn as a faint reference line. Lets the eye compare
+// slopes (how steeply each axis degrades accuracy) within one glance.
+// ---------------------------------------------------------------------------
+
+export interface SlopePanel {
+  title: string;
+  left: { label: string; value: number };
+  right: { label: string; value: number };
+  delta: string;
+}
+
+export function SlopeSmallMultiples({
+  panels,
+  yDomain,
+  mean,
+}: {
+  panels: SlopePanel[];
+  yDomain: [number, number];
+  mean: number;
+}) {
+  const p = usePalette();
+  const [ymin, ymax] = yDomain;
+  const W = 230;
+  const H = 168;
+  const padTop = 26;
+  const padBottom = 30;
+  const xL = 18;
+  const xR = W - 18;
+  const sy = (v: number) =>
+    padTop + (1 - (v - ymin) / (ymax - ymin)) * (H - padTop - padBottom);
+
+  return (
+    <div className="my-8">
+      <div className="flex flex-wrap justify-between gap-y-4">
+        {panels.map((panel) => {
+          const xa = xL;
+          const xb = xR;
+          const ya = sy(panel.left.value);
+          const yb = sy(panel.right.value);
+          return (
+            <div key={panel.title} className="flex-1 min-w-[200px]">
+              <div className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 text-center mb-1">
+                {panel.title}
+                <span className="ml-1 font-normal text-neutral-500 dark:text-neutral-400">
+                  {panel.delta}
+                </span>
+              </div>
+              <svg
+                viewBox={`0 0 ${W} ${H}`}
+                width="100%"
+                style={{ fontFamily: FONT }}
+              >
+                {/* mean reference gridline */}
+                <line
+                  x1={xL - 6}
+                  x2={xR + 6}
+                  y1={sy(mean)}
+                  y2={sy(mean)}
+                  stroke={p.grid}
+                  strokeWidth={1}
+                  strokeDasharray={GRID_DASH}
+                />
+                {/* x-axis baseline */}
+                <line
+                  x1={xL - 6}
+                  x2={xR + 6}
+                  y1={H - padBottom}
+                  y2={H - padBottom}
+                  stroke={p.axis}
+                  strokeWidth={AXIS_WIDTH}
+                />
+                {/* slope */}
+                <line
+                  x1={xa}
+                  x2={xb}
+                  y1={ya}
+                  y2={yb}
+                  stroke={p.ink}
+                  strokeWidth={2}
+                />
+                {/* endpoints + value labels */}
+                <circle cx={xa} cy={ya} r={5} fill={p.ink} />
+                <circle cx={xb} cy={yb} r={5} fill={p.ink} />
+                <text
+                  x={xa}
+                  y={ya - 10}
+                  fontSize={12}
+                  fontWeight={600}
+                  fill={p.ink}
+                  textAnchor="middle"
+                >
+                  {panel.left.value.toFixed(1)}
+                </text>
+                <text
+                  x={xb}
+                  y={yb - 10}
+                  fontSize={12}
+                  fontWeight={600}
+                  fill={p.ink}
+                  textAnchor="middle"
+                >
+                  {panel.right.value.toFixed(1)}
+                </text>
+                {/* x category labels */}
+                <text
+                  x={xa}
+                  y={H - 8}
+                  fontSize={TICK_FONT}
+                  fill={p.axis}
+                  textAnchor="middle"
+                >
+                  {panel.left.label}
+                </text>
+                <text
+                  x={xb}
+                  y={H - 8}
+                  fontSize={TICK_FONT}
+                  fill={p.axis}
+                  textAnchor="middle"
+                >
+                  {panel.right.label}
+                </text>
+              </svg>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Diverging bars around a zero baseline. Bar length = effect on pass rate of a
+// content flag (signed). Sorted, direct-labeled, red/green by sign.
+// ---------------------------------------------------------------------------
+
+export interface DivergingItem {
+  label: string;
+  value: number;
+}
+
+export function DivergingBars({
+  items,
+  domain,
+}: {
+  items: DivergingItem[];
+  domain: [number, number];
+}) {
+  const p = usePalette();
+  const W = 720;
+  const Lx = 168;
+  const x0 = Lx;
+  const x1 = W - 24;
+  const rh = 30;
+  const top = 8;
+  const H = top + items.length * rh + 24;
+  const [dmin, dmax] = domain;
+  const sx = (v: number) => x0 + ((v - dmin) / (dmax - dmin)) * (x1 - x0);
+  const zero = sx(0);
+  const axisBottom = H - 18;
+
+  // Dashed gridlines at round steps (zero is drawn separately as the axis).
+  const step = 10;
+  const gridTicks: number[] = [];
+  for (
+    let v = Math.ceil(dmin / step) * step;
+    v <= Math.floor(dmax / step) * step;
+    v += step
+  ) {
+    if (v !== 0) gridTicks.push(v);
+  }
+
+  return (
+    <div className="w-full overflow-hidden">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        role="img"
+        style={{ fontFamily: FONT }}
+      >
+        {/* gridlines */}
+        {gridTicks.map((t) => (
+          <line
+            key={`g${t}`}
+            x1={sx(t)}
+            x2={sx(t)}
+            y1={top - 2}
+            y2={axisBottom}
+            stroke={p.grid}
+            strokeWidth={1}
+            strokeDasharray={GRID_DASH}
+          />
+        ))}
+        {/* zero baseline (axis) */}
+        <line
+          x1={zero}
+          x2={zero}
+          y1={top - 2}
+          y2={axisBottom}
+          stroke={p.axis}
+          strokeWidth={AXIS_WIDTH}
+        />
+        {items.map((it, i) => {
+          const cy = top + i * rh + rh / 2;
+          const pos = it.value >= 0;
+          const xEnd = sx(it.value);
+          const barX = Math.min(zero, xEnd);
+          const barW = Math.abs(xEnd - zero);
+          const color = pos ? p.pos : p.neg;
+          return (
+            <g key={it.label}>
+              <text
+                x={Lx - 12}
+                y={cy + 4}
+                fontSize={12}
+                fill={p.ink}
+                textAnchor="end"
+              >
+                {it.label}
+              </text>
+              <rect
+                x={barX}
+                y={cy - 9}
+                width={barW}
+                height={18}
+                rx={2}
+                fill={color}
+                fillOpacity={0.85}
+              />
+              <text
+                x={pos ? xEnd + 6 : xEnd - 6}
+                y={cy + 4}
+                fontSize={11.5}
+                fontWeight={600}
+                fill={color}
+                textAnchor={pos ? "start" : "end"}
+              >
+                {pos ? "+" : "−"}
+                {Math.abs(it.value).toFixed(1)}
+              </text>
+            </g>
+          );
+        })}
+        <text
+          x={x0}
+          y={H - 4}
+          fontSize={TICK_FONT}
+          fill={p.axis}
+          textAnchor="start"
+        >
+          ←  harder
+        </text>
+        <text
+          x={x1}
+          y={H - 4}
+          fontSize={TICK_FONT}
+          fill={p.axis}
+          textAnchor="end"
+        >
+          easier  →
+        </text>
+      </svg>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Two-line slope chart showing how the adversarial gap collapses as semantic
+// distance grows. Lines are direct-labeled at their right end; the vertical gap
+// at each x is annotated, so the "convergence" reads at a glance.
+// ---------------------------------------------------------------------------
+
+export interface ConvergenceSeries {
+  name: string;
+  color: string;
+  dashed?: boolean;
+  points: number[];
+}
+
+export function ConvergenceLines({
+  xLabels,
+  series,
+  yDomain,
+}: {
+  xLabels: string[];
+  series: [ConvergenceSeries, ConvergenceSeries];
+  yDomain: [number, number];
+}) {
+  const p = usePalette();
+  const W = 620;
+  const H = 280;
+  const padTop = 24;
+  const padBottom = 34;
+  const xL = 56;
+  const xR = W - 150;
+  const [ymin, ymax] = yDomain;
+  const n = xLabels.length;
+  const sx = (i: number) => xL + (i / (n - 1)) * (xR - xL);
+  const sy = (v: number) =>
+    padTop + (1 - (v - ymin) / (ymax - ymin)) * (H - padTop - padBottom);
+
+  // Right-edge series labels: anchor to each line's endpoint, but force a
+  // minimum vertical separation so near-equal endpoints don't overlap.
+  const last = n - 1;
+  let yEndA = sy(series[0].points[last]);
+  let yEndB = sy(series[1].points[last]);
+  if (Math.abs(yEndA - yEndB) < 16) {
+    const mid = (yEndA + yEndB) / 2;
+    const aAbove = yEndA <= yEndB;
+    yEndA = mid + (aAbove ? -9 : 9);
+    yEndB = mid + (aAbove ? 9 : -9);
+  }
+  const endY = [yEndA, yEndB];
+
+  return (
+    <div className="w-full overflow-hidden">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        role="img"
+        style={{ fontFamily: FONT }}
+      >
+        {/* y gridlines + ticks (sparse) */}
+        {[ymin, (ymin + ymax) / 2, ymax].map((t) => (
+          <g key={t}>
+            <line
+              x1={xL}
+              x2={xR}
+              y1={sy(t)}
+              y2={sy(t)}
+              stroke={p.grid}
+              strokeWidth={1}
+              strokeDasharray={GRID_DASH}
+            />
+            <text
+              x={xL - 10}
+              y={sy(t) + 4}
+              fontSize={TICK_FONT}
+              fill={p.axis}
+              textAnchor="end"
+            >
+              {Math.round(t)}%
+            </text>
+          </g>
+        ))}
+        {/* axis spines */}
+        <line
+          x1={xL}
+          x2={xL}
+          y1={sy(ymax)}
+          y2={sy(ymin)}
+          stroke={p.axis}
+          strokeWidth={AXIS_WIDTH}
+        />
+        <line
+          x1={xL}
+          x2={xR}
+          y1={sy(ymin)}
+          y2={sy(ymin)}
+          stroke={p.axis}
+          strokeWidth={AXIS_WIDTH}
+        />
+
+        {/* vertical connector at each x: its shrinking length IS the gap */}
+        {xLabels.map((_, i) => {
+          const y0 = sy(series[0].points[i]);
+          const y1 = sy(series[1].points[i]);
+          return (
+            <line
+              key={i}
+              x1={sx(i)}
+              x2={sx(i)}
+              y1={Math.min(y0, y1)}
+              y2={Math.max(y0, y1)}
+              stroke={p.ref}
+              strokeWidth={1.5}
+            />
+          );
+        })}
+
+        {/* per-x value labels: higher value sits above, lower below, so the two
+            never collide even where the lines nearly meet */}
+        {xLabels.map((_, i) => {
+          const vA = series[0].points[i];
+          const vB = series[1].points[i];
+          const aHigher = vA >= vB;
+          return (
+            <g key={i}>
+              <text
+                x={sx(i)}
+                y={sy(vA) + (aHigher ? -10 : 18)}
+                fontSize={11.5}
+                fontWeight={600}
+                fill={series[0].color}
+                textAnchor="middle"
+              >
+                {vA.toFixed(1)}
+              </text>
+              <text
+                x={sx(i)}
+                y={sy(vB) + (aHigher ? 18 : -10)}
+                fontSize={11.5}
+                fontWeight={600}
+                fill={series[1].color}
+                textAnchor="middle"
+              >
+                {vB.toFixed(1)}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* series lines + points */}
+        {series.map((s, si) => (
+          <g key={s.name}>
+            <polyline
+              points={s.points.map((v, i) => `${sx(i)},${sy(v)}`).join(" ")}
+              fill="none"
+              stroke={s.color}
+              strokeWidth={2.5}
+              strokeDasharray={s.dashed ? "5 4" : undefined}
+            />
+            {s.points.map((v, i) => (
+              <circle key={i} cx={sx(i)} cy={sy(v)} r={4} fill={s.color} />
+            ))}
+            <text
+              x={xR + 12}
+              y={endY[si] + 4}
+              fontSize={12}
+              fontWeight={600}
+              fill={s.color}
+              textAnchor="start"
+            >
+              {s.name}
+            </text>
+          </g>
+        ))}
+
+        {/* x labels */}
+        {xLabels.map((lab, i) => (
+          <text
+            key={lab}
+            x={sx(i)}
+            y={H - 12}
+            fontSize={TICK_FONT}
+            fill={p.axis}
+            textAnchor="middle"
+          >
+            {lab}
+          </text>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+// Convenience: resolve an agent color for the current theme.
+function useAgentColor() {
+  const isDark = useIsDark();
+  return (agent: string) => agentColor(agent, isDark);
+}
+
+// ===========================================================================
+// Data-baked Horizon-1 figures. Each owns its data + caption so the article
+// body just drops them in.
+// ===========================================================================
+
+export function ArchitectureSpreadFigure() {
+  const { gridStroke, axisProps, ink, muted, pos } = useChartStyle();
+  const rows = [
+    { model: "claude-opus-4.8", worstH: "Hermes", low: 35.9, bestH: "RLM", high: 55.9 },
+    { model: "claude-haiku-4.5", worstH: "Hermes", low: 21.5, bestH: "RLM", high: 38.1 },
+    { model: "gpt-5-mini", worstH: "RAG", low: 19.5, bestH: "RLM", high: 24.6 },
+    { model: "claude-sonnet-4.5", worstH: "Hermes", low: 29.2, bestH: "RAG", high: 33.3 },
+    { model: "gpt-5.5", worstH: "Hermes", low: 36.4, bestH: "RLM", high: 51.8 },
+  ];
+  const data = rows.map((r) => ({
+    ...r,
+    span: Number((r.high - r.low).toFixed(1)),
+  }));
+
+  // Same hover behavior as the main chart: dim everything except the hovered
+  // row, and reveal that row's labels only on hover.
+  const [hovered, setHovered] = useState<number | null>(null);
+  const hoveredModel = hovered != null ? data[hovered]?.model : null;
+  const dimOf = (model?: string) =>
+    hoveredModel != null && model !== hoveredModel ? 0.15 : 1;
+
+  // Bare dot, dimmed unless its row is hovered.
+  const dot = (fill: string) =>
+    function Dot(props: unknown) {
+      const { cx, cy, key, payload } = props as {
+        cx?: number;
+        cy?: number;
+        key?: Key | null;
+        payload?: { model?: string };
+      };
+      if (typeof cx !== "number" || typeof cy !== "number")
+        return <g key={key} />;
+      return (
+        <circle
+          key={key}
+          cx={cx}
+          cy={cy}
+          r={6}
+          fill={fill}
+          fillOpacity={dimOf(payload?.model)}
+        />
+      );
+    };
+
+  // Harness label + value, shown only for the hovered row.
+  const endLabel = (side: "low" | "high") => (props: LabelRenderProps) => {
+    const { x, y, index } = props;
+    if (
+      typeof x !== "number" ||
+      typeof y !== "number" ||
+      index == null ||
+      index !== hovered
+    )
+      return null;
+    const d = data[index];
+    const isLow = side === "low";
+    return (
+      <text
+        x={(isLow ? x - 7 : x + 11) + 4}
+        y={y + 8}
+        textAnchor={isLow ? "end" : "start"}
+        fontSize={12}
+        fill={ink}
+      >
+        {isLow ? `${d.worstH} ${d.low}%` : `${d.bestH} ${d.high}%`}
+      </text>
+    );
+  };
+
+  // Connector drawn as an arrow pointing worst → best (span Bar spans low→high).
+  const arrowBar = (props: unknown) => {
+    const { x, y, width, height, payload } = props as LabelRenderProps & {
+      payload?: { model?: string };
+    };
+    if (
+      typeof x !== "number" ||
+      typeof y !== "number" ||
+      typeof width !== "number" ||
+      typeof height !== "number"
+    )
+      return <g />;
+    const cy = y + height / 2;
+    const tip = x + width - 6; // stop at the edge of the best-harness dot
+    const head = 8;
+    return (
+      <g opacity={dimOf(payload?.model)}>
+        <line
+          x1={x}
+          y1={cy}
+          x2={tip - head}
+          y2={cy}
+          stroke={muted}
+          strokeWidth={2}
+        />
+        <path
+          d={`M ${tip} ${cy} L ${tip - head} ${cy - head * 0.6} L ${tip - head} ${cy + head * 0.6} Z`}
+          fill={muted}
+        />
+      </g>
+    );
+  };
+  return (
+    <Figure
+      title="Same model, best vs. worst harness"
+      caption={
+        <>
+          Each row takes the identical model and connects its worst harness
+          (gray) to its best (green), so the arrow length is purely the harness
+          effect. The best harness is RLM on the Claude models, gpt-5-mini, and
+          gpt-5.5;
+          on sonnet-4.5 (no RLM run) the best is RAG. The gain is largest
+          on the strongest model (claude-opus-4.8, +20pp).
+        </>
+      }
+    >
+      <div className="flex items-center gap-4 mb-3 text-xs font-medium text-neutral-600 dark:text-neutral-300">
+        <span className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-2.5 h-2.5 rounded-full"
+            style={{ background: muted }}
+          />
+          Worst
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-2.5 h-2.5 rounded-full"
+            style={{ background: pos }}
+          />
+          Best
+        </span>
+      </div>
+      <div className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart
+            layout="vertical"
+            data={data}
+            margin={{ top: 8, right: 64, left: 8, bottom: 8 }}
+            onMouseMove={(s: {
+              activeTooltipIndex?: number | string | null;
+            }) => {
+              const n = s?.activeTooltipIndex;
+              const idx = n == null ? null : Number(n);
+              setHovered(idx != null && Number.isFinite(idx) ? idx : null);
+            }}
+            onMouseLeave={() => setHovered(null)}
+          >
+            <CartesianGrid
+              strokeDasharray={GRID_DASH}
+              stroke={gridStroke}
+              horizontal={false}
+            />
+            <XAxis
+              type="number"
+              domain={[0, 60]}
+              ticks={[0, 20, 40, 60]}
+              tickFormatter={(v: unknown) => `${v}%`}
+              {...axisProps}
+            />
+            <YAxis type="category" dataKey="model" width={108} {...axisProps} />
+            <Tooltip cursor={false} content={() => null} />
+            <Bar
+              dataKey="low"
+              stackId="a"
+              fill="transparent"
+              isAnimationActive={false}
+            />
+            <Bar
+              dataKey="span"
+              stackId="a"
+              fill="none"
+              barSize={16}
+              shape={arrowBar}
+              isAnimationActive={false}
+            />
+            <Scatter dataKey="low" shape={dot(muted)} isAnimationActive={false}>
+              <LabelList dataKey="low" content={endLabel("low")} />
+            </Scatter>
+            <Scatter dataKey="high" shape={dot(pos)} isAnimationActive={false}>
+              <LabelList dataKey="high" content={endLabel("high")} />
+            </Scatter>
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </Figure>
+  );
+}
+
+// Per-harness pass rate at each level of each difficulty axis. "ALL" is the
+// across-the-board mean (drawn as the dashed reference line per panel).
+const DIFFICULTY_FAMILIES = [
+  { id: "RLM", label: "RLM", colorKey: "RLM" },
+  { id: "ClaudeCode", label: "Claude Code", colorKey: "Claude Code" },
+  { id: "RAG", label: "RAG", colorKey: "RAG" },
+  { id: "Hermes", label: "Hermes", colorKey: "Hermes" },
+] as const;
+
+const DIFFICULTY_AXES = [
+  {
+    key: "n_hops",
+    title: "Reasoning hops",
+    drop: "−18.4pp",
+    data: [
+      { level: "1-hop", RLM: 65.8, ClaudeCode: 53.8, RAG: 50.6, Hermes: 46.8, ALL: 54.3 },
+      { level: "2-hop", RLM: 47.8, ClaudeCode: 38.5, RAG: 29.3, Hermes: 29.3, ALL: 36.2 },
+      { level: "3-hop", RLM: 56.5, ClaudeCode: 39.1, RAG: 21.7, Hermes: 26.1, ALL: 35.9 },
+    ],
+  },
+  {
+    key: "sd",
+    title: "Semantic distance",
+    drop: "−9.5pp",
+    data: [
+      { level: "near", RLM: 59.7, ClaudeCode: 51.4, RAG: 47.2, Hermes: 50.0, ALL: 52.1 },
+      { level: "mid", RLM: 50.6, ClaudeCode: 36.8, RAG: 31.2, Hermes: 23.4, ALL: 35.5 },
+      { level: "far", RLM: 58.7, ClaudeCode: 46.7, RAG: 30.4, Hermes: 34.8, ALL: 42.6 },
+    ],
+  },
+  {
+    key: "md",
+    title: "Memory depth",
+    drop: "−6.6pp",
+    data: [
+      { level: "low", RLM: 59.7, ClaudeCode: 47.5, RAG: 38.7, Hermes: 41.9, ALL: 47.0 },
+      { level: "mid", RLM: 58.1, ClaudeCode: 41.9, RAG: 39.5, Hermes: 37.2, ALL: 44.2 },
+      { level: "high", RLM: 52.2, ClaudeCode: 43.8, RAG: 34.4, Hermes: 31.1, ALL: 40.4 },
+    ],
+  },
+  {
+    key: "adv",
+    title: "Adversarial",
+    drop: "−5.6pp",
+    data: [
+      { level: "non-adv", RLM: 57.9, ClaudeCode: 45.3, RAG: 37.9, Hermes: 38.6, ALL: 44.9 },
+      { level: "adversarial", RLM: 50.9, ClaudeCode: 42.6, RAG: 34.5, Hermes: 29.1, ALL: 39.3 },
+    ],
+  },
+];
+
+export function DifficultyAxesFigure() {
+  const { gridStroke, axisStroke, axisProps } = useChartStyle();
+  const color = useAgentColor();
+  const [hovered, setHovered] = useState<string | null>(null);
+  return (
+    <Figure
+      title="Difficulty Breakdown"
+      caption={
+        <>
+          Pass rate by harness across each axis's levels, holding the model fixed
+          at claude-opus-4.8 so the differences are the harness alone; the dashed
+          gray line is the all-agents mean. The fourth panel treats adversarial
+          vs. non-adversarial as its own axis.
+        </>
+      }
+    >
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 text-xs font-medium text-neutral-600 dark:text-neutral-300">
+        {DIFFICULTY_FAMILIES.map((f) => (
+          <div
+            key={f.id}
+            onMouseEnter={() => setHovered(f.id)}
+            onMouseLeave={() => setHovered(null)}
+            className={cn(
+              "flex items-center gap-1.5 cursor-pointer transition-opacity",
+              hovered != null && hovered !== f.id && "opacity-40",
+            )}
+          >
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full"
+              style={{ background: color(f.colorKey) }}
+            />
+            {f.label}
+          </div>
+        ))}
+        <div className="flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400">
+          <span
+            className="inline-block w-4 border-t-2 border-dashed"
+            style={{ borderColor: axisStroke }}
+          />
+          mean
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+        {DIFFICULTY_AXES.map((ax) => (
+          <div key={ax.key}>
+            <div className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 text-center mb-1">
+              {ax.title}{" "}
+              <span className="font-normal text-neutral-500 dark:text-neutral-400">
+                {ax.drop}
+              </span>
+            </div>
+            <div className="h-[220px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={ax.data}
+                  margin={{ top: 16, right: 12, left: 0, bottom: 4 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray={GRID_DASH}
+                    stroke={gridStroke}
+                    vertical={false}
+                  />
+                  <XAxis dataKey="level" {...axisProps} />
+                  <YAxis
+                    type="number"
+                    domain={[0, 70]}
+                    ticks={[0, 20, 40, 60]}
+                    tickFormatter={(v: unknown) => `${v}%`}
+                    width={34}
+                    {...axisProps}
+                  />
+                  <Line
+                    dataKey="ALL"
+                    stroke={axisStroke}
+                    strokeWidth={1.5}
+                    strokeDasharray="4 3"
+                    dot={false}
+                    isAnimationActive={false}
+                    activeDot={false}
+                  />
+                  {DIFFICULTY_FAMILIES.map((f) => {
+                    const c = color(f.colorKey);
+                    const dim = hovered != null && hovered !== f.id;
+                    return (
+                      <Line
+                        key={f.id}
+                        dataKey={f.id}
+                        stroke={c}
+                        strokeWidth={2}
+                        strokeOpacity={dim ? 0.12 : 1}
+                        isAnimationActive={false}
+                        activeDot={false}
+                        dot={dotShape(c, dim ? 0.12 : 1, 4)}
+                      />
+                    );
+                  })}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Figure>
+  );
+}
+
+export function ContentFlagsFigure() {
+  const { gridStroke, axisStroke, axisProps, pos, neg } = useChartStyle();
+  const flags = [
+    {
+      label: "Synthetic Patch",
+      value: -21.6,
+      desc: 'A fact stated earlier in the trace is later changed or contradicted.',
+    },
+    {
+      label: "Family Confusion",
+      value: -20.3,
+      desc: "Several confusable entities (e.g. family members or similarly-named people/things).",
+    },
+    {
+      label: "Compositional",
+      value: -9.4,
+      desc: "The answer requires combining/chaining multiple facts from different points in the trace, not just recalling a single one.",
+    },
+    {
+      label: "Wrong Confident",
+      value: -4.3,
+      desc: "Someone in the trace states something confidently but incorrectly. The agent has to not trust the confident-sounding claim.",
+    },
+    {
+      label: "New Stakeholder",
+      value: 9.5,
+      desc: "A new person/actor is introduced.",
+    },
+    {
+      label: "Constrained Selection",
+      value: 15.1,
+      desc: "The task limits the answer to a small, well-defined set of options instead of being open ended.",
+    },
+    {
+      label: "Session Length",
+      value: 17.9,
+      desc: "Tasks tied to a dedicated/long session where the relevant info is concentrated in one place.",
+    },
+  ];
+  const renderValue = (props: LabelRenderProps) => {
+    const { x, y, width, height, value } = props;
+    if (
+      typeof x !== "number" ||
+      typeof y !== "number" ||
+      typeof width !== "number" ||
+      typeof height !== "number" ||
+      typeof value !== "number"
+    )
+      return null;
+    const isPos = value >= 0;
+    const left = Math.min(x, x + width);
+    const right = Math.max(x, x + width);
+    const lx = isPos ? right + 6 : left - 6;
+    return (
+      <text
+        x={lx}
+        y={y + height / 2 + 4}
+        textAnchor={isPos ? "start" : "end"}
+        fontSize={12}
+        fontWeight={600}
+        fill={isPos ? pos : neg}
+      >
+        {isPos ? "+" : "−"}
+        {Math.abs(value).toFixed(1)}
+      </text>
+    );
+  };
+  return (
+    <Figure
+      title="What makes a task hard: pass-rate delta per content flag"
+      caption={
+        <>
+          Each bar is the pass-rate difference between tasks carrying a flag and
+          the rest of the benchmark — negative (red) makes tasks harder, positive
+          (green) easier.
+        </>
+      }
+    >
+      <div className="h-[320px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            layout="vertical"
+            data={flags}
+            margin={{ top: 8, right: 56, left: 8, bottom: 8 }}
+          >
+            <CartesianGrid
+              strokeDasharray={GRID_DASH}
+              stroke={gridStroke}
+              horizontal={false}
+            />
+            <XAxis
+              type="number"
+              domain={[-26, 26]}
+              ticks={[-20, -10, 0, 10, 20]}
+              {...axisProps}
+            />
+            <YAxis type="category" dataKey="label" width={166} {...axisProps} />
+            <ReferenceLine x={0} stroke={axisStroke} strokeWidth={AXIS_WIDTH} />
+            <Bar dataKey="value" isAnimationActive={false} radius={2} barSize={18}>
+              {flags.map((f) => (
+                <Cell
+                  key={f.label}
+                  fill={f.value >= 0 ? pos : neg}
+                  fillOpacity={0.85}
+                />
+              ))}
+              <LabelList content={renderValue} />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="mt-5 space-y-2 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">
+        {flags.map((f) => (
+          <p key={f.label}>
+            <span
+              className="inline-block w-2 h-2 rounded-full mr-2 align-middle"
+              style={{ background: f.value >= 0 ? pos : neg }}
+            />
+            <span className="font-semibold text-neutral-800 dark:text-neutral-200">
+              {f.label}
+            </span>{" "}
+            {f.desc}
+          </p>
+        ))}
+      </div>
+    </Figure>
+  );
+}
+
+// Horizontal dumbbell (same style as the harness-spread chart): per harness, an
+// arrow from its non-adversarial pass rate to its adversarial pass rate. Arrow
+// length = the trap penalty. Sorted most-fragile first; labels reveal on hover.
+export function AdversarialRobustnessFigure() {
+  const { gridStroke, axisProps, ink, muted, neg } = useChartStyle();
+  const [hovered, setHovered] = useState<number | null>(null);
+  const rows = [
+    { family: "RAG", clean: 44.3, adv: 27.3 },
+    { family: "Codex", clean: 50.7, adv: 34.5 },
+    { family: "Hermes", clean: 40.7, adv: 25.5 },
+    { family: "RLM", clean: 57.9, adv: 50.9 },
+    { family: "Claude Code", clean: 45.3, adv: 42.6 },
+  ];
+  const data = rows.map((r) => ({
+    ...r,
+    low: r.adv,
+    high: r.clean,
+    span: Number((r.clean - r.adv).toFixed(1)),
+    drop: Number((r.clean - r.adv).toFixed(1)),
+  }));
+  const hoveredFamily = hovered != null ? data[hovered]?.family : null;
+  const dimOf = (family?: string) =>
+    hoveredFamily != null && family !== hoveredFamily ? 0.15 : 1;
+
+  const dot = (fill: string) =>
+    function Dot(props: unknown) {
+      const { cx, cy, key, payload } = props as {
+        cx?: number;
+        cy?: number;
+        key?: Key | null;
+        payload?: { family?: string };
+      };
+      if (typeof cx !== "number" || typeof cy !== "number")
+        return <g key={key} />;
+      return (
+        <circle
+          key={key}
+          cx={cx}
+          cy={cy}
+          r={6}
+          fill={fill}
+          fillOpacity={dimOf(payload?.family)}
+        />
+      );
+    };
+
+  // Clean (green) and adversarial (gray) values, shown only for the hovered row.
+  const endLabel = (side: "low" | "high") => (props: LabelRenderProps) => {
+    const { x, y, index } = props;
+    if (
+      typeof x !== "number" ||
+      typeof y !== "number" ||
+      index == null ||
+      index !== hovered
+    )
+      return null;
+    const d = data[index];
+    const isLow = side === "low";
+    return (
+      <text
+        x={isLow ? x - 7 : x + 11}
+        y={y + 8}
+        textAnchor={isLow ? "end" : "start"}
+        fontSize={12}
+        fill={ink}
+      >
+        {isLow ? `${d.adv}%` : `${d.clean}%  (−${d.drop}pp)`}
+      </text>
+    );
+  };
+
+  // Arrow points clean → adversarial (right → left): the trap's drop.
+  const arrowBar = (props: unknown) => {
+    const { x, y, width, height, payload } = props as LabelRenderProps & {
+      payload?: { family?: string };
+    };
+    if (
+      typeof x !== "number" ||
+      typeof y !== "number" ||
+      typeof width !== "number" ||
+      typeof height !== "number"
+    )
+      return <g />;
+    const cy = y + height / 2;
+    const tip = x + 6; // edge of the adversarial (low) dot
+    const head = 8;
+    return (
+      <g opacity={dimOf(payload?.family)}>
+        <line
+          x1={tip + head}
+          y1={cy}
+          x2={x + width}
+          y2={cy}
+          stroke={muted}
+          strokeWidth={2}
+        />
+        <path
+          d={`M ${tip} ${cy} L ${tip + head} ${cy - head * 0.6} L ${tip + head} ${cy + head * 0.6} Z`}
+          fill={muted}
+        />
+      </g>
+    );
+  };
+
+  return (
+    <Figure
+      title="Robustness to traps"
+      caption={
+        <>
+          Each arrow runs from a harness's non-adversarial (clean) pass rate to
+          its adversarial pass rate, so the arrow length is the trap penalty.
+          RAG, Codex, and Hermes lose 15–17pp; RLM and Claude Code hold within
+          ~3–7pp. RLM's adversarial score (50.9%) still clears every other
+          harness's clean score. Traps barely move time or tokens — the cost is
+          accuracy.
+        </>
+      }
+    >
+      <div className="flex items-center gap-4 mb-3 text-xs font-medium text-neutral-600 dark:text-neutral-300">
+        <span className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-2.5 h-2.5 rounded-full"
+            style={{ background: muted }}
+          />
+          Non-adversarial
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-2.5 h-2.5 rounded-full"
+            style={{ background: neg }}
+          />
+          Adversarial
+        </span>
+      </div>
+      <div className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart
+            layout="vertical"
+            data={data}
+            margin={{ top: 8, right: 80, left: 8, bottom: 8 }}
+            onMouseMove={(s: {
+              activeTooltipIndex?: number | string | null;
+            }) => {
+              const n = s?.activeTooltipIndex;
+              const idx = n == null ? null : Number(n);
+              setHovered(idx != null && Number.isFinite(idx) ? idx : null);
+            }}
+            onMouseLeave={() => setHovered(null)}
+          >
+            <CartesianGrid
+              strokeDasharray={GRID_DASH}
+              stroke={gridStroke}
+              horizontal={false}
+            />
+            <XAxis
+              type="number"
+              domain={[0, 60]}
+              ticks={[0, 20, 40, 60]}
+              tickFormatter={(v: unknown) => `${v}%`}
+              {...axisProps}
+            />
+            <YAxis type="category" dataKey="family" width={96} {...axisProps} />
+            <Tooltip cursor={false} content={() => null} />
+            <Bar
+              dataKey="low"
+              stackId="a"
+              fill="transparent"
+              isAnimationActive={false}
+            />
+            <Bar
+              dataKey="span"
+              stackId="a"
+              fill="none"
+              barSize={16}
+              shape={arrowBar}
+              isAnimationActive={false}
+            />
+            <Scatter dataKey="low" shape={dot(neg)} isAnimationActive={false}>
+              <LabelList dataKey="low" content={endLabel("low")} />
+            </Scatter>
+            <Scatter dataKey="high" shape={dot(muted)} isAnimationActive={false}>
+              <LabelList dataKey="high" content={endLabel("high")} />
+            </Scatter>
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </Figure>
+  );
+}
+
+export function ConvergenceFigure() {
+  const { gridStroke, axisProps, ink, neg } = useChartStyle();
+  const data = [
+    { x: "near", nonadv: 46.7, adv: 32.8 },
+    { x: "mid", nonadv: 35.4, adv: 28.4 },
+    { x: "far", nonadv: 29.9, adv: 31.1 },
+  ];
+  return (
+    <Figure
+      title="The adversarial gap collapses as memories get harder to find"
+      caption={
+        <>
+          Pass rate by semantic distance, split by whether the task is
+          adversarial. The gap between the lines shrinks from −13.9pp (near) to
+          −7.0pp (mid) to +1.2pp (far). When distractors are far, the gap
+          vanishes: retrieval difficulty already dominates, so the trap adds
+          nothing. Trap-resistance and retrieval-robustness are the same skill.
+        </>
+      }
+    >
+      <div className="flex items-center gap-4 mb-2 text-xs font-medium text-neutral-600 dark:text-neutral-300">
+        <span className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-4 h-[2px]"
+            style={{ background: ink }}
+          />
+          Non-adversarial
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-4 border-t-2 border-dashed"
+            style={{ borderColor: neg }}
+          />
+          Adversarial
+        </span>
+      </div>
+      <div className="h-[320px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 24, right: 24, left: 8, bottom: 8 }}>
+            <CartesianGrid strokeDasharray={GRID_DASH} stroke={gridStroke} />
+            <XAxis dataKey="x" {...axisProps} />
+            <YAxis
+              type="number"
+              domain={[25, 50]}
+              ticks={[25, 30, 35, 40, 45, 50]}
+              tickFormatter={(v: unknown) => `${v}%`}
+              width={40}
+              {...axisProps}
+            />
+            <Line
+              dataKey="nonadv"
+              stroke={ink}
+              strokeWidth={2.5}
+              isAnimationActive={false}
+              activeDot={false}
+              dot={dotShape(ink)}
+            >
+              <LabelList
+                dataKey="nonadv"
+                position="top"
+                formatter={(v: unknown) => Number(v).toFixed(1)}
+                fill={ink}
+                fontSize={12}
+                fontWeight={600}
+              />
+            </Line>
+            <Line
+              dataKey="adv"
+              stroke={neg}
+              strokeWidth={2.5}
+              strokeDasharray="5 4"
+              isAnimationActive={false}
+              activeDot={false}
+              dot={dotShape(neg)}
+            >
+              <LabelList
+                dataKey="adv"
+                position="bottom"
+                formatter={(v: unknown) => Number(v).toFixed(1)}
+                fill={neg}
+                fontSize={12}
+                fontWeight={600}
+              />
+            </Line>
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </Figure>
+  );
+}

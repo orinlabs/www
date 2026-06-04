@@ -5,11 +5,17 @@ import { useEffect } from 'react';
 import Prism from 'prismjs';
 
 import CodeBlock from '../../components/CodeBlock';
+import {
+  ArchitectureSpreadFigure,
+  ContentFlagsFigure,
+  DifficultyAxesFigure,
+} from '../../components/Horizon1Figures';
 import { JoinUs } from '../../components/Hiring';
 import { Horizon1Results } from '../../components/Horizon1Results';
 import {
   ResearchArticle,
   Section,
+  Subsection,
 } from '../../components/WhitePaper';
 
 const EXAMPLE_TRACE = `{"timestamp": "2026-03-19T09:42:11+00:00", "message_data": {"id": null, "type": "reasoning", "summary": "Need to grab the release tarball. Reaching for curl by default."}}
@@ -54,7 +60,49 @@ export default function Horizon1() {
       <Horizon1Results />
 
       <Section title="Results">
-        TODO: Analyze results once all runs are finished.
+        <p>
+          The clearest signal in our preview run is that for long horizon learning, <strong>the harness around a model matters more than the model itself</strong>
+          . Using a different harness with the same model can increase scores by up to 20 percentage points.
+        </p>
+
+        <ArchitectureSpreadFigure />
+
+        <p>
+          A strong harness on a small model beats a weak harness on a frontier one. The
+          highest-leverage move for a long-horizon agent is usually how it stores
+          and retrieves its own history — not which model you point at it.
+        </p>
+
+        <Subsection title="What makes tasks hard">
+          <p>
+            Each task is characterized by a few structured axes:{" "}
+            <span className="font-medium">reasoning hops</span> (number of facts that must
+            be chained), <span className="font-medium">semantic distance</span>{" "}
+            (how far the required memory is in an estimated embedding space),{" "}
+            <span className="font-medium">memory depth</span> (how deep in the
+            trace it lives), and whether the task is{" "}
+            <span className="font-medium">adversarial</span> — the environment
+            actively tries to mislead the agent using patched or stale facts,
+            confusable entities, a confidently wrong speaker, or a directive that
+            should be overridden.
+          </p>
+
+          <DifficultyAxesFigure />
+
+          <p>
+            Performance degrades on every axis. RLM holds up best and most
+            gracefully; RAG falls hardest. All harnesses get tripped up by
+            adversarial tasks — most of all when they need to recall a fact that
+            was later updated.
+          </p>
+
+          <ContentFlagsFigure />
+        </Subsection>
+
+        <p className="text-sm italic text-neutral-500 dark:text-neutral-400">
+          Numbers are from a preview run and are subject to change as remaining
+          configurations finish.
+        </p>
       </Section>
 
       <Section title="Methodology">
