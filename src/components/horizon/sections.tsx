@@ -1,9 +1,7 @@
 // Article sections for the Horizon page. Each section is a self-contained
 // block of prose (and figures) so the page itself is just a composition.
 
-import CodeBlock from "../CodeBlock";
 import { Section, Subsection } from "../WhitePaper";
-import { EXAMPLE_TRACE } from "./data";
 import { ContentFlagsFigure, DifficultyAxesFigure } from "./figures";
 
 export function IntroSection() {
@@ -78,63 +76,7 @@ export function ResultsSection() {
   );
 }
 
-export function MethodologySection() {
-  return (
-    <Section title="Methodology">
-      <p>
-        Each task in Horizon depends on a example agent's history, which we
-        call a "trace". A trace looks like this:
-      </p>
-      <CodeBlock language="json" code={EXAMPLE_TRACE} />
-      <p>
-        Traces are just large arrays of LLM chat inputs, and each tells a
-        complicated story. Traces are anywhere from 2-36M tokens long and span
-        3-7 months of agent activity. Each trace is <strong>real</strong>,
-        created by one of our products,{" "}
-        <a
-          href="https://acadialearning.org/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Acadia Learning
-        </a>
-        .
-      </p>
-      <p>
-        Horizon contains 195 tasks, but is private to prevent overfitting and
-        keep user data secure<sup>*</sup>. We have included a few example eval
-        cases in our{" "}
-        <a
-          href="https://github.com/orinlabs/horizon-1"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          public repo
-        </a>
-        , including a public{" "}
-        <a
-          href="https://huggingface.co/datasets/orinlabs/horizon-1-example-traces"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          HuggingFace dataset
-        </a>{" "}
-        of traces, to show how the benchmark is structured.
-      </p>
-      <p>
-        The correct solution to each task requires information from these massive
-        traces. The agent must recall events, recognize patterns, and understand
-        each situation in order to pass.
-      </p>
-      <p>
-        Each task takes place in an environment with many tools: email inboxes,
-        SMS inboxes, and more, and agents are scored on task completion rate,
-        cost, and speed. Task completions are judged using LLM-as-a-judge on the
-        environment state, combined with deterministic checks.
-      </p>
-    </Section>
-  );
-}
+
 
 export function IntegritySection() {
   return (
@@ -167,8 +109,11 @@ export function IntegritySection() {
       </ol>
 
       <p>
-        All 195 tasks passed these tests with low variance, showing that they are
-        solvable, the judges are fair, and the tasks do not leak information.
+        All 195 tasks passed these tests with low variance, showing that they are solvable, the judges are fair, and the tasks do not leak information.
+      </p>
+
+      <p>
+        Testing a human baseline is impossible (even reading the traces is like reading 140 Harry Potter books), but each task has been reviewed by a human and deemed reasonable.
       </p>
     </Section>
   );

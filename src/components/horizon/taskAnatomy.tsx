@@ -129,15 +129,47 @@ export function TaskAnatomySection() {
   return (
     <Section title="Example Task">
       <p>
-        Every Horizon task has a long <strong>historical trace</strong> that the agent must learn from to complete the task correctly.
+        Every Horizon task has a long <strong>historical trace</strong> that the agent must learn from to complete the task correctly. Each trace is <strong>real</strong>, pulled from one of our products,{" "}
+        <a
+          href="https://acadialearning.org/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Acadia Learning
+        </a>
+        .
       </p>
 
       <TaskTimelineFigure />
 
       <p>
-        For example: the agent in this task learned months ago that <code>curl</code> is broken on its machine and that <code>wget</code> works instead. This is buried deep in the trace, hidden by a bunch of other agent activity. When a new download request arrives, the task tests whether the agent has learned to use <code>wget</code> on the first try. 
+        For example: the agent in this task learned months ago that <code>curl</code> is broken on its machine and that <code>wget</code> works instead. This is buried deep in the trace, hidden by a bunch of other agent activity. When a new download request arrives, the task tests whether the agent has learned to use <code>wget</code> on the first try. Lessons can be anywhere in the trace, occur multiple times, or even require multiple data points to extract the required pattern.
       </p>
-      <p>Lessons can be anywhere in the trace, occur multiple times, or even require multiple data points to extract the required pattern.
+      <p>
+        Horizon contains 195 tasks, but is private to prevent overfitting and
+        keep user data secure<sup>*</sup>. We have included a few example eval
+        cases in our{" "}
+        <a
+          href="https://github.com/orinlabs/horizon-1"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          public repo
+        </a>
+        , including a public{" "}
+        <a
+          href="https://huggingface.co/datasets/orinlabs/horizon-1-example-traces"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          HuggingFace dataset
+        </a>{" "}
+        of traces, to show how the benchmark is structured.
+      </p>
+      <p>
+        Each task runs in an environment with real tools — email and SMS
+        inboxes, and more — and is graded on completion, cost, and speed, judged
+        from the final environment state by an LLM plus deterministic checks.
       </p>
 
     </Section>

@@ -397,14 +397,3 @@ export const CONVERGENCE: ConvergencePoint[] = [
   { x: "mid", nonadv: 35.4, adv: 28.4 },
   { x: "far", nonadv: 29.9, adv: 31.1 },
 ];
-
-// ---------------------------------------------------------------------------
-// Methodology: example trace shown in the article body
-// ---------------------------------------------------------------------------
-
-export const EXAMPLE_TRACE = `{"timestamp": "2026-03-19T09:42:11+00:00", "message_data": {"id": null, "type": "reasoning", "summary": "Need to grab the release tarball. Reaching for curl by default."}}
-{"timestamp": "2026-03-19T09:42:12+00:00", "message_data": {"id": "tc_a1", "name": "shell_exec", "type": "function_call", "call_id": "tc_a1", "arguments": "{\\"command\\": \\"curl -fLO https://files.example.com/release-1.4.2.tar.gz\\"}"}}
-{"timestamp": "2026-03-19T09:42:12+00:00", "message_data": {"type": "function_call_output", "call_id": "tc_a1", "output": "curl: symbol lookup error: undefined symbol: SSL_get1_peer_certificate\\nexit code: 127"}}
-{"timestamp": "2026-03-19T09:42:14+00:00", "message_data": {"id": null, "type": "reasoning", "summary": "curl is broken on this box — bad libssl link. Falling back to wget."}}
-{"timestamp": "2026-03-19T09:42:15+00:00", "message_data": {"id": "tc_a2", "name": "shell_exec", "type": "function_call", "call_id": "tc_a2", "arguments": "{\\"command\\": \\"wget https://files.example.com/release-1.4.2.tar.gz\\"}"}}
-{"timestamp": "2026-03-19T09:42:18+00:00", "message_data": {"type": "function_call_output", "call_id": "tc_a2", "output": "release-1.4.2.tar.gz  100%[==================>]  18.4M ... saved"}}`;

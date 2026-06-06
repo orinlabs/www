@@ -391,6 +391,7 @@ export function HorizonChart({
           hoveredId={hoveredId}
           onHover={setHoveredId}
           hoveredType={hoveredType}
+          className="ml-10"
         />
       )}
     </div>
@@ -667,25 +668,25 @@ export function HorizonLeaderboard() {
                 {row.model}
               </td>
               <td className="py-2 px-4 text-right tabular-nums font-medium text-neutral-800 dark:text-neutral-200">
-                <span className="mr-1.5 font-normal text-neutral-300 dark:text-neutral-600">
+                <span className="mr-1.5 font-normal text-neutral-400 dark:text-neutral-600">
                   {fmtCount(row.counts.overall)}
                 </span>
                 {fmtPct(row.completion)}
               </td>
               <td className="py-2 px-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
-                <span className="mr-1.5 text-neutral-300 dark:text-neutral-600">
+                <span className="mr-1.5 text-neutral-400 dark:text-neutral-600">
                   {fmtCount(row.counts.easy)}
                 </span>
                 {fmtPct(row.difficulty.easy)}
               </td>
               <td className="py-2 px-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
-                <span className="mr-1.5 text-neutral-300 dark:text-neutral-600">
+                <span className="mr-1.5 text-neutral-400 dark:text-neutral-600">
                   {fmtCount(row.counts.medium)}
                 </span>
                 {fmtPct(row.difficulty.medium)}
               </td>
               <td className="py-2 pl-4 pr-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
-                <span className="mr-1.5 text-neutral-300 dark:text-neutral-600">
+                <span className="mr-1.5 text-neutral-400 dark:text-neutral-600">
                   {fmtCount(row.counts.hard)}
                 </span>
                 {fmtPct(row.difficulty.hard)}
@@ -702,17 +703,19 @@ export function HorizonLeaderboard() {
 }
 
 export function HorizonTable({
+  className,
   hoveredId,
   onHover,
   hoveredType,
 }: {
+  className?: string;
   hoveredId?: string | null;
   onHover?: (id: string | null) => void;
   hoveredType?: string | null;
 }) {
   const isDark = useIsDark();
   return (
-    <div className="my-8 overflow-x-auto">
+    <div className={cn("my-8 overflow-x-auto", className)}>
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b-2 border-neutral-300 dark:border-neutral-700 text-left">

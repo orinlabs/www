@@ -11,7 +11,6 @@ import {
   HorizonLeaderboard,
   HorizonResults,
   IntegritySection,
-  MethodologySection,
   RecencyVsHarness,
   TaskAnatomySection,
 } from '../../components/horizon';
@@ -94,38 +93,10 @@ export default function Horizon() {
 
       <TaskAnatomySection />
 
-      <Section title="[breakdown]">
-        <p>
-          Most failures happen on query expansion, pattern recognition, and
-          distractor tasks.
-        </p>
-        <p>
-          This suggest{" "}
-          <strong>
-            that you can’t reason your way into remembering something.
-          </strong>{" "}
-          There’s a deeper structural issue that makes these tasks unsolvable
-          with current models/harnesses.
-        </p>
-        <p>
-          Models are also <strong>not improving</strong> on our hard tasks over
-          time. Scaling data and RL is barely helping — and whatever a newer
-          model buys you is dwarfed by the harness you wrap around it.
-        </p>
-
-        <RecencyVsHarness />
-
-        <p>
-          What helps the most is harnesses, which can change the paradigm of how
-          context is managed. But even harnesses have no solved this yet.
-        </p>
-      </Section>
-
-      <MethodologySection />
 
       <IntegritySection />
 
-      <Section title="[all results]">
+      <Section title="All Results">
         <HorizonResults />
       </Section>
 
@@ -134,8 +105,6 @@ export default function Horizon() {
       <p className="research-prose text-sm italic mb-12">
         *All data was collected with proper user permissions.
       </p>
-
-      <JoinUs padded={false} />
     </ResearchArticle>
   );
 }

@@ -14,7 +14,6 @@ export {
   ContributorsSection,
   IntegritySection,
   IntroSection,
-  MethodologySection,
   ResultsSection,
 } from "./sections";
 export {
