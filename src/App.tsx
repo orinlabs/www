@@ -12,6 +12,7 @@ import {
 
 import Layout from './components/Layout';
 import Home from './pages/Home';
+import NotFound from './pages/NotFound';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Research from './pages/Research';
 import Horizon, { HorizonHero } from './pages/research/Horizon';
@@ -125,6 +126,14 @@ function App() {
           element={
             <Layout>
               <TermsOfService />
+            </Layout>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <Layout>
+              <NotFound />
             </Layout>
           }
         />
