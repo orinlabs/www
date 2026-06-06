@@ -36,10 +36,7 @@ export default function Layout({ children, hero }: LayoutProps) {
       }
     >
       {hero ? (
-        <div
-          className="relative w-full overflow-hidden md:rounded-2xl border-b md:border md:rounded-xl border-neutral-200 dark:border-neutral-800 h-[70vh]"
-          style={{ backgroundColor: "#f4f3ef" }}
-        >
+        <div className="relative w-full overflow-hidden md:rounded-2xl border-b md:border md:rounded-xl border-neutral-200 dark:border-neutral-800 h-[70vh] bg-[#f4f3ef] dark:bg-[#262626]">
           {hero}
           <div className="absolute inset-x-0 top-0 z-20 px-6 sm:px-8 pt-8 pb-5 md:py-5">
             <Navbar />

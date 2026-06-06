@@ -19,7 +19,6 @@ export {
 } from "./sections";
 export {
   TaskAnatomySection,
-  TaskScoringFigure,
+  TaskOutcomes,
   TaskTimelineFigure,
-  TaskWalkthrough,
 } from "./taskAnatomy";

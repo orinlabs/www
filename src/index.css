@@ -429,6 +429,12 @@ pre {
   font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
 }
 
+/* In figures (captions, small annotations) code should track the smaller
+   surrounding text rather than the absolute prose code size. */
+.research-prose figure code {
+  font-size: 0.9em;
+}
+
 .research-prose a {
   @apply text-primary underline hover:no-underline transition-colors;
 }
