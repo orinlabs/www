@@ -32,7 +32,7 @@ export function JoinUs({ padded = true }: { padded?: boolean }) {
             key={role.slug}
             to={`/roles/${role.slug}`}
             className={cn(
-              "flex items-center justify-between gap-1 flex-1",
+              "flex flex-wrap items-center justify-between gap-1 flex-1",
               "py-1 group cursor-pointer",
             )}
           >

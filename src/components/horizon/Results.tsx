@@ -202,8 +202,8 @@ export function HorizonChart({
     );
 
   return (
-    <div className="my-8 -ml-10">
-      <div className="flex items-end justify-between gap-4 mb-4 ml-10">
+    <div className="my-8 -ml-2 sm:-ml-10">
+      <div className="flex flex-col items-start gap-4 mb-4 ml-2 sm:ml-10 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h4 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
             Score vs. {metric.label}
@@ -212,7 +212,7 @@ export function HorizonChart({
             Horizon (195 tasks), preview run — hover a point to reveal its
             model
           </p>
-          <div className="flex items-center gap-4 mt-2">
+          <div className="flex flex-wrap items-center gap-4 mt-2">
             {AGENT_TYPES.map((type) => (
               <div
                 key={type}
@@ -233,7 +233,7 @@ export function HorizonChart({
           </div>
         </div>
 
-        <div className="flex flex-col items-end gap-2 shrink-0">
+        <div className="flex flex-col items-start gap-2 shrink-0 sm:items-end">
           <Switch
             checked={scaleType === "log"}
             onCheckedChange={(checked) =>
@@ -260,7 +260,7 @@ export function HorizonChart({
           />
 
           {axisControls && (
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
             {METRIC_DEFS.map((m) => (
               <button
                 key={m.id}
@@ -274,7 +274,7 @@ export function HorizonChart({
           </div>)}
 
           {difficultyControls && (
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
             {Y_BUCKETS.map((b) => (
               <button
                 key={b.id}
