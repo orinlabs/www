@@ -1,4 +1,4 @@
-// Article sections for the Horizon-1 page. Each section is a self-contained
+// Article sections for the Horizon page. Each section is a self-contained
 // block of prose (and figures) so the page itself is just a composition.
 
 import CodeBlock from "../CodeBlock";
@@ -15,11 +15,11 @@ export function IntroSection() {
         while products like OpenClaw and Hermes have grown exponentially. But
         long-horizon agents frequently fall into the same traps: they lose track
         of what's going on, misremember what happened previously, and can't
-        consistently learn on the job. This is what Horizon-1 measures.
+        consistently learn on the job. This is what Horizon measures.
       </p>
 
       <p>
-        Horizon-1 makes no distinction between models and harnesses: the target
+        Horizon makes no distinction between models and harnesses: the target
         is the utility of the learning system, regardless of how it is crafted.
       </p>
     </div>
@@ -82,7 +82,7 @@ export function MethodologySection() {
   return (
     <Section title="Methodology">
       <p>
-        Each task in Horizon-1 depends on a example agent's history, which we
+        Each task in Horizon depends on a example agent's history, which we
         call a "trace". A trace looks like this:
       </p>
       <CodeBlock language="json" code={EXAMPLE_TRACE} />
@@ -101,7 +101,7 @@ export function MethodologySection() {
         .
       </p>
       <p>
-        Horizon-1 contains 195 tasks, but is private to prevent overfitting and
+        Horizon contains 195 tasks, but is private to prevent overfitting and
         keep user data secure<sup>*</sup>. We have included a few example eval
         cases in our{" "}
         <a
@@ -178,7 +178,7 @@ export function ContributorsSection() {
   return (
     <Section title="Contributors">
       <p>
-        Horizon-1 was developed as a collaboration between Orin Labs and
+        Horizon was developed as a collaboration between Orin Labs and
         Driftwood AI, led by Bryan Houlton and Aayush Gupta.
       </p>
     </Section>

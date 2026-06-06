@@ -1,4 +1,4 @@
-// Runtime derivation of the Horizon-1 leaderboard from the raw results
+// Runtime derivation of the Horizon leaderboard from the raw results
 // (jobs/combined_results.json in horizon-1-private, trimmed into
 // combinedResults.ts). data.ts builds RESULTS from this so the numbers — incl.
 // the Easy/Medium/Hard splits — come from one source instead of being hardcoded.
@@ -6,7 +6,13 @@
 // Difficulty (and the other task axes) live once in a per-task `tasks` map and
 // are joined to each run's cases by task id at runtime, mirroring the source.
 
-import type { AgentType, DifficultyBreakdown, DifficultyBucket } from "./data";
+import type {
+  AgentType,
+  DifficultyBreakdown,
+  DifficultyBucket,
+  PassCount,
+  PassCounts,
+} from "./data";
 
 // ---------------------------------------------------------------------------
 // Trimmed shape emitted into combinedResults.ts.
@@ -87,6 +93,14 @@ function passRate(cases: RawCase[]): number {
   return (100 * scored.filter((c) => c.passed).length) / scored.length;
 }
 
+function passCount(cases: RawCase[]): PassCount {
+  const scored = cases.filter((c) => c.passed != null);
+  return {
+    passed: scored.filter((c) => c.passed).length,
+    total: scored.length,
+  };
+}
+
 export interface AggregatedRun {
   runKey: string;
   agentType: AgentType;
@@ -96,6 +110,7 @@ export interface AggregatedRun {
   tokens: number;
   timeSec: number | undefined;
   difficulty: DifficultyBreakdown;
+  counts: PassCounts;
 }
 
 export function aggregateRun(
@@ -106,6 +121,8 @@ export function aggregateRun(
   const diffOf = (c: RawCase) => tasks[c.task]?.difficulty ?? null;
   const splitFor = (bucket: DifficultyBucket) =>
     Number(passRate(cases.filter((c) => diffOf(c) === bucket)).toFixed(1));
+  const countFor = (bucket: DifficultyBucket) =>
+    passCount(cases.filter((c) => diffOf(c) === bucket));
   return {
     runKey: run.runKey,
     agentType: displayHarness(run.harness),
@@ -118,6 +135,12 @@ export function aggregateRun(
       easy: splitFor("easy"),
       medium: splitFor("medium"),
       hard: splitFor("hard"),
+    },
+    counts: {
+      overall: passCount(cases),
+      easy: countFor("easy"),
+      medium: countFor("medium"),
+      hard: countFor("hard"),
     },
   };
 }

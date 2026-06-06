@@ -1,7 +1,7 @@
 // ===========================================================================
-// Horizon-1: single source of truth.
+// Horizon: single source of truth.
 //
-// Every Horizon-1 component (the scatter chart, the results table, and the
+// Every Horizon component (the scatter chart, the results table, and the
 // Tufte figures) reads its numbers from this file. Keep all benchmark data and
 // the shared formatting helpers here so a new run only ever edits one place.
 // ===========================================================================
@@ -40,6 +40,20 @@ export interface DifficultyBreakdown {
   hard: number;
 }
 
+// Raw passed/total counts behind a pass rate (e.g. 17/40).
+export interface PassCount {
+  passed: number;
+  total: number;
+}
+
+// Passed/total counts for the overall run and each difficulty split.
+export interface PassCounts {
+  overall: PassCount;
+  easy: PassCount;
+  medium: PassCount;
+  hard: PassCount;
+}
+
 export interface ResultRow {
   id: string;
   agentType: AgentType;
@@ -53,6 +67,8 @@ export interface ResultRow {
   // Pass rate split by task difficulty (easy/medium/hard). Currently seeded with
   // SAMPLE data — see sampleDifficulty — to be replaced with the real numbers.
   difficulty: DifficultyBreakdown;
+  // Raw passed/total counts behind the overall + per-difficulty pass rates.
+  counts: PassCounts;
   // Optional override for the tokens cell (e.g. approximate/footnoted values).
   tokensLabel?: string;
   // When set, excluded from the Time chart and shown in the table instead of fmtTime.
@@ -139,6 +155,11 @@ export function fmtPct(v: number) {
   return `${v.toFixed(1)}%`;
 }
 
+// Raw passed/total behind a pass rate, e.g. "17/40".
+export function fmtCount(c: { passed: number; total: number }) {
+  return `${c.passed}/${c.total}`;
+}
+
 export function fmtTime(v: number) {
   const m = Math.floor(v / 60);
   const s = Math.round(v % 60);
@@ -206,6 +227,7 @@ export const RESULTS: ResultRow[] = aggregateRuns(COMBINED).map((r) => ({
   timeSec: r.timeSec,
   releaseDate: Date.parse(MODEL_RELEASE_DATES[r.model] ?? "2025-08-07"),
   difficulty: r.difficulty,
+  counts: r.counts,
 }));
 
 export const AGENT_TYPES: AgentType[] = Array.from(

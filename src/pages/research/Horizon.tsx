@@ -8,30 +8,31 @@ import { Link } from 'react-router-dom';
 import { JoinUs } from '../../components/Hiring';
 import {
   ContributorsSection,
-  Horizon1Chart,
-  Horizon1Results,
+  HorizonLeaderboard,
+  HorizonResults,
   IntegritySection,
   MethodologySection,
-} from '../../components/horizon1';
+  RecencyVsHarness,
+  TaskAnatomySection,
+} from '../../components/horizon';
 import { ResearchArticle, Section } from '../../components/WhitePaper';
 
-const HERO_TITLE = "Introducing Horizon-1";
-const HERO_ABSTRACT =
-  "We're releasing a preview of Horizon-1, our flagship benchmark that measures an agent's ability to learn on the job. Each task is created from real product usage data and requires the agent to learn from months of it's previous actions to succeed.";
+const HERO_TITLE = "Introducing Horizon";
+const HERO_ABSTRACT = "We're releasing Horizon, a benchmark that measures an agent's ability to take ideal actions from past experience. Each task requires understanding months of real interactions with customers across millions of tokens to succeed."
 
 // Full-width hero: the benchmark image with the title/subtitle/authors/date
 // overlaid in the lower-left. The nav is layered on top by the Layout.
-export function Horizon1Hero() {
+export function HorizonHero() {
   return (
     <>
       <img
-        src="/horizon-1-benchmark.png"
-        alt="Horizon-1 — building agents that learn"
+        src="/horizon-benchmark.png"
+        alt="Horizon — building agents that learn"
         className="absolute inset-x-0 bottom-0 h-[42%] md:inset-0 md:h-full object-cover object-right-bottom md:object-contain md:object-bottom block dark:hidden"
       />
       <img
-        src="/horizon-1-benchmark-dark.png"
-        alt="Horizon-1 — building agents that learn"
+        src="/horizon-benchmark-dark.png"
+        alt="Horizon — building agents that learn"
         className="absolute inset-x-0 bottom-0 h-[42%] md:inset-0 md:h-full object-cover object-right-bottom md:object-contain md:object-bottom hidden dark:block"
       />
       <div className="absolute inset-x-0 z-10 top-0 md:top-auto md:bottom-0 px-8 sm:px-10 lg:px-12 pt-24 sm:pt-28 md:pt-0 pb-8 sm:pb-10 lg:pb-12">
@@ -67,7 +68,7 @@ export function Horizon1Hero() {
   );
 }
 
-export default function Horizon1() {
+export default function Horizon() {
   useEffect(() => {
     Prism.highlightAll();
   }, []);
@@ -82,21 +83,21 @@ export default function Horizon1() {
     >
       <Section className="mt-8">
         <p>
-          We expect agents to soon play an active role in businesses, but the bottleneck to that is whether agents can learn on the job. This is exactly what Horizon-1 measures. Horizon-1 makes no distinction between models and harnesses, aiming to measure the learning ability of the system as a whole.
+          Horizon is derived from failures we saw running Claw-like agents with real customers over the last year. We believe the future will be full of persisent background agents that act by themselves, but the clear adoption bottleneck is that agents still cannot reliably learn over time.
+        </p>
+        <p>
+          Horizon makes no distinction between models and harnesses, aiming instead to measure the learning ability of the agent.
         </p>
 
-        <Horizon1Chart
-          defaultAxis='timeSec' defaultDifficulty="all" axisControls={false} difficultyControls={false} />
+        <HorizonLeaderboard />
       </Section>
+
+      <TaskAnatomySection />
 
       <Section title="[breakdown]">
         <p>
           Most failures happen on query expansion, pattern recognition, and
           distractor tasks.
-        </p>
-        <p>
-          Models are also <strong>not improving</strong> on our hard tasks over
-          time. Scaling data and RL is not helping.
         </p>
         <p>
           This suggest{" "}
@@ -106,6 +107,14 @@ export default function Horizon1() {
           There’s a deeper structural issue that makes these tasks unsolvable
           with current models/harnesses.
         </p>
+        <p>
+          Models are also <strong>not improving</strong> on our hard tasks over
+          time. Scaling data and RL is barely helping — and whatever a newer
+          model buys you is dwarfed by the harness you wrap around it.
+        </p>
+
+        <RecencyVsHarness />
+
         <p>
           What helps the most is harnesses, which can change the paradigm of how
           context is managed. But even harnesses have no solved this yet.
@@ -117,7 +126,7 @@ export default function Horizon1() {
       <IntegritySection />
 
       <Section title="[all results]">
-        <Horizon1Results />
+        <HorizonResults />
       </Section>
 
       <ContributorsSection />

@@ -65,7 +65,7 @@ export const ROLES: Role[] = [
       {
         heading: "What you'll work on",
         body:
-          "Agents forget what they've committed to and what users teach them, so we're building long-horizon learning benchmarks (starting from our [Horizon-1](/research/horizon-1) work) for memory once history overflows the context window. Real work also comes in bursts. Give an agent three tasks at once and it drops most of them, so we need environments for multi-tasking, stakeholder management, requirements-gathering, and scaled caution around irreversible actions. Underneath it all sit open problems we have to crack: temporal reasoning and planning, and a verifiable, evidence-backed model of the state of the world.",
+          "Agents forget what they've committed to and what users teach them, so we're building long-horizon learning benchmarks (starting from our [Horizon](/research/horizon) work) for memory once history overflows the context window. Real work also comes in bursts. Give an agent three tasks at once and it drops most of them, so we need environments for multi-tasking, stakeholder management, requirements-gathering, and scaled caution around irreversible actions. Underneath it all sit open problems we have to crack: temporal reasoning and planning, and a verifiable, evidence-backed model of the state of the world.",
       },
       {
         heading: "What we're looking for",

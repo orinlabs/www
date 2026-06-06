@@ -1,4 +1,4 @@
-import { type Key, useState } from "react";
+import { type Key, useMemo, useState } from "react";
 
 import { cn } from "slate-ui";
 import {
@@ -20,17 +20,21 @@ import {
 
 import {
   ADVERSARIAL_ROBUSTNESS,
+  AGENT_TYPES,
+  type AgentType,
   ARCHITECTURE_SPREAD,
   CONTENT_FLAGS,
   CONVERGENCE,
   DIFFICULTY_AXES,
   DIFFICULTY_FAMILIES,
+  fmtDateAxis,
+  RESULTS,
 } from "./data";
 import { agentColor, useIsDark } from "./theme";
 
 // ---------------------------------------------------------------------------
 // Shared primitives: a figure frame with caption, plus recharts axis/grid
-// styling so every figure matches the scatter charts (Horizon1Chart) exactly.
+// styling so every figure matches the scatter charts (HorizonChart) exactly.
 // ---------------------------------------------------------------------------
 
 // Shared chart constants matching the recharts charts.
@@ -55,7 +59,7 @@ function usePalette() {
   };
 }
 
-// Axis/grid styling shared by every recharts figure (identical to Horizon1Chart).
+// Axis/grid styling shared by every recharts figure (identical to HorizonChart).
 function useChartStyle() {
   const isDark = useIsDark();
   const gridStroke = isDark ? "#404040" : "#e5e5e5";
@@ -813,7 +817,7 @@ function useAgentColor() {
 }
 
 // ===========================================================================
-// Data-baked Horizon-1 figures. Each owns its data + caption so the article
+// Data-baked Horizon figures. Each owns its data + caption so the article
 // body just drops them in.
 // ===========================================================================
 
@@ -1467,3 +1471,248 @@ export function ConvergenceFigure() {
     </Figure>
   );
 }
+
+// Recency vs. the harness. One dot per config at its model's release date (x)
+// and pass rate (y), colored by harness. The fitted line is the time trend —
+// gently up but noisy. The real story is the VERTICAL spread at a single release
+// date (same model era, different harnesses): it dwarfs a year of model progress.
+// Trend + spreads are computed from RESULTS on load; hover any dot for details.
+export function RecencyVsHarness() {
+  const s = useChartStyle();
+  const { isDark } = s;
+
+  const { series, fit, ticks, domain, dateSpread, widest } = useMemo(() => {
+    // Drop single-run models (run on only one harness): a lone dot carries no
+    // harness comparison, which is the whole point of this chart.
+    const runsPerModel = new Map<string, number>();
+    for (const d of RESULTS)
+      runsPerModel.set(d.model, (runsPerModel.get(d.model) ?? 0) + 1);
+    const pts = RESULTS.filter(
+      (d) =>
+        Number.isFinite(d.releaseDate) && (runsPerModel.get(d.model) ?? 0) >= 2,
+    ).map((d) => ({
+      x: d.releaseDate,
+      y: d.completion,
+      model: d.model,
+      agentType: d.agentType,
+    }));
+    const byH = new Map<AgentType, typeof pts>();
+    for (const pt of pts) {
+      const a = byH.get(pt.agentType) ?? [];
+      a.push(pt);
+      byH.set(pt.agentType, a);
+    }
+    const series = AGENT_TYPES.filter((h) => byH.has(h)).map((h) => ({
+      harness: h,
+      data: byH.get(h)!,
+    }));
+
+    const n = pts.length;
+    const mx = pts.reduce((acc, d) => acc + d.x, 0) / n;
+    const my = pts.reduce((acc, d) => acc + d.y, 0) / n;
+    let sxy = 0;
+    let sxx = 0;
+    let syy = 0;
+    for (const d of pts) {
+      sxy += (d.x - mx) * (d.y - my);
+      sxx += (d.x - mx) ** 2;
+      syy += (d.y - my) ** 2;
+    }
+    const slope = sxy / sxx;
+    const fit = {
+      slope,
+      intercept: my - slope * mx,
+      r: sxy / Math.sqrt(sxx * syy),
+      slopePerYear: slope * 365 * 864e5,
+    };
+
+    const xs = pts.map((d) => d.x);
+    const xMin = Math.min(...xs);
+    const xMax = Math.max(...xs);
+    const xpad = (xMax - xMin) * 0.06;
+    const domain: [number, number] = [xMin - xpad, xMax + xpad];
+
+    const ticks: number[] = [];
+    const d0 = new Date(domain[0]);
+    let ty = d0.getUTCFullYear();
+    let tm = d0.getUTCMonth();
+    for (let k = 0; k < 24; k++) {
+      const t = Date.UTC(ty, tm, 1);
+      if (t > domain[1]) break;
+      if (t >= domain[0]) ticks.push(t);
+      tm += 2;
+      if (tm > 11) {
+        tm -= 12;
+        ty += 1;
+      }
+    }
+
+    const byDate = new Map<number, number[]>();
+    for (const d of pts) {
+      const a = byDate.get(d.x) ?? [];
+      a.push(d.y);
+      byDate.set(d.x, a);
+    }
+    const dateSpread = [...byDate.entries()].map(([x, ys]) => ({
+      x,
+      lo: Math.min(...ys),
+      hi: Math.max(...ys),
+      span: Math.max(...ys) - Math.min(...ys),
+    }));
+    const widest = dateSpread.reduce((a, b) => (b.span > a.span ? b : a));
+
+    return { series, fit, ticks, domain, dateSpread, widest };
+  }, []);
+
+  return (
+    <Figure
+      title="A newer model is a weak lever next to the harness"
+      caption={
+        <>
+          Each dot is a config at its model&apos;s release date; color is the
+          harness. The fitted trend is only{" "}
+          <strong>+{fit.slopePerYear.toFixed(0)}pp per year</strong> and noisy
+          (r&nbsp;=&nbsp;{fit.r.toFixed(2)}). But look vertically: at a single
+          release date, swapping the harness moves the score by up to{" "}
+          <strong>{widest.span.toFixed(0)}pp</strong> — more than a year of model
+          progress. The fastest lever is a better harness now, not a newer model
+          later. Hover any point for its model and score.
+        </>
+      }
+    >
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+        {series.map((x) => (
+          <div
+            key={x.harness}
+            className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300"
+          >
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full"
+              style={{ background: agentColor(x.harness, isDark) }}
+            />
+            {x.harness}
+          </div>
+        ))}
+      </div>
+      <div className="h-[360px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart margin={{ top: 16, right: 16, left: 12, bottom: 28 }}>
+            <CartesianGrid strokeDasharray={GRID_DASH} stroke={s.gridStroke} />
+            <XAxis
+              type="number"
+              dataKey="x"
+              name="Release date"
+              scale="linear"
+              domain={domain}
+              ticks={ticks}
+              tickFormatter={(v) => fmtDateAxis(Number(v))}
+              allowDataOverflow
+              {...s.axisProps}
+              label={{
+                value: "Model release date",
+                position: "insideBottom",
+                offset: -12,
+                fill: s.axisStroke,
+                fontSize: TICK_FONT,
+              }}
+            />
+            <YAxis
+              type="number"
+              dataKey="y"
+              name="Pass rate"
+              domain={[0, 60]}
+              ticks={[0, 20, 40, 60]}
+              unit="%"
+              width={48}
+              {...s.axisProps}
+              label={{
+                value: "Pass rate (%)",
+                angle: -90,
+                position: "insideLeft",
+                offset: 6,
+                fill: s.axisStroke,
+                fontSize: TICK_FONT,
+                style: { textAnchor: "middle" },
+              }}
+            />
+            <Tooltip
+              cursor={{ stroke: s.axisStroke, strokeDasharray: GRID_DASH }}
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const d = payload[0].payload as {
+                  agentType: AgentType;
+                  model: string;
+                  y: number;
+                  x: number;
+                };
+                return (
+                  <div className="rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 py-1.5 text-xs shadow-sm">
+                    <div className="font-medium text-neutral-800 dark:text-neutral-200">
+                      {d.agentType} · {d.model}
+                    </div>
+                    <div className="text-neutral-500 dark:text-neutral-400">
+                      {d.y.toFixed(1)}% pass · released {fmtDateAxis(d.x)}
+                    </div>
+                  </div>
+                );
+              }}
+            />
+            {/* faint vertical bars: harness spread at each release date */}
+            {dateSpread.map((d) => (
+              <ReferenceLine
+                key={`sp${d.x}`}
+                ifOverflow="extendDomain"
+                stroke={s.muted}
+                strokeWidth={8}
+                strokeOpacity={d.x === widest.x ? 0.22 : 0.12}
+                segment={[
+                  { x: d.x, y: d.lo },
+                  { x: d.x, y: d.hi },
+                ]}
+                label={
+                  d.x === widest.x
+                    ? {
+                        value: `${d.span.toFixed(0)}pp from harness`,
+                        position: "top",
+                        fill: s.ink,
+                        fontSize: 11,
+                        fontWeight: 600,
+                      }
+                    : undefined
+                }
+              />
+            ))}
+            {/* time trend */}
+            <ReferenceLine
+              ifOverflow="extendDomain"
+              stroke={s.ink}
+              strokeWidth={2}
+              strokeDasharray="6 4"
+              segment={[
+                { x: domain[0], y: fit.intercept + fit.slope * domain[0] },
+                { x: domain[1], y: fit.intercept + fit.slope * domain[1] },
+              ]}
+              label={{
+                value: `+${fit.slopePerYear.toFixed(0)}pp/yr (r=${fit.r.toFixed(2)})`,
+                position: "insideBottomRight",
+                fill: s.muted,
+                fontSize: 11,
+              }}
+            />
+            {series.map((x) => (
+              <Scatter
+                key={x.harness}
+                name={x.harness}
+                data={x.data}
+                fill={agentColor(x.harness, isDark)}
+                fillOpacity={0.85}
+                isAnimationActive={false}
+              />
+            ))}
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </Figure>
+  );
+}
+

@@ -14,13 +14,13 @@ interface ResearchPost {
 
 const RESEARCH_POSTS: ResearchPost[] = [
   {
-    id: "horizon-1",
-    title: "Introducing Horizon-1",
+    id: "horizon",
+    title: "Introducing Horizon",
     description:
-      "Today, we're releasing a preview of Horizon-1, our benchmark that measures an agent's ability to acquire learnings from a long history and apply them to a task.",
+      "Today, we're releasing a preview of Horizon, our benchmark that measures an agent's ability to acquire learnings from a long history and apply them to a task.",
     date: "June 2026",
     author: "Orin Labs",
-    path: "/research/horizon-1",
+    path: "/research/horizon",
   },
   {
     id: "long-horizon-agents",

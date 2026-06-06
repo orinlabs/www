@@ -6,7 +6,7 @@ export default function Home() {
       <div className="flex flex-col gap-3">
 
         {/*<Link
-          to="/research/horizon-1"
+          to="/research/horizon"
           className="group flex items-center justify-between gap-4 rounded-xl border border-primary/20 bg-primary/5 dark:bg-primary/10 px-4 sm:px-6 py-3 hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
         >
           <div className="flex items-center gap-3 min-w-0">
@@ -14,7 +14,7 @@ export default function Home() {
               New
             </span>
             <span className="text-sm sm:text-base text-neutral-800 dark:text-neutral-200 truncate">
-              <span className="font-semibold">Horizon-1</span> — Benchmarking continual learning over long horizons
+              <span className="font-semibold">Horizon</span> — Benchmarking continual learning over long horizons
             </span>
           </div>
           <span className="shrink-0 flex items-center gap-1 text-sm font-medium text-primary">

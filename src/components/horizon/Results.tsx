@@ -23,6 +23,7 @@ import {
   DIFFICULTY_BUCKETS,
   type DifficultyBucket,
   fmtCost,
+  fmtCount,
   fmtDate,
   fmtPct,
   fmtTime,
@@ -90,7 +91,7 @@ const Y_BUCKETS: { id: DifficultyBucket | "all"; label: string }[] = [
 // Hard). Dots are colored by harness; a point's model + values are revealed on
 // hover. With `showTable`, the full leaderboard renders below and shares the
 // hover highlight.
-export function Horizon1Chart({
+export function HorizonChart({
   showTable = false,
   axisControls = true,
   difficultyControls = true,
@@ -208,7 +209,7 @@ export function Horizon1Chart({
             Score vs. {metric.label}
           </h4>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Horizon-1 (195 tasks), preview run — hover a point to reveal its
+            Horizon (195 tasks), preview run — hover a point to reveal its
             model
           </p>
           <div className="flex items-center gap-4 mt-2">
@@ -386,7 +387,7 @@ export function Horizon1Chart({
       </div>
 
       {showTable && (
-        <Horizon1Table
+        <HorizonTable
           hoveredId={hoveredId}
           onHover={setHoveredId}
           hoveredType={hoveredType}
@@ -401,7 +402,7 @@ export function Horizon1Chart({
 // fixed (a row) and varying only the harness swings the score 10–20+ points,
 // and RLM is the rightmost dot in nearly every row — the harness, not the
 // model, is the dominant and most consistent lever.
-export function Horizon1ModelChart() {
+export function HorizonModelChart() {
   const isDark = useIsDark();
   const [hoveredHarness, setHoveredHarness] = useState<string | null>(null);
 
@@ -599,11 +600,108 @@ export function Horizon1ModelChart() {
   );
 }
 
-export function Horizon1Results() {
-  return <Horizon1Chart showTable />;
+export function HorizonResults() {
+  return <HorizonChart showTable />;
 }
 
-export function Horizon1Table({
+// Simple leaderboard derived from the data file: one row per (harness × model)
+// configuration, showing the overall pass rate plus the easy/medium/hard
+// splits. Sorted strongest-first by overall completion.
+export function HorizonLeaderboard() {
+  const isDark = useIsDark();
+  // Keep only the strongest configuration per harness, then sort strongest-first.
+  const rows = useMemo(() => {
+    const bestByHarness = new Map<AgentType, ResultRow>();
+    for (const r of RESULTS) {
+      const cur = bestByHarness.get(r.agentType);
+      if (cur == null || r.completion > cur.completion) {
+        bestByHarness.set(r.agentType, r);
+      }
+    }
+    return [...bestByHarness.values()].sort(
+      (a, b) => b.completion - a.completion,
+    );
+  }, []);
+
+  return (
+    <div className="my-8 overflow-x-auto">
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr className="border-b-2 border-neutral-300 dark:border-neutral-700 text-left">
+            <th className="py-2 pl-4 pr-4 font-semibold text-neutral-800 dark:text-neutral-200">
+              Harness
+            </th>
+            <th className="py-2 px-4 font-semibold text-neutral-800 dark:text-neutral-200">
+              Best Model
+            </th>
+            <th className="py-2 px-4 font-semibold text-neutral-800 dark:text-neutral-200 text-right">
+              Overall
+            </th>
+            <th className="py-2 px-4 font-semibold text-neutral-800 dark:text-neutral-200 text-right">
+              Easy
+            </th>
+            <th className="py-2 px-4 font-semibold text-neutral-800 dark:text-neutral-200 text-right">
+              Medium
+            </th>
+            <th className="py-2 pl-4 pr-4 font-semibold text-neutral-800 dark:text-neutral-200 text-right">
+              Hard
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr
+              key={row.id}
+              className="border-b border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition"
+            >
+              <td className="py-2 pl-4 pr-4 text-neutral-700 dark:text-neutral-300">
+                <span className="flex items-center gap-2">
+                  <span
+                    className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ background: agentColor(row.agentType, isDark) }}
+                  />
+                  <span className="font-medium">{row.agentType}</span>
+                </span>
+              </td>
+              <td className="py-2 px-4 text-neutral-700 dark:text-neutral-300 tabular-nums">
+                {row.model}
+              </td>
+              <td className="py-2 px-4 text-right tabular-nums font-medium text-neutral-800 dark:text-neutral-200">
+                <span className="mr-1.5 font-normal text-neutral-300 dark:text-neutral-600">
+                  {fmtCount(row.counts.overall)}
+                </span>
+                {fmtPct(row.completion)}
+              </td>
+              <td className="py-2 px-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
+                <span className="mr-1.5 text-neutral-300 dark:text-neutral-600">
+                  {fmtCount(row.counts.easy)}
+                </span>
+                {fmtPct(row.difficulty.easy)}
+              </td>
+              <td className="py-2 px-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
+                <span className="mr-1.5 text-neutral-300 dark:text-neutral-600">
+                  {fmtCount(row.counts.medium)}
+                </span>
+                {fmtPct(row.difficulty.medium)}
+              </td>
+              <td className="py-2 pl-4 pr-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
+                <span className="mr-1.5 text-neutral-300 dark:text-neutral-600">
+                  {fmtCount(row.counts.hard)}
+                </span>
+                {fmtPct(row.difficulty.hard)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400 italic">
+        Preview run, subject to change.
+      </p>
+    </div>
+  );
+}
+
+export function HorizonTable({
   hoveredId,
   onHover,
   hoveredType,
