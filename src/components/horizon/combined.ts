@@ -26,7 +26,7 @@ export interface TaskMeta {
   misdirection?: string;
   n_hops?: number;
   burial_depth_tokens?: number;
-  family?: string;
+  family?: string | null;
   category?: string;
   adversarial?: boolean;
   flags?: string[];

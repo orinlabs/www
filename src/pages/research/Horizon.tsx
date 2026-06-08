@@ -5,14 +5,12 @@ import { useEffect } from 'react';
 import Prism from 'prismjs';
 import { Link } from 'react-router-dom';
 
-import { JoinUs } from '../../components/Hiring';
 import {
   ContributorsSection,
   DifficultyDriversSection,
   HorizonLeaderboard,
   HorizonResults,
   IntegritySection,
-  RecencyVsHarness,
   TaskAnatomySection,
 } from '../../components/horizon';
 import { ResearchArticle, Section } from '../../components/WhitePaper';
