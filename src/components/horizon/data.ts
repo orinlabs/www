@@ -6,7 +6,7 @@
 // the shared formatting helpers here so a new run only ever edits one place.
 // ===========================================================================
 
-import { aggregateRuns } from "./combined";
+import { aggregateRuns, poolByTaskField, type TaskMeta } from "./combined";
 import { COMBINED } from "./combinedResults";
 
 // ---------------------------------------------------------------------------
@@ -18,7 +18,8 @@ export type AgentType =
   | "Codex"
   | "RAG"
   | "Hermes"
-  | "RLM";
+  | "RLM"
+  | "OpenClaw";
 
 export type ScaleType = "linear" | "log";
 
@@ -59,8 +60,8 @@ export interface ResultRow {
   agentType: AgentType;
   model: string;
   completion: number;
-  costUsd: number;
-  tokens: number;
+  costUsd?: number;
+  tokens?: number;
   timeSec?: number;
   // Model release date as a millisecond timestamp (derived from MODEL_RELEASE_DATES).
   releaseDate: number;
@@ -228,11 +229,110 @@ export const RESULTS: ResultRow[] = aggregateRuns(COMBINED).map((r) => ({
   releaseDate: Date.parse(MODEL_RELEASE_DATES[r.model] ?? "2025-08-07"),
   difficulty: r.difficulty,
   counts: r.counts,
+  tokensLabel:
+    r.tokensEstimated && r.tokens != null ? `~${fmtTokens(r.tokens)}` : undefined,
 }));
 
 export const AGENT_TYPES: AgentType[] = Array.from(
   new Set(RESULTS.map((r) => r.agentType)),
 );
+
+// ---------------------------------------------------------------------------
+// "What makes a task hard": difficulty tiers + the structured axes behind them.
+// Every number here is pooled across all included runs at runtime (see
+// poolByTaskField), so the distributions and pass rates always match the data.
+// ---------------------------------------------------------------------------
+
+// One level of a difficulty axis: its pooled pass rate and how many tasks sit
+// at that level (the distribution).
+export interface DimensionLevel {
+  level: string;
+  rate: number;
+  passed: number;
+  total: number;
+  taskCount: number;
+}
+
+// A structured axis we control per task (reasoning hops, semantic distance, …),
+// with its ordered levels (easiest → hardest) and a one-line description.
+export interface TaskDimension {
+  id: string;
+  title: string;
+  blurb: string;
+  levels: DimensionLevel[];
+}
+
+function buildLevels(
+  field: keyof TaskMeta,
+  order: { key: string; label: string }[],
+  mapValue?: (v: TaskMeta[keyof TaskMeta]) => string | null,
+): DimensionLevel[] {
+  const stats = poolByTaskField(COMBINED, field, mapValue);
+  return order.map(({ key, label }) => {
+    const s = stats[key] ?? { passed: 0, total: 0, taskCount: 0 };
+    return {
+      level: label,
+      rate: s.total ? Number(((100 * s.passed) / s.total).toFixed(1)) : 0,
+      passed: s.passed,
+      total: s.total,
+      taskCount: s.taskCount,
+    };
+  });
+}
+
+export const TASK_DIMENSIONS: TaskDimension[] = [
+  {
+    id: "n_hops",
+    title: "Reasoning hops",
+    blurb:
+      "How many separate facts from the trace must be chained together to answer.",
+    levels: buildLevels(
+      "n_hops",
+      [
+        { key: "1", label: "1 hop" },
+        { key: "2", label: "2 hops" },
+        { key: "3+", label: "3+ hops" },
+      ],
+      (v) => (Number(v) >= 3 ? "3+" : String(v)),
+    ),
+  },
+  {
+    id: "semantic_distance",
+    title: "Semantic distance",
+    blurb:
+      "How far the needed memory sits from the task prompt in embedding space — i.e. how hard it is to find by similarity.",
+    levels: buildLevels("semantic_distance", [
+      { key: "near", label: "Near" },
+      { key: "mid", label: "Mid" },
+      { key: "far", label: "Far" },
+    ]),
+  },
+  {
+    id: "misdirection",
+    title: "Misdirection",
+    blurb:
+      "How strongly nearby content in the trace points toward a plausible wrong answer.",
+    levels: buildLevels("misdirection", [
+      { key: "low", label: "Low" },
+      { key: "mid", label: "Mid" },
+      { key: "high", label: "High" },
+    ]),
+  },
+  {
+    id: "adversarial",
+    title: "Adversarial traps",
+    blurb:
+      "Whether the trace actively works against the agent — patched or stale facts, confusable entities, a confidently wrong speaker.",
+    levels: buildLevels(
+      "adversarial",
+      [
+        { key: "clean", label: "Clean" },
+        { key: "trap", label: "Adversarial" },
+      ],
+      (v) => (v ? "trap" : "clean"),
+    ),
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Interactive scatter: selectable x-axis metrics
@@ -396,4 +496,49 @@ export const CONVERGENCE: ConvergencePoint[] = [
   { x: "near", nonadv: 46.7, adv: 32.8 },
   { x: "mid", nonadv: 35.4, adv: 28.4 },
   { x: "far", nonadv: 29.9, adv: 31.1 },
+];
+
+// ---------------------------------------------------------------------------
+// Figure: did the needed fact survive into Hermes's store, and does it matter?
+//
+// For each of the 195 tasks we used its SOLVABILITY.md (the exact fact + line)
+// to label whether that fact survived into Hermes's store: present, only
+// partial, or absent. `tasks` is how many of the 195 fall in each bucket;
+// `passRate` is Hermes's pooled pass rate (over 585 trials) on those tasks.
+// Only ~11% of needed facts were kept, and having the fact roughly triples the
+// pass rate (67% vs 24%).
+// ---------------------------------------------------------------------------
+
+export interface FactInStoreBucket {
+  level: "present" | "partial" | "absent";
+  label: string;
+  tasks: number;
+  passRate: number;
+}
+
+export const HERMES_FACT_IN_STORE_TOTAL = 195;
+
+export const HERMES_FACT_IN_STORE: FactInStoreBucket[] = [
+  { level: "present", label: "In store", tasks: 21, passRate: 67 },
+  { level: "partial", label: "Partial", tasks: 73, passRate: 37 },
+  { level: "absent", label: "Not stored", tasks: 101, passRate: 24 },
+];
+
+// ---------------------------------------------------------------------------
+// Figure: Hermes pass rate by (fact-in-store × semantic distance). Read down a
+// column for the store-side effect (having the fact beats not having it at every
+// distance, ~50pp); read across the "In store" row for the search-side effect
+// (even when stored, near is far easier to surface than mid/far, 87→56).
+// ---------------------------------------------------------------------------
+
+export interface FactDistanceRow {
+  inStore: string;
+  near: number;
+  mid: number;
+  far: number;
+}
+
+export const HERMES_FACT_BY_DISTANCE: FactDistanceRow[] = [
+  { inStore: "In store", near: 87.5, mid: 56.2, far: 60.0 },
+  { inStore: "Not stored", near: 33.3, mid: 19.2, far: 17.3 },
 ];

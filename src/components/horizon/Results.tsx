@@ -777,13 +777,13 @@ export function HorizonTable({
                 {fmtPct(row.completion)}
               </td>
               <td className="py-2 px-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
-                {fmtCost(row.costUsd)}
+                {row.costUsd != null ? fmtCost(row.costUsd) : "—"}
               </td>
               <td className="py-2 px-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
                 {row.timeSec != null ? fmtTime(row.timeSec) : "—"}
               </td>
               <td className="py-2 pl-4 pr-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
-                {row.tokensLabel ?? fmtTokens(row.tokens)}
+                {row.tokensLabel ?? (row.tokens != null ? fmtTokens(row.tokens) : "—")}
               </td>
             </tr>
           ))}

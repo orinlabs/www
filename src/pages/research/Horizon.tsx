@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { JoinUs } from '../../components/Hiring';
 import {
   ContributorsSection,
+  DifficultyDriversSection,
   HorizonLeaderboard,
   HorizonResults,
   IntegritySection,
@@ -93,6 +94,7 @@ export default function Horizon() {
 
       <TaskAnatomySection />
 
+      <DifficultyDriversSection />
 
       <IntegritySection />
 

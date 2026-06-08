@@ -9,6 +9,7 @@ export const AGENT_TYPE_COLORS: Record<string, { light: string; dark: string }> 
     Codex: { light: "#1d4ed8", dark: "#60a5fa" },
     Hermes: { light: "#171717", dark: "#fafafa" },
     RLM: { light: "#7c3aed", dark: "#a78bfa" },
+    OpenClaw: { light: "#be185d", dark: "#f472b6" },
   };
 
 export const FALLBACK_COLOR = { light: "#525252", dark: "#a3a3a3" };

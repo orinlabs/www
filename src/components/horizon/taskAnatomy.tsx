@@ -129,7 +129,7 @@ export function TaskAnatomySection() {
   return (
     <Section title="Example Task">
       <p>
-        Every Horizon task has a long <strong>historical trace</strong> that the agent must learn from to complete the task correctly. Each trace is <strong>real</strong>, pulled from one of our products,{" "}
+        Every Horizon task has a long <strong>historical trace</strong> that the agent must learn from to complete the task correctly. Each trace is <strong>real</strong> and months-long, pulled from one of our products,{" "}
         <a
           href="https://acadialearning.org/"
           target="_blank"

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Regenerate src/components/horizon/combinedResults.ts from the private run.
 
-Reads horizon-1-private/jobs/combined_results.json and trims it to exactly what
-the Horizon page derives at runtime: a per-task metadata map (difficulty +
-axes) and per-run cases (task id, pass, cost, tokens, time). Run this whenever
-the benchmark run updates; never edit combinedResults.ts by hand.
+Reads horizon-1-private/scripts/analysis/horizon1_runs_export.json (the
+build_export.py per-case export) and trims it to exactly what the Horizon page
+derives at runtime: a per-task metadata map (difficulty + axes) and per-run
+cases (task id, pass, cost, tokens, time). Run this whenever the benchmark run
+updates; never edit combinedResults.ts by hand.
 
 Usage:
-  uv run python scripts/ingest_horizon.py [path/to/combined_results.json]
+  uv run python scripts/ingest_horizon.py [path/to/horizon1_runs_export.json]
 """
 
 from __future__ import annotations
@@ -17,26 +18,41 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-DEFAULT_SOURCE = REPO.parent / "horizon-1-private" / "jobs" / "combined_results.json"
+DEFAULT_SOURCE = (
+    REPO.parent
+    / "horizon-1-private"
+    / "scripts"
+    / "analysis"
+    / "horizon1_runs_export.json"
+)
 OUT = REPO / "src" / "components" / "horizon" / "combinedResults.ts"
 
-# Per-task metadata fields carried through (difficulty drives the splits; the
-# rest are kept for future figures). Order is preserved in the emitted file.
+# Export agent name -> the raw harness id displayHarness() maps to a label.
+AGENT_TO_HARNESS = {
+    "RLM": "trace-rlm",
+    "RAG": "trace-rag",
+    "ClaudeCode": "claude-code",
+    "Hermes": "hermes",
+    "Codex": "codex",
+    "OpenClaw": "openclaw",
+}
+
+# Per-task metadata: (source key, emitted key). difficulty drives the splits;
+# the axes feed the difficulty figures. Order is preserved in the output.
 TASK_FIELDS = [
-    "difficulty",
-    "semantic_distance",
-    "misdirection",
-    "n_hops",
-    "burial_depth_tokens",
-    "family",
-    "category",
-    "adversarial",
-    "flags",
-    "tags",
+    ("difficulty", "difficulty"),
+    ("sd", "semantic_distance"),
+    ("md", "misdirection"),
+    ("n_hops", "n_hops"),
+    ("family", "family"),
+    ("category", "category"),
+    ("adversarial", "adversarial"),
+    ("flags", "flags"),
+    ("tags", "tags"),
 ]
 
 HEADER = (
-    "// AUTO-GENERATED from horizon-1-private/jobs/combined_results.json.\n"
+    "// AUTO-GENERATED from horizon-1-private/scripts/analysis/horizon1_runs_export.json.\n"
     "// Trimmed to what the page derives: a per-task metadata map (difficulty + axes)\n"
     "// and per-run cases (task id, pass, cost, tokens, time). Difficulty is joined\n"
     "// from `tasks` at runtime. Regenerate when the run updates; do not edit by hand.\n"
@@ -45,47 +61,50 @@ HEADER = (
 )
 
 
+def slug(run_label: str) -> str:
+    return run_label.replace("/", "-").replace(" ", "-").lower()
+
+
 def trim_task(meta: dict) -> dict:
-    return {k: meta[k] for k in TASK_FIELDS if k in meta}
+    return {out: meta[src] for src, out in TASK_FIELDS if src in meta}
+
+
+def round_or_none(v, digits: int):
+    return round(v, digits) if isinstance(v, (int, float)) else None
 
 
 def trim_case(case: dict) -> dict:
-    cost_usd = case.get("cost_usd")
-    cost = (
-        round(cost_usd["value"], 4)
-        if isinstance(cost_usd, dict) and cost_usd.get("value") is not None
-        else None
-    )
-    tokens = case.get("tokens")
-    total = (
-        tokens["total"]
-        if isinstance(tokens, dict) and tokens.get("total") is not None
-        else None
-    )
-    time_sec = case.get("time_sec")
-    secs = (
-        round(time_sec["agent_exec"], 1)
-        if isinstance(time_sec, dict) and time_sec.get("agent_exec") is not None
-        else None
-    )
     return {
         "task": case["task"],
         "passed": case.get("passed"),
-        "cost": cost,
-        "tokens": total,
-        "time": secs,
+        "cost": round_or_none(case.get("cost_usd"), 4),
+        "tokens": case.get("total_tokens")
+        if isinstance(case.get("total_tokens"), int)
+        else None,
+        "time": round_or_none(case.get("time_sec"), 1),
     }
 
 
-def trim_run(run_key: str, run: dict) -> dict:
-    cases = run["cases"]
-    case_list = cases.values() if isinstance(cases, dict) else cases
+def trim_run(run: dict) -> dict | None:
+    cases = run.get("cases") or []
+    if not cases:
+        return None
+    # The published per-task aggregates are authoritative for cost/tokens/time;
+    # the per-case cost is unreliable or missing for some agents (e.g. OpenClaw,
+    # Hermes), so carry the reported numbers through rather than re-deriving.
+    rep = run.get("reported") or {}
     return {
-        "runKey": run_key,
-        "harness": run["harness"],
+        "runKey": slug(run["run"]),
+        "harness": AGENT_TO_HARNESS.get(run["agent"], run["agent"].lower()),
         "model": run["model"],
-        "modelName": run.get("model_name"),
-        "cases": [trim_case(c) for c in case_list],
+        "modelName": run.get("model"),
+        "reported": {
+            "cost": rep.get("cost_per_task_usd"),
+            "tokens": rep.get("tokens_per_task"),
+            "time": rep.get("time_per_task_sec"),
+            "tokensEstimated": bool(rep.get("tokens_estimated")),
+        },
+        "cases": [trim_case(c) for c in cases],
     }
 
 
@@ -93,19 +112,22 @@ def main() -> None:
     source = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_SOURCE
     data = json.loads(source.read_text())
 
+    runs = [r for r in (trim_run(r) for r in data["runs"]) if r is not None]
     combined = {
-        "tasks": {tid: trim_task(meta) for tid, meta in data["tasks"].items()},
-        "runs": [trim_run(rk, r) for rk, r in data["runs"].items()],
+        "tasks": {tid: trim_task(meta) for tid, meta in data["cases"].items()},
+        "runs": runs,
     }
 
     payload = json.dumps(combined, separators=(",", ":"), ensure_ascii=False)
     OUT.write_text(f"{HEADER}{payload};\n")
 
-    meta = data.get("_meta", {})
+    meta = data.get("meta", {})
+    agents = sorted({r["harness"] for r in runs})
     print(
         f"Wrote {OUT.relative_to(REPO)}: "
-        f"{len(combined['runs'])} runs, {len(combined['tasks'])} tasks "
-        f"(source generated_at {meta.get('generated_at', '?')})"
+        f"{len(runs)} runs, {len(combined['tasks'])} tasks "
+        f"(harnesses: {', '.join(agents)}; "
+        f"source generated_at {meta.get('generated_at', '?')})"
     )
 
 

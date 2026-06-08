@@ -12,6 +12,7 @@ export {
 } from "./Results";
 export {
   ContributorsSection,
+  DifficultyDriversSection,
   IntegritySection,
   IntroSection,
   ResultsSection,

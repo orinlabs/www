@@ -29,6 +29,7 @@ import {
   DIFFICULTY_FAMILIES,
   fmtDateAxis,
   RESULTS,
+  TASK_DIMENSIONS,
 } from "./data";
 import { agentColor, useIsDark } from "./theme";
 
@@ -1197,6 +1198,253 @@ export function ContentFlagsFigure() {
             {f.desc}
           </p>
         ))}
+      </div>
+    </Figure>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pass rate across the levels of one task axis (easiest → hardest), as a single
+// line chart. Reused for the semantic-distance and reasoning-hops figures in the
+// difficulty section. Numbers are pooled + runtime-derived from ./data.
+// ---------------------------------------------------------------------------
+
+export function PassRateByAxisFigure({
+  dimId,
+  title,
+  caption,
+  height = 280,
+}: {
+  dimId: string;
+  title: string;
+  caption?: React.ReactNode;
+  height?: number;
+}) {
+  const { gridStroke, axisProps, ink } = useChartStyle();
+  const dim = TASK_DIMENSIONS.find((d) => d.id === dimId);
+  if (!dim) return null;
+  const data = dim.levels.map((l) => ({ level: l.level, rate: l.rate }));
+
+  return (
+    <Figure title={title} caption={caption}>
+      <div style={{ height }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 28, right: 24, left: 8, bottom: 8 }}>
+            <CartesianGrid
+              strokeDasharray={GRID_DASH}
+              stroke={gridStroke}
+              vertical={false}
+            />
+            <XAxis dataKey="level" {...axisProps} />
+            <YAxis
+              type="number"
+              domain={[0, 50]}
+              ticks={[0, 25, 50]}
+              tickFormatter={(v: unknown) => `${v}%`}
+              width={40}
+              {...axisProps}
+            />
+            <Line
+              dataKey="rate"
+              stroke={ink}
+              strokeWidth={2.5}
+              isAnimationActive={false}
+              activeDot={false}
+              dot={dotShape(ink, 1, 4)}
+            >
+              <LabelList
+                dataKey="rate"
+                position="top"
+                formatter={(v: unknown) => `${Number(v).toFixed(1)}%`}
+                fill={ink}
+                fontSize={12}
+                fontWeight={600}
+              />
+            </Line>
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </Figure>
+  );
+}
+
+// Hermes pass rate conditioned on whether the needed fact survived into its
+// store (present / partial / absent). Having the fact roughly triples the pass
+// rate — and the store kept the fact for only ~11% of tasks. The per-bucket
+// task share rides under each bar so the rarity reads alongside the effect.
+export function HermesStoreRecallFigure() {
+  const { isDark, gridStroke, axisProps, ink, muted, pos, neg } =
+    useChartStyle();
+  const amber = isDark ? "#fbbf24" : "#d97706";
+  const colorFor: Record<string, string> = {
+    present: pos,
+    partial: amber,
+    absent: neg,
+  };
+
+  const data = HERMES_FACT_IN_STORE.map((b) => ({
+    label: b.label,
+    level: b.level,
+    rate: b.passRate,
+    tasks: b.tasks,
+    share: Math.round((100 * b.tasks) / HERMES_FACT_IN_STORE_TOTAL),
+  }));
+
+  const renderRate = (props: LabelRenderProps) => {
+    const { x, y, width, value } = props;
+    if (
+      typeof x !== "number" ||
+      typeof y !== "number" ||
+      typeof width !== "number" ||
+      typeof value !== "number"
+    )
+      return null;
+    return (
+      <text
+        x={x + width / 2}
+        y={y - 7}
+        textAnchor="middle"
+        fontSize={13}
+        fontWeight={600}
+        fill={ink}
+      >
+        {Math.round(value)}%
+      </text>
+    );
+  };
+
+  // Two-line category tick: the bucket, plus how many of the 195 tasks it holds.
+  const renderTick = (props: {
+    x?: number;
+    y?: number;
+    payload?: { value?: string | number; index?: number };
+  }) => {
+    const { x, y, payload } = props;
+    if (typeof x !== "number" || typeof y !== "number" || !payload) return <g />;
+    const d = data[payload.index ?? -1];
+    return (
+      <g>
+        <text x={x} y={y + 14} textAnchor="middle" fontSize={TICK_FONT} fill={ink}>
+          {payload.value}
+        </text>
+        <text x={x} y={y + 29} textAnchor="middle" fontSize={11} fill={muted}>
+          {d ? `${d.tasks} tasks (${d.share}%)` : ""}
+        </text>
+      </g>
+    );
+  };
+
+  return (
+    <Figure
+      title="Hermes can only pass when the fact is in its store"
+      caption={
+        <>
+          Hermes pass rate by whether the fact a task needs survived into the store. Only 11% of needed facts were kept and 52% were absent entirely, yet having the fact roughly triples the pass rate (67% vs 24%). The failure is storage, not reasoning.
+        </>
+      }
+    >
+      <div className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={data}
+            margin={{ top: 28, right: 16, left: 8, bottom: 30 }}
+          >
+            <CartesianGrid
+              strokeDasharray={GRID_DASH}
+              stroke={gridStroke}
+              vertical={false}
+            />
+            <XAxis dataKey="label" interval={0} tick={renderTick} {...axisProps} />
+            <YAxis
+              type="number"
+              domain={[0, 75]}
+              ticks={[0, 25, 50, 75]}
+              tickFormatter={(v: unknown) => `${v}%`}
+              width={40}
+              {...axisProps}
+            />
+            <Bar
+              dataKey="rate"
+              radius={2}
+              barSize={84}
+              isAnimationActive={false}
+            >
+              {data.map((d) => (
+                <Cell key={d.level} fill={colorFor[d.level]} fillOpacity={0.85} />
+              ))}
+              <LabelList content={renderRate} />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </Figure>
+  );
+}
+
+// Heatmap of Hermes pass rate by (fact-in-store × semantic distance). Down a
+// column is the store-side gap (having the fact wins everywhere); across the
+// "In store" row is the search-side gap (even a stored fact is hard to surface
+// when it is far). Color runs red (low) → green (high).
+export function HermesFactDistanceFigure() {
+  const isDark = useIsDark();
+  const cols: { key: "near" | "mid" | "far"; label: string }[] = [
+    { key: "near", label: "Near" },
+    { key: "mid", label: "Mid" },
+    { key: "far", label: "Far" },
+  ];
+
+  const heat = (rate: number) => {
+    const t = Math.max(0, Math.min(1, rate / 90));
+    const lo = isDark ? [127, 29, 29] : [254, 202, 202];
+    const hi = isDark ? [20, 83, 45] : [187, 247, 208];
+    const c = lo.map((l, i) => Math.round(l + (hi[i] - l) * t));
+    return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+  };
+
+  return (
+    <Figure
+      title="Having the fact helps — but a far memory is hard to surface even when stored"
+      caption={
+        <>
+          Hermes pass rate by whether the needed fact is in the store (rows) and
+          how far it sits in semantic space (columns). Down a column: having the
+          fact beats not having it by ~50pp at every distance. Across the top
+          row: even a stored fact is much harder to use when it is far (88% near
+          → 56% mid).
+        </>
+      }
+    >
+      <div className="max-w-lg text-sm" style={{ fontFamily: FONT }}>
+        <div className="grid grid-cols-[7rem_repeat(3,1fr)] gap-1">
+          <div />
+          {cols.map((c) => (
+            <div
+              key={c.key}
+              className="text-center font-semibold text-neutral-600 dark:text-neutral-300 pb-1"
+            >
+              {c.label}
+            </div>
+          ))}
+          {HERMES_FACT_BY_DISTANCE.map((row) => (
+            <Fragment key={row.inStore}>
+              <div className="flex items-center justify-end pr-3 font-semibold text-neutral-700 dark:text-neutral-200">
+                {row.inStore}
+              </div>
+              {cols.map((c) => (
+                <div
+                  key={c.key}
+                  className="rounded py-4 text-center font-semibold tabular-nums"
+                  style={{
+                    background: heat(row[c.key]),
+                    color: isDark ? "#f5f5f5" : "#171717",
+                  }}
+                >
+                  {row[c.key].toFixed(0)}%
+                </div>
+              ))}
+            </Fragment>
+          ))}
+        </div>
       </div>
     </Figure>
   );

@@ -41,11 +41,20 @@ export interface RawCase {
   time: number | null;
 }
 
+// Published per-task aggregates (authoritative for cost/tokens/time).
+export interface ReportedAggregates {
+  cost: number | null;
+  tokens: number | null;
+  time: number | null;
+  tokensEstimated: boolean;
+}
+
 export interface RawRun {
   runKey: string;
   harness: string;
   model: string;
   modelName: string | null;
+  reported?: ReportedAggregates;
   cases: RawCase[];
 }
 
@@ -64,6 +73,7 @@ const HARNESS_DISPLAY: Record<string, AgentType> = {
   "trace-rlm": "RLM",
   hermes: "Hermes",
   codex: "Codex",
+  openclaw: "OpenClaw",
 };
 
 export function displayHarness(raw: string): AgentType {
@@ -81,11 +91,6 @@ export function normalizeModel(raw: string): string {
 // ---------------------------------------------------------------------------
 // Per-run aggregation.
 // ---------------------------------------------------------------------------
-
-function mean(xs: (number | null)[]): number | undefined {
-  const v = xs.filter((x): x is number => typeof x === "number");
-  return v.length ? v.reduce((a, b) => a + b, 0) / v.length : undefined;
-}
 
 function passRate(cases: RawCase[]): number {
   const scored = cases.filter((c) => c.passed != null);
@@ -106,9 +111,10 @@ export interface AggregatedRun {
   agentType: AgentType;
   model: string;
   completion: number;
-  costUsd: number;
-  tokens: number;
-  timeSec: number | undefined;
+  costUsd?: number;
+  tokens?: number;
+  timeSec?: number;
+  tokensEstimated?: boolean;
   difficulty: DifficultyBreakdown;
   counts: PassCounts;
 }
@@ -123,14 +129,16 @@ export function aggregateRun(
     Number(passRate(cases.filter((c) => diffOf(c) === bucket)).toFixed(1));
   const countFor = (bucket: DifficultyBucket) =>
     passCount(cases.filter((c) => diffOf(c) === bucket));
+  const rep = run.reported;
   return {
     runKey: run.runKey,
     agentType: displayHarness(run.harness),
     model: normalizeModel(run.model),
     completion: Number(passRate(cases).toFixed(1)),
-    costUsd: Number((mean(cases.map((c) => c.cost)) ?? 0).toFixed(3)),
-    tokens: Math.round(mean(cases.map((c) => c.tokens)) ?? 0),
-    timeSec: mean(cases.map((c) => c.time)),
+    costUsd: rep?.cost ?? undefined,
+    tokens: rep?.tokens ?? undefined,
+    timeSec: rep?.time ?? undefined,
+    tokensEstimated: rep?.tokensEstimated,
     difficulty: {
       easy: splitFor("easy"),
       medium: splitFor("medium"),
@@ -149,4 +157,50 @@ export function aggregateRuns(data: CombinedData): AggregatedRun[] {
   return data.runs
     .map((r) => aggregateRun(r, data.tasks))
     .sort((a, b) => b.completion - a.completion);
+}
+
+// ---------------------------------------------------------------------------
+// Per-task-axis pooling: for one piece of task metadata (difficulty, n_hops,
+// semantic_distance, ...), bucket tasks by level and pool the pass rate across
+// every included run. Used by the "what makes a task hard" figures so the
+// distributions and pass rates come straight from the source, not hardcoded.
+// ---------------------------------------------------------------------------
+
+export interface FieldLevelStat {
+  // Scored cases pooled across all runs for tasks at this level.
+  passed: number;
+  total: number;
+  // Number of distinct tasks at this level (the distribution).
+  taskCount: number;
+}
+
+export function poolByTaskField(
+  data: CombinedData,
+  field: keyof TaskMeta,
+  mapValue: (v: TaskMeta[keyof TaskMeta]) => string | null = (v) =>
+    v == null ? null : String(v),
+): Record<string, FieldLevelStat> {
+  const out: Record<string, FieldLevelStat> = {};
+  const get = (level: string) =>
+    (out[level] ??= { passed: 0, total: 0, taskCount: 0 });
+
+  for (const meta of Object.values(data.tasks)) {
+    const level = mapValue(meta[field]);
+    if (level != null) get(level).taskCount += 1;
+  }
+
+  for (const run of data.runs) {
+    for (const c of run.cases) {
+      if (c.passed == null) continue;
+      const meta = data.tasks[c.task];
+      if (!meta) continue;
+      const level = mapValue(meta[field]);
+      if (level == null) continue;
+      const stat = get(level);
+      stat.total += 1;
+      if (c.passed) stat.passed += 1;
+    }
+  }
+
+  return out;
 }
