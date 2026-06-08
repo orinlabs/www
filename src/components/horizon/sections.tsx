@@ -44,10 +44,10 @@ export function DifficultyDriversSection() {
       </p>
 
       <p>
-      For <strong>search</strong> strategies, a similar problem exists: the agent can only retroactively search for things it <i>expects</i>. In the example task above the agent has no reason to suspect that <code>curl</code> is broken, so it won't search the trace to check. Nearly every time RLM, RAG, Claude Code, or Codex failed a task, it was because of this issue. Additionally, existing search functions like keyword, semantic, FTS5, and BM25 lack the ability to accurately search the trace for counterfactuals, experiential links, and other non-textual learnings.
+      For <strong>search</strong> strategies, a similar problem exists: the agent can only retroactively search for things it <i>expects</i>. In the example task above the agent has no reason to suspect that <code>curl</code> is broken, so it won't search the trace to check. Nearly every time RLM, RAG, Claude Code, or Codex failed a task, it was because of this issue. Additionally, existing search functions like keyword, semantic, FTS5, and BM25 lack the ability to accurately search the trace for counterfactuals, experiential links, and other non-textual connections.
       </p>
 
-      <p>As tasks increase in difficulty, the required learning becomes more unexpected, buried in more data, and may even require multple data points to extact the required pattern.</p>
+      <p>As tasks increase in difficulty, the required learning becomes more unexpected, buried in more data, and may even require multiple data points to extact the required pattern.</p>
     </Section>
   );
 }
