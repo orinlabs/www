@@ -116,12 +116,21 @@ export function HorizonChart({
   // Dates (and any forceLinear metric) can't use a log scale.
   const effectiveScale: ScaleType = metric.forceLinear ? "linear" : scaleType;
 
+  const metricForRow = (r: ResultRow): number | undefined => {
+    if (metricId === "releaseDate" || bucket === "all") {
+      return r[metricId] as number | undefined;
+    }
+    return r.difficultyMetrics[bucket][metricId];
+  };
+
   const data = useMemo(
     () =>
-      RESULTS.filter(
-        (r) => r[metricId] != null && Number.isFinite(r[metricId] as number),
-      ).map((r) => ({
+      RESULTS.filter((r) => {
+        const x = metricForRow(r);
+        return x != null && Number.isFinite(x);
+      }).map((r) => ({
         ...r,
+        [metricId]: metricForRow(r),
         y: bucket === "all" ? r.completion : r.difficulty[bucket],
       })),
     [metricId, bucket],

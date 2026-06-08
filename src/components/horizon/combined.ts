@@ -8,8 +8,10 @@
 
 import type {
   AgentType,
+  BucketMetrics,
   DifficultyBreakdown,
   DifficultyBucket,
+  DifficultyMetrics,
   PassCount,
   PassCounts,
 } from "./data";
@@ -106,6 +108,32 @@ function passCount(cases: RawCase[]): PassCount {
   };
 }
 
+function avgCaseMetric(
+  cases: RawCase[],
+  field: "cost" | "tokens" | "time",
+): number | undefined {
+  const vals = cases
+    .map((c) => c[field])
+    .filter((v): v is number => v != null);
+  if (!vals.length) return undefined;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+function metricsFor(
+  cases: RawCase[],
+  tasks: Record<string, TaskMeta>,
+  bucket: DifficultyBucket,
+): BucketMetrics {
+  const filtered = cases.filter(
+    (c) => (tasks[c.task]?.difficulty ?? null) === bucket,
+  );
+  return {
+    costUsd: avgCaseMetric(filtered, "cost"),
+    tokens: avgCaseMetric(filtered, "tokens"),
+    timeSec: avgCaseMetric(filtered, "time"),
+  };
+}
+
 export interface AggregatedRun {
   runKey: string;
   agentType: AgentType;
@@ -116,6 +144,7 @@ export interface AggregatedRun {
   timeSec?: number;
   tokensEstimated?: boolean;
   difficulty: DifficultyBreakdown;
+  difficultyMetrics: DifficultyMetrics;
   counts: PassCounts;
 }
 
@@ -143,6 +172,11 @@ export function aggregateRun(
       easy: splitFor("easy"),
       medium: splitFor("medium"),
       hard: splitFor("hard"),
+    },
+    difficultyMetrics: {
+      easy: metricsFor(cases, tasks, "easy"),
+      medium: metricsFor(cases, tasks, "medium"),
+      hard: metricsFor(cases, tasks, "hard"),
     },
     counts: {
       overall: passCount(cases),

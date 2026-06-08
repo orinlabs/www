@@ -41,6 +41,19 @@ export interface DifficultyBreakdown {
   hard: number;
 }
 
+// Per-task averages for cost / tokens / time within one difficulty bucket.
+export interface BucketMetrics {
+  costUsd?: number;
+  tokens?: number;
+  timeSec?: number;
+}
+
+export interface DifficultyMetrics {
+  easy: BucketMetrics;
+  medium: BucketMetrics;
+  hard: BucketMetrics;
+}
+
 // Raw passed/total counts behind a pass rate (e.g. 17/40).
 export interface PassCount {
   passed: number;
@@ -65,9 +78,9 @@ export interface ResultRow {
   timeSec?: number;
   // Model release date as a millisecond timestamp (derived from MODEL_RELEASE_DATES).
   releaseDate: number;
-  // Pass rate split by task difficulty (easy/medium/hard). Currently seeded with
-  // SAMPLE data — see sampleDifficulty — to be replaced with the real numbers.
   difficulty: DifficultyBreakdown;
+  // Per-difficulty cost / tokens / time (averaged over cases in each bucket).
+  difficultyMetrics: DifficultyMetrics;
   // Raw passed/total counts behind the overall + per-difficulty pass rates.
   counts: PassCounts;
   // Optional override for the tokens cell (e.g. approximate/footnoted values).
@@ -228,6 +241,7 @@ export const RESULTS: ResultRow[] = aggregateRuns(COMBINED).map((r) => ({
   timeSec: r.timeSec,
   releaseDate: Date.parse(MODEL_RELEASE_DATES[r.model] ?? "2025-08-07"),
   difficulty: r.difficulty,
+  difficultyMetrics: r.difficultyMetrics,
   counts: r.counts,
   tokensLabel:
     r.tokensEstimated && r.tokens != null ? `~${fmtTokens(r.tokens)}` : undefined,
