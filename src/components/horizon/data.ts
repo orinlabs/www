@@ -6,7 +6,15 @@
 // the shared formatting helpers here so a new run only ever edits one place.
 // ===========================================================================
 
-import { aggregateRuns, poolByTaskField, type TaskMeta } from "./combined";
+import {
+  aggregateRuns,
+  displayHarness,
+  poolByTaskClassifier,
+  poolByTaskClassifierByHarness,
+  poolByTaskField,
+  poolByTaskFieldByHarness,
+  type TaskMeta,
+} from "./combined";
 import { COMBINED } from "./combinedResults";
 
 // ---------------------------------------------------------------------------
@@ -276,12 +284,88 @@ export interface TaskDimension {
   levels: DimensionLevel[];
 }
 
+// 1–10 rubric split into 3 score bands with ~balanced task counts (46 / 57 / 92).
+const ANTICIPABILITY_BUCKETS = [
+  { key: "high", label: "High" },
+  { key: "mid", label: "Med" },
+  { key: "low", label: "Low" },
+];
+
+function mapAnticipabilityBucket(
+  v: TaskMeta[keyof TaskMeta],
+): string | null {
+  if (v == null) return null;
+  const score = Number(v);
+  if (score === 10) return "high";
+  if (score === 9) return "mid";
+  return "low";
+}
+
+const BURIAL_DEPTH_QUANTILE_COUNT = 5;
+
+function burialDepthQuantileBounds(
+  tasks: Record<string, TaskMeta>,
+  count: number,
+): number[] {
+  const ratios = Object.values(tasks)
+    .filter((t) => t.burial_depth != null && t.trace_lines)
+    .map((t) => t.burial_depth! / t.trace_lines!)
+    .sort((a, b) => a - b);
+  const n = ratios.length;
+  if (!n || count < 2) return [];
+  const bounds: number[] = [];
+  for (let i = 1; i < count; i++) {
+    bounds.push(ratios[Math.floor((i * n) / count) - 1]);
+  }
+  return bounds;
+}
+
+const BURIAL_DEPTH_BOUNDS = burialDepthQuantileBounds(
+  COMBINED.tasks,
+  BURIAL_DEPTH_QUANTILE_COUNT,
+);
+
+// Q1 = shallowest (low ratio) → Q5 = deepest; ~equal task counts per bin.
+const BURIAL_DEPTH_BUCKETS = Array.from(
+  { length: BURIAL_DEPTH_QUANTILE_COUNT },
+  (_, i) => ({
+    key: `q${i + 1}`,
+    label: `Q${i + 1}`,
+  }),
+);
+
+function mapBurialDepthBucket(meta: TaskMeta): string | null {
+  if (meta.burial_depth == null || !meta.trace_lines) return null;
+  const ratio = meta.burial_depth / meta.trace_lines;
+  for (let i = 0; i < BURIAL_DEPTH_BOUNDS.length; i++) {
+    if (ratio <= BURIAL_DEPTH_BOUNDS[i]) return `q${i + 1}`;
+  }
+  return `q${BURIAL_DEPTH_QUANTILE_COUNT}`;
+}
+
 function buildLevels(
   field: keyof TaskMeta,
   order: { key: string; label: string }[],
   mapValue?: (v: TaskMeta[keyof TaskMeta]) => string | null,
 ): DimensionLevel[] {
   const stats = poolByTaskField(COMBINED, field, mapValue);
+  return order.map(({ key, label }) => {
+    const s = stats[key] ?? { passed: 0, total: 0, taskCount: 0 };
+    return {
+      level: label,
+      rate: s.total ? Number(((100 * s.passed) / s.total).toFixed(1)) : 0,
+      passed: s.passed,
+      total: s.total,
+      taskCount: s.taskCount,
+    };
+  });
+}
+
+function buildLevelsByClassifier(
+  classify: (meta: TaskMeta) => string | null,
+  order: { key: string; label: string }[],
+): DimensionLevel[] {
+  const stats = poolByTaskClassifier(COMBINED, classify);
   return order.map(({ key, label }) => {
     const s = stats[key] ?? { passed: 0, total: 0, taskCount: 0 };
     return {
@@ -311,15 +395,22 @@ export const TASK_DIMENSIONS: TaskDimension[] = [
     ),
   },
   {
-    id: "semantic_distance",
-    title: "Semantic distance",
+    id: "anticipability",
+    title: "Anticipability",
     blurb:
-      "How far the needed memory sits from the task prompt in embedding space — i.e. how hard it is to find by similarity.",
-    levels: buildLevels("semantic_distance", [
-      { key: "near", label: "Near" },
-      { key: "mid", label: "Mid" },
-      { key: "far", label: "Far" },
-    ]),
+      "gpt-5-mini rubric score 1–10: how predictable it is that the agent would need the required memory (store-at-ingestion or search-at-task). 10 = dead-on cued; 1 = no cue. Grouped high (10) / med (9) / low (≤8).",
+    levels: buildLevels(
+      "anticipability",
+      ANTICIPABILITY_BUCKETS,
+      mapAnticipabilityBucket,
+    ),
+  },
+  {
+    id: "burial_depth",
+    title: "Burial depth",
+    blurb:
+      "How deep in the trace the required memory starts (burial_depth ÷ trace_lines), grouped into quintiles Q1 (shallowest) through Q5 (deepest).",
+    levels: buildLevelsByClassifier(mapBurialDepthBucket, BURIAL_DEPTH_BUCKETS),
   },
   {
     id: "misdirection",
@@ -344,6 +435,133 @@ export const TASK_DIMENSIONS: TaskDimension[] = [
         { key: "trap", label: "Adversarial" },
       ],
       (v) => (v ? "trap" : "clean"),
+    ),
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Difficulty trend figures: pass rate by axis level, split by harness.
+// ---------------------------------------------------------------------------
+
+export interface TrendFamily {
+  id: string;
+  label: string;
+  colorKey: AgentType;
+}
+
+const HARNESS_DATA_KEY: Record<AgentType, string> = {
+  RLM: "RLM",
+  "Claude Code": "ClaudeCode",
+  Codex: "Codex",
+  RAG: "RAG",
+  Hermes: "Hermes",
+  OpenClaw: "OpenClaw",
+};
+
+const TREND_HARNESS_ORDER: AgentType[] = [
+  "RLM",
+  "Claude Code",
+  "Codex",
+  "RAG",
+  "Hermes",
+  "OpenClaw",
+];
+
+export const TREND_FAMILIES: TrendFamily[] = (() => {
+  const present = new Set(
+    COMBINED.runs.map((r) => displayHarness(r.harness)),
+  );
+  return TREND_HARNESS_ORDER.filter((h) => present.has(h)).map((h) => ({
+    id: HARNESS_DATA_KEY[h],
+    label: h,
+    colorKey: h,
+  }));
+})();
+
+export interface TrendAxis {
+  id: string;
+  title: string;
+  data: Record<string, number | string>[];
+  // Grouped bar chart when sparse per-point n makes a line chart noisy.
+  chart?: "line" | "bar";
+}
+
+function toRate(stat: { passed: number; total: number }): number {
+  return stat.total
+    ? Number(((100 * stat.passed) / stat.total).toFixed(1))
+    : 0;
+}
+
+function buildHarnessTrendRows(
+  field: keyof TaskMeta,
+  order: { key: string; label: string }[],
+  mapValue?: (v: TaskMeta[keyof TaskMeta]) => string | null,
+): Record<string, number | string>[] {
+  const byHarness = poolByTaskFieldByHarness(COMBINED, field, mapValue);
+  const pooled = poolByTaskField(COMBINED, field, mapValue);
+
+  return order.map(({ key, label }) => {
+    const row: Record<string, number | string> = {
+      level: label,
+      taskCount: pooled[key]?.taskCount ?? 0,
+    };
+    for (const f of TREND_FAMILIES) {
+      const stat = byHarness[f.label]?.[key];
+      if (stat?.total) row[f.id] = toRate(stat);
+    }
+    return row;
+  });
+}
+
+function buildHarnessTrendRowsByClassifier(
+  classify: (meta: TaskMeta) => string | null,
+  order: { key: string; label: string }[],
+): Record<string, number | string>[] {
+  const byHarness = poolByTaskClassifierByHarness(COMBINED, classify);
+  const pooled = poolByTaskClassifier(COMBINED, classify);
+
+  return order.map(({ key, label }) => {
+    const row: Record<string, number | string> = {
+      level: label,
+      taskCount: pooled[key]?.taskCount ?? 0,
+    };
+    for (const f of TREND_FAMILIES) {
+      const stat = byHarness[f.label]?.[key];
+      if (stat?.total) row[f.id] = toRate(stat);
+    }
+    return row;
+  });
+}
+
+export const TREND_AXES: TrendAxis[] = [
+  {
+    id: "n_hops",
+    title: "Reasoning hops",
+    data: buildHarnessTrendRows(
+      "n_hops",
+      [
+        { key: "1", label: "1 hop" },
+        { key: "2", label: "2 hops" },
+        { key: "3+", label: "3+ hops" },
+      ],
+      (v) => (Number(v) >= 3 ? "3+" : String(v)),
+    ),
+  },
+  {
+    id: "anticipability",
+    title: "Anticipability",
+    data: buildHarnessTrendRows(
+      "anticipability",
+      ANTICIPABILITY_BUCKETS,
+      mapAnticipabilityBucket,
+    ),
+  },
+  {
+    id: "burial_depth",
+    title: "Burial depth",
+    data: buildHarnessTrendRowsByClassifier(
+      mapBurialDepthBucket,
+      BURIAL_DEPTH_BUCKETS,
     ),
   },
 ];

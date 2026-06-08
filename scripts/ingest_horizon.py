@@ -41,7 +41,9 @@ AGENT_TO_HARNESS = {
 # the axes feed the difficulty figures. Order is preserved in the output.
 TASK_FIELDS = [
     ("difficulty", "difficulty"),
-    ("sd", "semantic_distance"),
+    ("anticipability", "anticipability"),
+    ("burial_depth", "burial_depth"),
+    ("trace_lines", "trace_lines"),
     ("md", "misdirection"),
     ("n_hops", "n_hops"),
     ("family", "family"),

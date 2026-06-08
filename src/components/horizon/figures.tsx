@@ -1,4 +1,10 @@
-import { type Key, useMemo, useState } from "react";
+import {
+  type Key,
+  type MouseEvent as ReactMouseEvent,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { cn } from "slate-ui";
 import {
@@ -27,7 +33,10 @@ import {
   CONVERGENCE,
   DIFFICULTY_AXES,
   DIFFICULTY_FAMILIES,
+  TREND_AXES,
+  TREND_FAMILIES,
   fmtDateAxis,
+  fmtPct,
   RESULTS,
   TASK_DIMENSIONS,
 } from "./data";
@@ -69,6 +78,7 @@ function useChartStyle() {
     isDark,
     gridStroke,
     axisStroke,
+    surface: isDark ? "#0a0a0a" : "#ffffff",
     ink: isDark ? "#e5e5e5" : "#171717",
     muted: isDark ? "#a3a3a3" : "#737373",
     neg: isDark ? "#f87171" : "#dc2626",
@@ -118,15 +128,17 @@ function Figure({
   caption,
   children,
 }: {
-  title: string;
+  title?: string;
   caption?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <figure className="my-8">
-      <figcaption className="mb-1 text-sm font-semibold text-neutral-800 dark:text-neutral-200">
-        {title}
-      </figcaption>
+      {title && (
+        <figcaption className="mb-1 text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+          {title}
+        </figcaption>
+      )}
       {children}
       {caption && (
         <figcaption className="mt-2 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
@@ -1209,6 +1221,386 @@ export function ContentFlagsFigure() {
 // difficulty section. Numbers are pooled + runtime-derived from ./data.
 // ---------------------------------------------------------------------------
 
+const TREND_LINE_SNAP_RADIUS = 28;
+const TREND_PANEL_HEIGHT = 286;
+const TREND_CHART_MARGIN = { top: 32, right: 16, left: 4, bottom: 4 };
+
+interface TrendChartPoint {
+  x: number;
+  y: number;
+  harnessId: string;
+  value: number;
+}
+
+function distToSegment(
+  px: number,
+  py: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+): number {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  if (dx === 0 && dy === 0) return Math.hypot(px - x1, py - y1);
+  const t = Math.max(
+    0,
+    Math.min(1, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)),
+  );
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
+function nearestHarnessLine(
+  points: TrendChartPoint[],
+  mx: number,
+  my: number,
+): string | null {
+  const byHarness = new Map<string, TrendChartPoint[]>();
+  for (const p of points) {
+    const list = byHarness.get(p.harnessId) ?? [];
+    list.push(p);
+    byHarness.set(p.harnessId, list);
+  }
+
+  let bestHarness: string | null = null;
+  let bestDist = Infinity;
+  for (const [harnessId, pts] of byHarness) {
+    const sorted = [...pts].sort((a, b) => a.x - b.x);
+    let lineDist = Infinity;
+    if (sorted.length === 1) {
+      lineDist = Math.hypot(mx - sorted[0].x, my - sorted[0].y);
+    } else {
+      for (let i = 0; i < sorted.length - 1; i++) {
+        lineDist = Math.min(
+          lineDist,
+          distToSegment(
+            mx,
+            my,
+            sorted[i].x,
+            sorted[i].y,
+            sorted[i + 1].x,
+            sorted[i + 1].y,
+          ),
+        );
+      }
+    }
+    if (lineDist < bestDist) {
+      bestDist = lineDist;
+      bestHarness = harnessId;
+    }
+  }
+
+  return bestDist <= TREND_LINE_SNAP_RADIUS ? bestHarness : null;
+}
+
+function HarnessTrendPanel({
+  data,
+  height,
+  style,
+  color,
+  hoveredHarness,
+  onHoverLine,
+  onClearLine,
+}: {
+  data: Record<string, number | string>[];
+  height: number;
+  style: ReturnType<typeof useChartStyle>;
+  color: (agent: string) => string;
+  hoveredHarness: string | null;
+  onHoverLine: (harnessId: string | null) => void;
+  onClearLine: () => void;
+}) {
+  const { gridStroke, axisProps, surface } = style;
+  const pointsRef = useRef<TrendChartPoint[]>([]);
+  pointsRef.current = [];
+
+  const harnessOpacity = (harnessId: string) => {
+    if (hoveredHarness == null) return 1;
+    if (hoveredHarness === harnessId) return 1;
+    return 0.15;
+  };
+
+  const handleMove = (e: ReactMouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    onHoverLine(nearestHarnessLine(pointsRef.current, mx, my));
+  };
+
+  const makeDot =
+    (harnessId: string, dotColor: string) =>
+    (props: {
+      cx?: number;
+      cy?: number;
+      key?: Key | null;
+      payload?: Record<string, number | string>;
+    }) => {
+      const { cx, cy, key, payload } = props;
+      if (typeof cx !== "number" || typeof cy !== "number" || !payload)
+        return <g key={key} />;
+      const value = payload[harnessId];
+      if (typeof value !== "number") return <g key={key} />;
+      pointsRef.current.push({ x: cx, y: cy, harnessId, value });
+      const opacity = harnessOpacity(harnessId);
+      return (
+        <g key={key}>
+          <circle cx={cx} cy={cy} r={5} fill={surface} />
+          <circle
+            cx={cx}
+            cy={cy}
+            r={4}
+            fill={dotColor}
+            fillOpacity={opacity}
+            style={{ transition: "fill-opacity 0.2s ease" }}
+          />
+        </g>
+      );
+    };
+
+  const valueLabel = (dotColor: string) => (props: LabelRenderProps) => {
+      const { x, y, index } = props;
+      if (typeof x !== "number" || typeof y !== "number" || index == null)
+        return null;
+      const row = data[index];
+      if (!row || hoveredHarness == null) return null;
+      const value = row[hoveredHarness];
+      if (typeof value !== "number") return null;
+      return (
+        <text
+          x={x}
+          y={y}
+          dy={-12}
+          textAnchor="middle"
+          fontSize={11}
+          fontWeight={600}
+          fill={dotColor}
+          style={{ pointerEvents: "none" }}
+        >
+          {fmtPct(value)}
+        </text>
+      );
+    };
+
+  return (
+    <div style={{ height }} onMouseMove={handleMove} onMouseLeave={onClearLine}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={TREND_CHART_MARGIN}>
+          <CartesianGrid
+            strokeDasharray={GRID_DASH}
+            stroke={gridStroke}
+            vertical={false}
+          />
+          <XAxis
+            dataKey="level"
+            type="category"
+            scale="point"
+            padding={{ left: 24, right: 24 }}
+            {...axisProps}
+          />
+          <YAxis
+            type="number"
+            domain={[0, 70]}
+            ticks={[0, 20, 40, 60]}
+            tickFormatter={(v: unknown) => `${v}%`}
+            width={34}
+            {...axisProps}
+          />
+          {TREND_FAMILIES.map((f) => {
+            const c = color(f.colorKey);
+            const active = hoveredHarness === f.id;
+            const opacity = harnessOpacity(f.id);
+            return (
+              <Line
+                key={f.id}
+                dataKey={f.id}
+                stroke={c}
+                strokeWidth={active ? 3 : 2}
+                strokeOpacity={opacity}
+                style={{ transition: "stroke-opacity 0.2s ease" }}
+                isAnimationActive={false}
+                activeDot={false}
+                dot={makeDot(f.id, c)}
+                connectNulls
+              />
+            );
+          })}
+          {hoveredHarness && (() => {
+            const f = TREND_FAMILIES.find((x) => x.id === hoveredHarness);
+            if (!f) return null;
+            const c = color(f.colorKey);
+            return (
+              <Line
+                key={`labels-${f.id}`}
+                dataKey={f.id}
+                stroke="none"
+                strokeWidth={0}
+                dot={false}
+                isAnimationActive={false}
+                activeDot={false}
+              >
+                <LabelList content={valueLabel(c)} />
+              </Line>
+            );
+          })()}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function HarnessTrendHistogram({
+  data,
+  height,
+  style,
+  color,
+  hoveredHarness,
+  onHoverHarness,
+  onClearHarness,
+}: {
+  data: Record<string, number | string>[];
+  height: number;
+  style: ReturnType<typeof useChartStyle>;
+  color: (agent: string) => string;
+  hoveredHarness: string | null;
+  onHoverHarness: (harnessId: string | null) => void;
+  onClearHarness: () => void;
+}) {
+  const { gridStroke, axisProps } = style;
+
+  const harnessOpacity = (harnessId: string) => {
+    if (hoveredHarness == null) return 0.85;
+    if (hoveredHarness === harnessId) return 0.95;
+    return 0.2;
+  };
+
+  const barLabel =
+    (harnessId: string, dotColor: string) => (props: LabelRenderProps) => {
+      const { x, y, width, value, index } = props;
+      if (
+        typeof x !== "number" ||
+        typeof y !== "number" ||
+        typeof width !== "number" ||
+        index == null ||
+        hoveredHarness !== harnessId ||
+        typeof value !== "number"
+      )
+        return null;
+      return (
+        <text
+          x={x + width / 2}
+          y={y}
+          dy={-4}
+          textAnchor="middle"
+          fontSize={10}
+          fontWeight={600}
+          fill={dotColor}
+          style={{ pointerEvents: "none" }}
+        >
+          {fmtPct(value)}
+        </text>
+      );
+    };
+
+  return (
+    <div style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          margin={TREND_CHART_MARGIN}
+          barGap={1}
+          barCategoryGap="8%"
+          maxBarSize={10}
+        >
+          <CartesianGrid
+            strokeDasharray={GRID_DASH}
+            stroke={gridStroke}
+            vertical={false}
+          />
+          <XAxis dataKey="level" type="category" {...axisProps} />
+          <YAxis
+            type="number"
+            domain={[0, 70]}
+            ticks={[0, 20, 40, 60]}
+            tickFormatter={(v: unknown) => `${v}%`}
+            width={34}
+            {...axisProps}
+          />
+          {TREND_FAMILIES.map((f) => {
+            const c = color(f.colorKey);
+            return (
+              <Bar
+                key={f.id}
+                dataKey={f.id}
+                fill={c}
+                fillOpacity={harnessOpacity(f.id)}
+                radius={[2, 2, 0, 0]}
+                isAnimationActive={false}
+                onMouseEnter={() => onHoverHarness(f.id)}
+                onMouseLeave={onClearHarness}
+              >
+                <LabelList content={barLabel(f.id, c)} />
+              </Bar>
+            );
+          })}
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function passRateLineChart(
+  data: { level: string; rate: number }[],
+  height: number,
+  style: ReturnType<typeof useChartStyle>,
+) {
+  const { gridStroke, axisProps, ink } = style;
+  return (
+    <div style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 28, right: 16, left: 4, bottom: 4 }}>
+          <CartesianGrid
+            strokeDasharray={GRID_DASH}
+            stroke={gridStroke}
+            vertical={false}
+          />
+          <XAxis
+            dataKey="level"
+            type="category"
+            scale="point"
+            padding={{ left: 24, right: 24 }}
+            {...axisProps}
+          />
+          <YAxis
+            type="number"
+            domain={[0, 50]}
+            ticks={[0, 25, 50]}
+            tickFormatter={(v: unknown) => `${v}%`}
+            width={34}
+            {...axisProps}
+          />
+          <Line
+            dataKey="rate"
+            stroke={ink}
+            strokeWidth={2.5}
+            isAnimationActive={false}
+            activeDot={false}
+            dot={dotShape(ink, 1, 4)}
+          >
+            <LabelList
+              dataKey="rate"
+              position="top"
+              formatter={(v: unknown) => `${Number(v).toFixed(1)}%`}
+              fill={ink}
+              fontSize={11}
+              fontWeight={600}
+            />
+          </Line>
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 export function PassRateByAxisFigure({
   dimId,
   title,
@@ -1220,49 +1612,81 @@ export function PassRateByAxisFigure({
   caption?: React.ReactNode;
   height?: number;
 }) {
-  const { gridStroke, axisProps, ink } = useChartStyle();
+  const style = useChartStyle();
   const dim = TASK_DIMENSIONS.find((d) => d.id === dimId);
   if (!dim) return null;
   const data = dim.levels.map((l) => ({ level: l.level, rate: l.rate }));
 
   return (
     <Figure title={title} caption={caption}>
-      <div style={{ height }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 28, right: 24, left: 8, bottom: 8 }}>
-            <CartesianGrid
-              strokeDasharray={GRID_DASH}
-              stroke={gridStroke}
-              vertical={false}
+      {passRateLineChart(data, height, style)}
+    </Figure>
+  );
+}
+
+// Three small multiples: pass rate vs. reasoning hops, anticipability (binned
+// 1–10 rubric), and burial depth — one series per harness. Pooled across models.
+export function DifficultyTrendFigures() {
+  const style = useChartStyle();
+  const color = useAgentColor();
+  const [hoveredLegend, setHoveredLegend] = useState<string | null>(null);
+  const [hoveredLine, setHoveredLine] = useState<string | null>(null);
+
+  const activeHarness = hoveredLine ?? hoveredLegend;
+
+  return (
+    <Figure
+      caption="Pass rate by harness across each axis level (easiest → hardest left to right), pooled across all models on that harness."
+    >
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 text-xs font-medium text-neutral-600 dark:text-neutral-300">
+        {TREND_FAMILIES.map((f) => (
+          <div
+            key={f.id}
+            onMouseEnter={() => setHoveredLegend(f.id)}
+            onMouseLeave={() => setHoveredLegend(null)}
+            className={cn(
+              "flex items-center gap-1.5 cursor-pointer transition-opacity",
+              activeHarness != null && activeHarness !== f.id && "opacity-40",
+            )}
+          >
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full"
+              style={{ background: color(f.colorKey) }}
             />
-            <XAxis dataKey="level" {...axisProps} />
-            <YAxis
-              type="number"
-              domain={[0, 50]}
-              ticks={[0, 25, 50]}
-              tickFormatter={(v: unknown) => `${v}%`}
-              width={40}
-              {...axisProps}
-            />
-            <Line
-              dataKey="rate"
-              stroke={ink}
-              strokeWidth={2.5}
-              isAnimationActive={false}
-              activeDot={false}
-              dot={dotShape(ink, 1, 4)}
-            >
-              <LabelList
-                dataKey="rate"
-                position="top"
-                formatter={(v: unknown) => `${Number(v).toFixed(1)}%`}
-                fill={ink}
-                fontSize={12}
-                fontWeight={600}
+            {f.label}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-4 items-end">
+        {TREND_AXES.map((ax) => (
+          <div key={ax.id} className="flex flex-col">
+            <div className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 text-center leading-none mb-1 min-h-[1rem]">
+              {ax.title}
+            </div>
+            {ax.chart === "bar" ? (
+              <HarnessTrendHistogram
+                data={ax.data}
+                height={TREND_PANEL_HEIGHT}
+                style={style}
+                color={color}
+                hoveredHarness={activeHarness}
+                onHoverHarness={setHoveredLine}
+                onClearHarness={() => setHoveredLine(null)}
               />
-            </Line>
-          </LineChart>
-        </ResponsiveContainer>
+            ) : (
+              <HarnessTrendPanel
+                data={ax.data}
+                height={TREND_PANEL_HEIGHT}
+                style={style}
+                color={color}
+                hoveredHarness={activeHarness}
+                onHoverLine={setHoveredLine}
+                onClearLine={() => setHoveredLine(null)}
+              />
+            )}
+          </div>
+        ))}
       </div>
     </Figure>
   );

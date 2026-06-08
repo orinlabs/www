@@ -24,10 +24,11 @@ import type {
 // the remaining axes are carried through for future figures.
 export interface TaskMeta {
   difficulty: DifficultyBucket | null;
-  semantic_distance?: string;
+  anticipability?: number;
+  burial_depth?: number;
+  trace_lines?: number;
   misdirection?: string;
   n_hops?: number;
-  burial_depth_tokens?: number;
   family?: string | null;
   category?: string;
   adversarial?: boolean;
@@ -195,7 +196,7 @@ export function aggregateRuns(data: CombinedData): AggregatedRun[] {
 
 // ---------------------------------------------------------------------------
 // Per-task-axis pooling: for one piece of task metadata (difficulty, n_hops,
-// semantic_distance, ...), bucket tasks by level and pool the pass rate across
+// anticipability, ...), bucket tasks by level and pool the pass rate across
 // every included run. Used by the "what makes a task hard" figures so the
 // distributions and pass rates come straight from the source, not hardcoded.
 // ---------------------------------------------------------------------------
@@ -231,6 +232,109 @@ export function poolByTaskField(
       const level = mapValue(meta[field]);
       if (level == null) continue;
       const stat = get(level);
+      stat.total += 1;
+      if (c.passed) stat.passed += 1;
+    }
+  }
+
+  return out;
+}
+
+// Same as poolByTaskField, but keeps pass rates separate per harness (pooled
+// across all models on that harness).
+export function poolByTaskFieldByHarness(
+  data: CombinedData,
+  field: keyof TaskMeta,
+  mapValue: (v: TaskMeta[keyof TaskMeta]) => string | null = (v) =>
+    v == null ? null : String(v),
+): Record<string, Record<string, FieldLevelStat>> {
+  const out: Record<string, Record<string, FieldLevelStat>> = {};
+  const get = (harness: string, level: string) => {
+    const byLevel = (out[harness] ??= {});
+    return (byLevel[level] ??= { passed: 0, total: 0, taskCount: 0 });
+  };
+
+  const levelTaskCounts: Record<string, number> = {};
+  for (const meta of Object.values(data.tasks)) {
+    const level = mapValue(meta[field]);
+    if (level != null) levelTaskCounts[level] = (levelTaskCounts[level] ?? 0) + 1;
+  }
+
+  for (const run of data.runs) {
+    const harness = displayHarness(run.harness);
+    for (const c of run.cases) {
+      if (c.passed == null) continue;
+      const meta = data.tasks[c.task];
+      if (!meta) continue;
+      const level = mapValue(meta[field]);
+      if (level == null) continue;
+      const stat = get(harness, level);
+      stat.taskCount = levelTaskCounts[level] ?? 0;
+      stat.total += 1;
+      if (c.passed) stat.passed += 1;
+    }
+  }
+
+  return out;
+}
+
+// Like poolByTaskField, but classifies from the full task metadata (e.g.
+// burial_depth / trace_lines ratio).
+export function poolByTaskClassifier(
+  data: CombinedData,
+  classify: (meta: TaskMeta) => string | null,
+): Record<string, FieldLevelStat> {
+  const out: Record<string, FieldLevelStat> = {};
+  const get = (level: string) =>
+    (out[level] ??= { passed: 0, total: 0, taskCount: 0 });
+
+  for (const meta of Object.values(data.tasks)) {
+    const level = classify(meta);
+    if (level != null) get(level).taskCount += 1;
+  }
+
+  for (const run of data.runs) {
+    for (const c of run.cases) {
+      if (c.passed == null) continue;
+      const meta = data.tasks[c.task];
+      if (!meta) continue;
+      const level = classify(meta);
+      if (level == null) continue;
+      const stat = get(level);
+      stat.total += 1;
+      if (c.passed) stat.passed += 1;
+    }
+  }
+
+  return out;
+}
+
+export function poolByTaskClassifierByHarness(
+  data: CombinedData,
+  classify: (meta: TaskMeta) => string | null,
+): Record<string, Record<string, FieldLevelStat>> {
+  const out: Record<string, Record<string, FieldLevelStat>> = {};
+  const get = (harness: string, level: string) => {
+    const byLevel = (out[harness] ??= {});
+    return (byLevel[level] ??= { passed: 0, total: 0, taskCount: 0 });
+  };
+
+  const levelTaskCounts: Record<string, number> = {};
+  for (const meta of Object.values(data.tasks)) {
+    const level = classify(meta);
+    if (level != null) levelTaskCounts[level] = (levelTaskCounts[level] ?? 0) + 1;
+  }
+
+  for (const run of data.runs) {
+    const harness = displayHarness(run.harness);
+    for (const c of run.cases) {
+      if (c.passed == null) continue;
+      const meta = data.tasks[c.task];
+      if (!meta) continue;
+      const level = classify(meta);
+      if (level == null) continue;
+      const stat = get(harness, level);
+      stat.taskCount = levelTaskCounts[level] ?? 0;
       stat.total += 1;
       if (c.passed) stat.passed += 1;
     }
