@@ -20,6 +20,7 @@ import {
 import {
   AGENT_TYPES,
   type AgentType,
+  displayAgentType,
   DIFFICULTY_BUCKETS,
   type DifficultyBucket,
   fmtCost,
@@ -236,7 +237,7 @@ export function HorizonChart({
                   className="inline-block w-2.5 h-2.5 rounded-full"
                   style={{ background: agentColor(type, isDark) }}
                 />
-                {type}
+                {displayAgentType(type)}
               </div>
             ))}
           </div>
@@ -377,7 +378,7 @@ export function HorizonChart({
                       style={{ fontSize: 11, fontWeight: 600, fill: labelFill }}
                     >
                       <tspan x={x} dy={-18}>
-                        {`${row.agentType} - ${row.model}`}
+                        {`${displayAgentType(row.agentType)} - ${row.model}`}
                       </tspan>
                       <tspan
                         x={x}
@@ -670,7 +671,7 @@ export function HorizonLeaderboard() {
                     className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
                     style={{ background: agentColor(row.agentType, isDark) }}
                   />
-                  <span className="font-medium">{row.agentType}</span>
+                  <span className="font-medium">{displayAgentType(row.agentType)}</span>
                 </span>
               </td>
               <td className="py-2 px-4 text-neutral-700 dark:text-neutral-300 tabular-nums">
@@ -773,7 +774,7 @@ export function HorizonTable({
                     className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
                     style={{ background: agentColor(row.agentType, isDark) }}
                   />
-                  <span className="font-medium">{row.agentType}</span>
+                  <span className="font-medium">{displayAgentType(row.agentType)}</span>
                 </span>
               </td>
               <td className="py-2 px-4 text-neutral-700 dark:text-neutral-300 tabular-nums">

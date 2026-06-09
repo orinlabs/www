@@ -36,24 +36,24 @@ export function DifficultyDriversSection() {
       </p>
 
       <p>
-      The <strong>search</strong> strategy lets the agent search through the trace using <code>grep</code>, semantic search (RAG), or methods like RLM. The <strong>store</strong> strategy is the reverse: the agent stores realtime learnings in a database or Markdown file for use later. OpenClaw and Hermes primarily use this approach.
+      The <strong>search</strong> strategy lets the agent search through the trace using <code>grep</code>, semantic search (RAG), or methods like RLM. The <strong>store</strong> strategy is the reverse: the agent stores realtime learnings in a database or Markdown file for use later. OpenClaw (LCM) and Hermes primarily use this approach.
       </p>
 
       <p>
-        On the same model (claude-opus-4.8), neither approach saturates Horizon: RLM passes 56% while OpenClaw passes 53%. Of the tasks RLM misses, 76% are missed by OpenClaw too.
+        On the same model (claude-opus-4.8), neither approach saturates Horizon: RLM passes 56% while OpenClaw (LCM) passes 53%. Of the tasks RLM misses, 76% are missed by OpenClaw (LCM) too.
       </p>
 
       <p>
-      The core problem is that it's impossible to predict what an agent needs to remember. For <strong>store</strong> strategies, the agent needs to decide which trace learnings to store <i>before</i> seeing the task. Nearly every time OpenClaw and Hermes failed a task, it was because the agent didn't identify the required learning(s) as important enough to store.
+      The core problem is that it's impossible to predict what an agent needs to remember. For <strong>store</strong> strategies, the agent needs to decide which trace learnings to store <i>before</i> seeing the task. Nearly every time OpenClaw (LCM) and Hermes failed a task, it was because the agent didn't identify the required learning(s) as important enough to store.
       </p>
 
       <p>
       For <strong>search</strong> strategies, a similar problem exists: the agent can only retroactively search for things it <i>expects</i>. In the example task above the agent has no reason to suspect that <code>curl</code> is broken, so it won't search the trace to check. Nearly every time RLM, RAG, Claude Code, or Codex failed a task, it was because of this issue. Additionally, existing search functions like keyword, semantic, FTS5, and BM25 lack the ability to accurately search the trace for counterfactuals, experiential links, and other non-textual connections.
       </p>
 
-      <p>As tasks increase in difficulty, the required learning becomes more unexpected, buried in more data, and may even require multiple data points to extract the required pattern.</p>
-
       <DifficultyTrendFigures />
+
+      <p>As tasks increase in difficulty, the required learning becomes more unexpected, buried in more data, and may even require multiple data points to extract the required pattern.</p>
     </Section>
   );
 }

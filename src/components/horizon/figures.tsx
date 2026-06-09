@@ -27,6 +27,7 @@ import {
 import {
   ADVERSARIAL_ROBUSTNESS,
   AGENT_TYPES,
+  displayAgentType,
   type AgentType,
   ARCHITECTURE_SPREAD,
   CONTENT_FLAGS,
@@ -1624,8 +1625,8 @@ export function PassRateByAxisFigure({
   );
 }
 
-// Three small multiples: pass rate vs. reasoning hops, anticipability (binned
-// 1–10 rubric), and burial depth — one series per harness. Pooled across models.
+// Three small multiples: anticipability, burial depth, and reasoning hops —
+// one series per harness. Pooled across models.
 export function DifficultyTrendFigures() {
   const style = useChartStyle();
   const color = useAgentColor();
@@ -2138,7 +2139,7 @@ export function RecencyVsHarness() {
                 return (
                   <div className="rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 py-1.5 text-xs shadow-sm">
                     <div className="font-medium text-neutral-800 dark:text-neutral-200">
-                      {d.agentType} · {d.model}
+                      {displayAgentType(d.agentType)} · {d.model}
                     </div>
                     <div className="text-neutral-500 dark:text-neutral-400">
                       {d.y.toFixed(1)}% pass · released {fmtDateAxis(d.x)}

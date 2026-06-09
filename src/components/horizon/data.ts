@@ -29,6 +29,19 @@ export type AgentType =
   | "RLM"
   | "OpenClaw";
 
+export const AGENT_DISPLAY_NAMES: Record<AgentType, string> = {
+  RLM: "RLM",
+  "Claude Code": "Claude Code",
+  Codex: "Codex",
+  RAG: "RAG",
+  Hermes: "Hermes",
+  OpenClaw: "OpenClaw (LCM)",
+};
+
+export function displayAgentType(type: AgentType): string {
+  return AGENT_DISPLAY_NAMES[type];
+}
+
 export type ScaleType = "linear" | "log";
 
 export type MetricKey = "costUsd" | "timeSec" | "tokens" | "releaseDate";
@@ -473,7 +486,7 @@ export const TREND_FAMILIES: TrendFamily[] = (() => {
   );
   return TREND_HARNESS_ORDER.filter((h) => present.has(h)).map((h) => ({
     id: HARNESS_DATA_KEY[h],
-    label: h,
+    label: displayAgentType(h),
     colorKey: h,
   }));
 })();
@@ -506,7 +519,7 @@ function buildHarnessTrendRows(
       taskCount: pooled[key]?.taskCount ?? 0,
     };
     for (const f of TREND_FAMILIES) {
-      const stat = byHarness[f.label]?.[key];
+      const stat = byHarness[f.colorKey]?.[key];
       if (stat?.total) row[f.id] = toRate(stat);
     }
     return row;
@@ -526,7 +539,7 @@ function buildHarnessTrendRowsByClassifier(
       taskCount: pooled[key]?.taskCount ?? 0,
     };
     for (const f of TREND_FAMILIES) {
-      const stat = byHarness[f.label]?.[key];
+      const stat = byHarness[f.colorKey]?.[key];
       if (stat?.total) row[f.id] = toRate(stat);
     }
     return row;
@@ -534,19 +547,6 @@ function buildHarnessTrendRowsByClassifier(
 }
 
 export const TREND_AXES: TrendAxis[] = [
-  {
-    id: "n_hops",
-    title: "Reasoning hops",
-    data: buildHarnessTrendRows(
-      "n_hops",
-      [
-        { key: "1", label: "1 hop" },
-        { key: "2", label: "2 hops" },
-        { key: "3+", label: "3+ hops" },
-      ],
-      (v) => (Number(v) >= 3 ? "3+" : String(v)),
-    ),
-  },
   {
     id: "anticipability",
     title: "Anticipability",
@@ -562,6 +562,19 @@ export const TREND_AXES: TrendAxis[] = [
     data: buildHarnessTrendRowsByClassifier(
       mapBurialDepthBucket,
       BURIAL_DEPTH_BUCKETS,
+    ),
+  },
+  {
+    id: "n_hops",
+    title: "Reasoning hops",
+    data: buildHarnessTrendRows(
+      "n_hops",
+      [
+        { key: "1", label: "1 hop" },
+        { key: "2", label: "2 hops" },
+        { key: "3+", label: "3+ hops" },
+      ],
+      (v) => (Number(v) >= 3 ? "3+" : String(v)),
     ),
   },
 ];
