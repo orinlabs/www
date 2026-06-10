@@ -14,7 +14,6 @@ export {
   DifficultyDriversSection,
   IntegritySection,
   IntroSection,
-  ResultsSection,
 } from "./sections";
 export {
   TaskAnatomySection,

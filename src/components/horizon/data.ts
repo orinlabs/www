@@ -409,7 +409,7 @@ export const TASK_DIMENSIONS: TaskDimension[] = [
   },
   {
     id: "anticipability",
-    title: "Anticipability",
+    title: "Predictability",
     blurb:
       "gpt-5-mini rubric score 1–10: how predictable it is that the agent would need the required memory (store-at-ingestion or search-at-task). 10 = dead-on cued; 1 = no cue. Grouped high (10) / med (9) / low (≤8).",
     levels: buildLevels(
@@ -549,7 +549,7 @@ function buildHarnessTrendRowsByClassifier(
 export const TREND_AXES: TrendAxis[] = [
   {
     id: "anticipability",
-    title: "Anticipability",
+    title: "Predictability",
     data: buildHarnessTrendRows(
       "anticipability",
       ANTICIPABILITY_BUCKETS,

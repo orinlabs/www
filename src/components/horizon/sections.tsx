@@ -44,7 +44,7 @@ export function DifficultyDriversSection() {
       </p>
 
       <p>
-      The core problem is that it's impossible to predict what an agent needs to remember. For <strong>store</strong> strategies, the agent needs to decide which trace learnings to store <i>before</i> seeing the task. Nearly every time OpenClaw (LCM) and Hermes failed a task, it was because the agent didn't identify the required learning(s) as important enough to store.
+      The core problem is that it's impossible to predict what an agent needs to remember. For <strong>store</strong> strategies, the agent needs to decide which trace learnings to store <i>before</i> seeing the task. Nearly every time OpenClaw (LCM) and Hermes failed a task, it was because the agent didn't identify the required learning(s) as important enough to store. Sometimes they stored too much information, forcing them to into a <b>search</b> strategy over their own memory.
       </p>
 
       <p>
@@ -57,59 +57,6 @@ export function DifficultyDriversSection() {
     </Section>
   );
 }
-
-export function ResultsSection() {
-  return (
-    <Section title="Results">
-      <p>
-        The clearest signal in our preview run is that for long horizon
-        learning,{" "}
-        <strong>the harness around a model matters more than the model itself</strong>
-        . Using a different harness with the same model can increase scores by up
-        to 20 percentage points.
-      </p>
-
-      <p>
-        A strong harness on a small model beats a weak harness on a frontier one.
-        The highest-leverage move for a long-horizon agent is usually how it
-        stores and retrieves its own history — not which model you point at it.
-      </p>
-
-      <Subsection title="What makes tasks hard">
-        <p>
-          Each task is characterized by a few structured axes:{" "}
-          <span className="font-medium">reasoning hops</span> (number of facts
-          that must be chained),{" "}
-          <span className="font-medium">semantic distance</span> (how far the
-          required memory is in an estimated embedding space),{" "}
-          <span className="font-medium">memory depth</span> (how deep in the
-          trace it lives), and whether the task is{" "}
-          <span className="font-medium">adversarial</span> — the environment
-          actively tries to mislead the agent using patched or stale facts,
-          confusable entities, a confidently wrong speaker, or a directive that
-          should be overridden.
-        </p>
-
-        <DifficultyAxesFigure />
-
-        <p>
-          Performance degrades on every axis. RLM holds up best and most
-          gracefully; RAG falls hardest. All harnesses get tripped up by
-          adversarial tasks — most of all when they need to recall a fact that
-          was later updated.
-        </p>
-
-        <ContentFlagsFigure />
-      </Subsection>
-
-      <p className="text-sm italic text-neutral-500 dark:text-neutral-400">
-        Numbers are from a preview run and are subject to change as remaining
-        configurations finish.
-      </p>
-    </Section>
-  );
-}
-
 
 
 export function IntegritySection() {
