@@ -11,7 +11,6 @@ export {
   HorizonTable,
 } from "./Results";
 export {
-  ContributorsSection,
   DifficultyDriversSection,
   IntegritySection,
   IntroSection,

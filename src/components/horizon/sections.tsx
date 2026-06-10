@@ -152,14 +152,3 @@ export function IntegritySection() {
     </Section>
   );
 }
-
-export function ContributorsSection() {
-  return (
-    <Section title="Contributors">
-      <p>
-        Horizon was developed as a collaboration between Orin Labs and
-        Driftwood AI, led by Bryan Houlton and Aayush Gupta.
-      </p>
-    </Section>
-  );
-}

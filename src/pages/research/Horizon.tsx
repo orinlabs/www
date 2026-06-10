@@ -6,7 +6,6 @@ import Prism from 'prismjs';
 import { Link } from 'react-router-dom';
 
 import {
-  ContributorsSection,
   DifficultyDriversSection,
   HorizonLeaderboard,
   HorizonResults,
@@ -99,8 +98,6 @@ export default function Horizon() {
       <Section title="All Results">
         <HorizonResults />
       </Section>
-
-      <ContributorsSection />
 
       <p className="research-prose text-sm italic mb-12">
         *All data was collected with proper user permissions.
