@@ -165,9 +165,9 @@ export function aggregateRun(
     agentType: displayHarness(run.harness),
     model: normalizeModel(run.model),
     completion: Number(passRate(cases).toFixed(1)),
-    costUsd: rep?.cost ?? undefined,
-    tokens: rep?.tokens ?? undefined,
-    timeSec: rep?.time ?? undefined,
+    costUsd: rep?.cost ?? avgCaseMetric(cases, "cost"),
+    tokens: rep?.tokens ?? avgCaseMetric(cases, "tokens"),
+    timeSec: rep?.time ?? avgCaseMetric(cases, "time"),
     tokensEstimated: rep?.tokensEstimated,
     difficulty: {
       easy: splitFor("easy"),
