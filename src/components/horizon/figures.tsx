@@ -33,11 +33,14 @@ import {
   CONTENT_FLAGS,
   CONVERGENCE,
   DIFFICULTY_AXES,
+  DIFFICULTY_BUCKETS,
+  type DifficultyBucket,
   DIFFICULTY_FAMILIES,
   TREND_AXES,
   TREND_FAMILIES,
   fmtDateAxis,
   fmtPct,
+  fmtTokens,
   RESULTS,
   TASK_DIMENSIONS,
 } from "./data";
@@ -1159,7 +1162,7 @@ export function ContentFlagsFigure() {
       caption={
         <>
           Each bar is the pass-rate difference between tasks carrying a flag and
-          the rest of the benchmark — negative (red) makes tasks harder, positive
+          the rest of the benchmark. Negative (red) makes tasks harder, positive
           (green) easier.
         </>
       }
@@ -1799,7 +1802,7 @@ export function AdversarialRobustnessFigure() {
           its adversarial pass rate, so the arrow length is the trap penalty.
           RAG, Codex, and Hermes lose 15–17pp; RLM and Claude Code hold within
           ~3–7pp. RLM's adversarial score (50.9%) still clears every other
-          harness's clean score. Traps barely move time or tokens — the cost is
+          harness's clean score. Traps barely move time or tokens; the cost is
           accuracy.
         </>
       }
@@ -1963,40 +1966,320 @@ export function ConvergenceFigure() {
   );
 }
 
-// Recency vs. the harness. One dot per config at its model's release date (x)
-// and pass rate (y), colored by harness. The fitted line is the time trend —
-// gently up but noisy. The real story is the VERTICAL spread at a single release
-// date (same model era, different harnesses): it dwarfs a year of model progress.
-// Trend + spreads are computed from RESULTS on load; hover any dot for details.
-export function RecencyVsHarness() {
+// Pass rate vs. model release date, split by task difficulty. Each run
+// contributes three dots (easy / medium / hard) with one least-squares fit per
+// difficulty, so the slopes are directly comparable: easy and medium climb
+// with newer models, hard barely moves. Models run on only one harness are
+// dropped so the trend is not confounded by harness choice. Computed from
+// RESULTS on load. Hover snaps to the closest dot.
+export function RecencyByDifficultyFigure() {
   const s = useChartStyle();
-  const { isDark } = s;
+  const { isDark, surface } = s;
+  const [hoveredBucket, setHoveredBucket] = useState<DifficultyBucket | null>(
+    null,
+  );
+  const [hovered, setHovered] = useState<{
+    id: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
 
-  const { series, fit, ticks, domain, dateSpread, widest } = useMemo(() => {
-    // Drop single-run models (run on only one harness): a lone dot carries no
-    // harness comparison, which is the whole point of this chart.
+  const bucketColor: Record<DifficultyBucket, string> = {
+    easy: isDark ? "#34d399" : "#059669",
+    medium: isDark ? "#fbbf24" : "#d97706",
+    hard: isDark ? "#f87171" : "#dc2626",
+  };
+
+  const { series, ticks, domain } = useMemo(() => {
+    // Drop single-run models (run on only one harness) so the time trend is
+    // not confounded by which harness happened to run a lone model.
     const runsPerModel = new Map<string, number>();
     for (const d of RESULTS)
       runsPerModel.set(d.model, (runsPerModel.get(d.model) ?? 0) + 1);
-    const pts = RESULTS.filter(
+    const included = RESULTS.filter(
       (d) =>
         Number.isFinite(d.releaseDate) && (runsPerModel.get(d.model) ?? 0) >= 2,
-    ).map((d) => ({
-      x: d.releaseDate,
+    );
+
+    const xs = included.map((d) => d.releaseDate);
+    const xMin = Math.min(...xs);
+    const xMax = Math.max(...xs);
+    const xpad = (xMax - xMin) * 0.06;
+    const domain: [number, number] = [xMin - xpad, xMax + xpad];
+
+    const series = DIFFICULTY_BUCKETS.map(({ id: bucket }) => {
+      const data = included.map((d) => ({
+        id: `${d.id}-${bucket}`,
+        x: d.releaseDate,
+        y: d.difficulty[bucket],
+        model: d.model,
+        agentType: d.agentType,
+        bucket,
+      }));
+      const n = data.length;
+      const mx = data.reduce((acc, d) => acc + d.x, 0) / n;
+      const my = data.reduce((acc, d) => acc + d.y, 0) / n;
+      let sxy = 0;
+      let sxx = 0;
+      for (const d of data) {
+        sxy += (d.x - mx) * (d.y - my);
+        sxx += (d.x - mx) ** 2;
+      }
+      const slope = sxy / sxx;
+      const intercept = my - slope * mx;
+      return {
+        bucket,
+        data,
+        slopePerYear: slope * 365 * 864e5,
+        // Extend the fit across the full x-domain so the lines reach the
+        // chart edges.
+        fitSeg: [
+          { x: domain[0], y: intercept + slope * domain[0] },
+          { x: domain[1], y: intercept + slope * domain[1] },
+        ] as [{ x: number; y: number }, { x: number; y: number }],
+      };
+    });
+
+    const ticks: number[] = [];
+    const d0 = new Date(domain[0]);
+    let ty = d0.getUTCFullYear();
+    let tm = d0.getUTCMonth();
+    for (let k = 0; k < 24; k++) {
+      const t = Date.UTC(ty, tm, 1);
+      if (t > domain[1]) break;
+      if (t >= domain[0]) ticks.push(t);
+      tm += 2;
+      if (tm > 11) {
+        tm -= 12;
+        ty += 1;
+      }
+    }
+
+    return { series, ticks, domain };
+  }, [isDark]);
+
+  const allPts = useMemo(() => series.flatMap((sr) => sr.data), [series]);
+  const dimBucket = (b: DifficultyBucket) =>
+    hoveredBucket != null && hoveredBucket !== b;
+
+  // Pixel positions of rendered dots, collected during render so a hover
+  // anywhere can snap to the closest point within SNAP_RADIUS.
+  const pointsRef = useRef<{ x: number; y: number; id: string }[]>([]);
+  pointsRef.current = [];
+  const SNAP_RADIUS = 80;
+
+  const handleMove = (e: ReactMouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    let best: { id: string; x: number; y: number } | null = null;
+    let bestDist = Infinity;
+    for (const p of pointsRef.current) {
+      const dist = Math.hypot(p.x - mx, p.y - my);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = p;
+      }
+    }
+    setHovered(best && bestDist <= SNAP_RADIUS ? best : null);
+  };
+
+  const renderDot = (props: {
+    cx?: number;
+    cy?: number;
+    fill?: string;
+    fillOpacity?: number;
+    payload?: { id: string };
+  }) => {
+    const { cx, cy, fill, fillOpacity, payload } = props;
+    if (typeof cx !== "number" || typeof cy !== "number") return <g />;
+    if (payload) pointsRef.current.push({ x: cx, y: cy, id: payload.id });
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={5} fill={surface} />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={4}
+          fill={fill}
+          fillOpacity={fillOpacity}
+          style={{ transition: "fill-opacity 0.2s ease" }}
+        />
+      </g>
+    );
+  };
+
+  const slopeLabel = (sr: (typeof series)[number]) =>
+    function SlopeLabel(props: { viewBox?: unknown }) {
+      const vb = props.viewBox as { x: number; y: number; width: number };
+      return (
+        <text
+          x={vb.x + vb.width + 8}
+          y={vb.y + 4}
+          textAnchor="start"
+          fontSize={11}
+          fontWeight={600}
+          fill={bucketColor[sr.bucket]}
+          opacity={dimBucket(sr.bucket) || hovered != null ? 0.15 : 1}
+        >
+          {`${sr.slopePerYear >= 0 ? "+" : ""}${sr.slopePerYear.toFixed(0)}pp/yr`}
+        </text>
+      );
+    };
+
+  return (
+    <Figure title="Pass rate vs. model release date">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+        {DIFFICULTY_BUCKETS.map(({ id, label }) => (
+          <div
+            key={id}
+            onMouseEnter={() => setHoveredBucket(id)}
+            onMouseLeave={() => setHoveredBucket(null)}
+            className={cn(
+              "flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 cursor-pointer transition-opacity",
+              dimBucket(id) && "opacity-40",
+            )}
+          >
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full"
+              style={{ background: bucketColor[id] }}
+            />
+            {label}
+          </div>
+        ))}
+      </div>
+      <div
+        ref={wrapRef}
+        className="relative h-[360px]"
+        onMouseMove={handleMove}
+        onMouseLeave={() => setHovered(null)}
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart margin={{ top: 24, right: 64, left: 12, bottom: 28 }}>
+            <CartesianGrid strokeDasharray={GRID_DASH} stroke={s.gridStroke} />
+            <XAxis
+              type="number"
+              dataKey="x"
+              name="Release date"
+              scale="linear"
+              domain={domain}
+              ticks={ticks}
+              tickFormatter={(v) => fmtDateAxis(Number(v))}
+              allowDataOverflow
+              {...s.axisProps}
+              label={{
+                value: "Model release date",
+                position: "insideBottom",
+                offset: -12,
+                fill: s.axisStroke,
+                fontSize: TICK_FONT,
+              }}
+            />
+            <YAxis
+              type="number"
+              dataKey="y"
+              name="Pass rate"
+              domain={[0, 100]}
+              ticks={[0, 25, 50, 75, 100]}
+              unit="%"
+              width={48}
+              {...s.axisProps}
+              label={{
+                value: "Pass rate (%)",
+                angle: -90,
+                position: "insideLeft",
+                offset: 6,
+                fill: s.axisStroke,
+                fontSize: TICK_FONT,
+                style: { textAnchor: "middle" },
+              }}
+            />
+            {series.map((sr) => (
+              <ReferenceLine
+                key={`fit-${sr.bucket}`}
+                ifOverflow="extendDomain"
+                stroke={bucketColor[sr.bucket]}
+                strokeWidth={2}
+                strokeDasharray="6 4"
+                strokeOpacity={
+                  dimBucket(sr.bucket) || hovered != null ? 0.15 : 0.9
+                }
+                segment={[...sr.fitSeg]}
+                label={slopeLabel(sr)}
+              />
+            ))}
+            <Scatter data={allPts} isAnimationActive={false} shape={renderDot}>
+              {allPts.map((p) => (
+                <Cell
+                  key={p.id}
+                  fill={bucketColor[p.bucket]}
+                  fillOpacity={
+                    (hovered != null || hoveredBucket != null) &&
+                    hovered?.id !== p.id &&
+                    hoveredBucket !== p.bucket
+                      ? 0.12
+                      : 0.85
+                  }
+                />
+              ))}
+            </Scatter>
+          </ComposedChart>
+        </ResponsiveContainer>
+        {hovered &&
+          (() => {
+            const p = allPts.find((d) => d.id === hovered.id);
+            if (!p) return null;
+            const w = wrapRef.current?.clientWidth ?? 0;
+            const flip = hovered.y < 48;
+            return (
+              <div
+                className="pointer-events-none absolute z-10 -translate-x-1/2 text-center leading-tight"
+                style={{
+                  left: Math.min(Math.max(hovered.x, 90), Math.max(w - 90, 90)),
+                  top: flip ? hovered.y + 14 : hovered.y - 44,
+                }}
+              >
+                <div className="text-[11px] font-semibold text-neutral-800 dark:text-neutral-200 whitespace-nowrap">
+                  {displayAgentType(p.agentType)} - {p.model}
+                </div>
+                <div className="text-[10px] text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
+                  {fmtPct(p.y)} on {p.bucket} tasks
+                </div>
+              </div>
+            );
+          })()}
+      </div>
+    </Figure>
+  );
+}
+
+// Tokens per task vs. pass rate, one dot per run, colored by harness. The
+// dashed line is the least-squares fit; its weak slope and low r are the claim
+// (test-time scaling does not buy memory). Computed from RESULTS on load.
+// Hover snaps to the closest dot (same pattern as HorizonChart).
+export function TokensVsPassFigure() {
+  const s = useChartStyle();
+  const { isDark, surface } = s;
+  const [hoveredHarness, setHoveredHarness] = useState<AgentType | null>(null);
+  const [hovered, setHovered] = useState<{
+    id: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  const { pts, harnesses, fit, domain } = useMemo(() => {
+    const pts = RESULTS.filter((d) => d.tokens != null).map((d) => ({
+      id: d.id,
+      x: d.tokens as number,
       y: d.completion,
       model: d.model,
       agentType: d.agentType,
     }));
-    const byH = new Map<AgentType, typeof pts>();
-    for (const pt of pts) {
-      const a = byH.get(pt.agentType) ?? [];
-      a.push(pt);
-      byH.set(pt.agentType, a);
-    }
-    const series = AGENT_TYPES.filter((h) => byH.has(h)).map((h) => ({
-      harness: h,
-      data: byH.get(h)!,
-    }));
+    const harnesses = AGENT_TYPES.filter((h) =>
+      pts.some((p) => p.agentType === h),
+    );
 
     const n = pts.length;
     const mx = pts.reduce((acc, d) => acc + d.x, 0) / n;
@@ -2014,93 +2297,105 @@ export function RecencyVsHarness() {
       slope,
       intercept: my - slope * mx,
       r: sxy / Math.sqrt(sxx * syy),
-      slopePerYear: slope * 365 * 864e5,
     };
 
-    const xs = pts.map((d) => d.x);
-    const xMin = Math.min(...xs);
-    const xMax = Math.max(...xs);
-    const xpad = (xMax - xMin) * 0.06;
-    const domain: [number, number] = [xMin - xpad, xMax + xpad];
+    const xMax = Math.max(...pts.map((d) => d.x));
+    const domain: [number, number] = [0, Math.ceil(xMax / 250_000) * 250_000];
 
-    const ticks: number[] = [];
-    const d0 = new Date(domain[0]);
-    let ty = d0.getUTCFullYear();
-    let tm = d0.getUTCMonth();
-    for (let k = 0; k < 24; k++) {
-      const t = Date.UTC(ty, tm, 1);
-      if (t > domain[1]) break;
-      if (t >= domain[0]) ticks.push(t);
-      tm += 2;
-      if (tm > 11) {
-        tm -= 12;
-        ty += 1;
-      }
-    }
-
-    const byDate = new Map<number, number[]>();
-    for (const d of pts) {
-      const a = byDate.get(d.x) ?? [];
-      a.push(d.y);
-      byDate.set(d.x, a);
-    }
-    const dateSpread = [...byDate.entries()].map(([x, ys]) => ({
-      x,
-      lo: Math.min(...ys),
-      hi: Math.max(...ys),
-      span: Math.max(...ys) - Math.min(...ys),
-    }));
-    const widest = dateSpread.reduce((a, b) => (b.span > a.span ? b : a));
-
-    return { series, fit, ticks, domain, dateSpread, widest };
+    return { pts, harnesses, fit, domain };
   }, []);
 
-  return (
-    <Figure
-      title="A newer model is a weak lever next to the harness"
-      caption={
-        <>
-          Each dot is a config at its model&apos;s release date; color is the
-          harness. The fitted trend is only{" "}
-          <strong>+{fit.slopePerYear.toFixed(0)}pp per year</strong> and noisy
-          (r&nbsp;=&nbsp;{fit.r.toFixed(2)}). But look vertically: at a single
-          release date, swapping the harness moves the score by up to{" "}
-          <strong>{widest.span.toFixed(0)}pp</strong> — more than a year of model
-          progress. The fastest lever is a better harness now, not a newer model
-          later. Hover any point for its model and score.
-        </>
+  // Pixel positions of rendered dots, collected during render so a hover
+  // anywhere can snap to the closest point within SNAP_RADIUS.
+  const pointsRef = useRef<{ x: number; y: number; id: string }[]>([]);
+  pointsRef.current = [];
+  const SNAP_RADIUS = 80;
+
+  const isDimmed = (p: { id: string; agentType: AgentType }) =>
+    (hovered != null || hoveredHarness != null) &&
+    hovered?.id !== p.id &&
+    hoveredHarness !== p.agentType;
+
+  const handleMove = (e: ReactMouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    let best: { id: string; x: number; y: number } | null = null;
+    let bestDist = Infinity;
+    for (const p of pointsRef.current) {
+      const dist = Math.hypot(p.x - mx, p.y - my);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = p;
       }
-    >
+    }
+    setHovered(best && bestDist <= SNAP_RADIUS ? best : null);
+  };
+
+  const renderDot = (props: {
+    cx?: number;
+    cy?: number;
+    fill?: string;
+    fillOpacity?: number;
+    payload?: { id: string };
+  }) => {
+    const { cx, cy, fill, fillOpacity, payload } = props;
+    if (typeof cx !== "number" || typeof cy !== "number") return <g />;
+    if (payload) pointsRef.current.push({ x: cx, y: cy, id: payload.id });
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={5} fill={surface} />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={4}
+          fill={fill}
+          fillOpacity={fillOpacity}
+          style={{ transition: "fill-opacity 0.2s ease" }}
+        />
+      </g>
+    );
+  };
+
+  return (
+    <Figure title="Tokens per task vs. pass rate">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
-        {series.map((x) => (
+        {harnesses.map((h) => (
           <div
-            key={x.harness}
-            className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300"
+            key={h}
+            onMouseEnter={() => setHoveredHarness(h)}
+            onMouseLeave={() => setHoveredHarness(null)}
+            className={cn(
+              "flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 cursor-pointer transition-opacity",
+              hoveredHarness != null && hoveredHarness !== h && "opacity-40",
+            )}
           >
             <span
               className="inline-block w-2.5 h-2.5 rounded-full"
-              style={{ background: agentColor(x.harness, isDark) }}
+              style={{ background: agentColor(h, isDark) }}
             />
-            {x.harness}
+            {h}
           </div>
         ))}
       </div>
-      <div className="h-[360px]">
+      <div
+        ref={wrapRef}
+        className="relative h-[360px]"
+        onMouseMove={handleMove}
+        onMouseLeave={() => setHovered(null)}
+      >
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart margin={{ top: 16, right: 16, left: 12, bottom: 28 }}>
+          <ComposedChart margin={{ top: 24, right: 16, left: 12, bottom: 28 }}>
             <CartesianGrid strokeDasharray={GRID_DASH} stroke={s.gridStroke} />
             <XAxis
               type="number"
               dataKey="x"
-              name="Release date"
-              scale="linear"
+              name="Tokens per task"
               domain={domain}
-              ticks={ticks}
-              tickFormatter={(v) => fmtDateAxis(Number(v))}
-              allowDataOverflow
+              tickFormatter={(v) => fmtTokens(Number(v))}
               {...s.axisProps}
               label={{
-                value: "Model release date",
+                value: "Tokens per task",
                 position: "insideBottom",
                 offset: -12,
                 fill: s.axisStroke,
@@ -2126,84 +2421,62 @@ export function RecencyVsHarness() {
                 style: { textAnchor: "middle" },
               }}
             />
-            <Tooltip
-              cursor={{ stroke: s.axisStroke, strokeDasharray: GRID_DASH }}
-              content={({ active, payload }) => {
-                if (!active || !payload?.length) return null;
-                const d = payload[0].payload as {
-                  agentType: AgentType;
-                  model: string;
-                  y: number;
-                  x: number;
-                };
-                return (
-                  <div className="rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 py-1.5 text-xs shadow-sm">
-                    <div className="font-medium text-neutral-800 dark:text-neutral-200">
-                      {displayAgentType(d.agentType)} · {d.model}
-                    </div>
-                    <div className="text-neutral-500 dark:text-neutral-400">
-                      {d.y.toFixed(1)}% pass · released {fmtDateAxis(d.x)}
-                    </div>
-                  </div>
-                );
-              }}
-            />
-            {/* faint vertical bars: harness spread at each release date */}
-            {dateSpread.map((d) => (
-              <ReferenceLine
-                key={`sp${d.x}`}
-                ifOverflow="extendDomain"
-                stroke={s.muted}
-                strokeWidth={8}
-                strokeOpacity={d.x === widest.x ? 0.22 : 0.12}
-                segment={[
-                  { x: d.x, y: d.lo },
-                  { x: d.x, y: d.hi },
-                ]}
-                label={
-                  d.x === widest.x
-                    ? {
-                        value: `${d.span.toFixed(0)}pp from harness`,
-                        position: "top",
-                        fill: s.ink,
-                        fontSize: 11,
-                        fontWeight: 600,
-                      }
-                    : undefined
-                }
-              />
-            ))}
-            {/* time trend */}
             <ReferenceLine
               ifOverflow="extendDomain"
               stroke={s.ink}
               strokeWidth={2}
               strokeDasharray="6 4"
+              strokeOpacity={
+                hoveredHarness != null || hovered != null ? 0.15 : 1
+              }
               segment={[
                 { x: domain[0], y: fit.intercept + fit.slope * domain[0] },
                 { x: domain[1], y: fit.intercept + fit.slope * domain[1] },
               ]}
               label={{
-                value: `+${fit.slopePerYear.toFixed(0)}pp/yr (r=${fit.r.toFixed(2)})`,
+                value: `r=${fit.r.toFixed(2)}`,
                 position: "insideBottomRight",
                 fill: s.muted,
                 fontSize: 11,
+                opacity:
+                  hoveredHarness != null || hovered != null ? 0.15 : 1,
               }}
             />
-            {series.map((x) => (
-              <Scatter
-                key={x.harness}
-                name={x.harness}
-                data={x.data}
-                fill={agentColor(x.harness, isDark)}
-                fillOpacity={0.85}
-                isAnimationActive={false}
-              />
-            ))}
+            <Scatter data={pts} isAnimationActive={false} shape={renderDot}>
+              {pts.map((p) => (
+                <Cell
+                  key={p.id}
+                  fill={agentColor(p.agentType, isDark)}
+                  fillOpacity={isDimmed(p) ? 0.12 : 0.85}
+                />
+              ))}
+            </Scatter>
           </ComposedChart>
         </ResponsiveContainer>
+        {hovered &&
+          (() => {
+            const p = pts.find((d) => d.id === hovered.id);
+            if (!p) return null;
+            const w = wrapRef.current?.clientWidth ?? 0;
+            const flip = hovered.y < 48;
+            return (
+              <div
+                className="pointer-events-none absolute z-10 -translate-x-1/2 text-center leading-tight"
+                style={{
+                  left: Math.min(Math.max(hovered.x, 90), Math.max(w - 90, 90)),
+                  top: flip ? hovered.y + 14 : hovered.y - 44,
+                }}
+              >
+                <div className="text-[11px] font-semibold text-neutral-800 dark:text-neutral-200 whitespace-nowrap">
+                  {displayAgentType(p.agentType)} - {p.model}
+                </div>
+                <div className="text-[10px] text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
+                  {fmtPct(p.y)} · {fmtTokens(p.x)} tokens/task
+                </div>
+              </div>
+            );
+          })()}
       </div>
     </Figure>
   );
 }
-

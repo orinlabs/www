@@ -219,7 +219,7 @@ export function HorizonChart({
             Score vs. {metric.label}
           </h4>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Horizon (195 tasks), preview run — hover a point to reveal its
+            Horizon (195 tasks), preview run; hover a point to reveal its
             model
           </p>
           <div className="flex flex-wrap items-center gap-4 mt-2">
@@ -300,7 +300,7 @@ export function HorizonChart({
       </div>
 
       <div
-        className="h-[380px]"
+        className="h-[380px] [&_svg]:overflow-visible"
         onMouseMove={handleMove}
         onMouseLeave={() => setHoveredId(null)}
       >
@@ -469,11 +469,10 @@ export function HorizonModelChart() {
   return (
     <div className="my-8">
       <h4 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
-        The harness matters more than the model
+        Same model, different harness
       </h4>
       <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-3">
-        Task completion for each model, split by harness. Hold the model fixed
-        (one row) and the harness alone swings the score 10–20+ points.
+        Task completion for each model, split by harness.
       </p>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
@@ -603,9 +602,8 @@ export function HorizonModelChart() {
       </div>
 
       <p className="mt-2 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
-        Each row is one model run on multiple harnesses; dot color is the
-        harness. Hover a harness to trace it across models — RLM is the rightmost
-        dot in nearly every row. Preview run, subject to change.
+        Hover a harness to trace it across models. Preview run, subject to
+        change.
       </p>
     </div>
   );

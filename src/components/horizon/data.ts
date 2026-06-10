@@ -246,6 +246,8 @@ export const MODEL_RELEASE_DATES: Record<string, string> = {
   "claude-opus-4.8": "2026-05-28",
   "gpt-5.5": "2026-04-24",
   "claude-sonnet-4.6": "2026-02-17",
+  "deepseek-v4-pro": "2026-04-24",
+  "gemini-3.1-pro-preview": "2026-02-19",
 };
 
 // Preview run results, derived at runtime from the trimmed per-case data in
@@ -411,7 +413,7 @@ export const TASK_DIMENSIONS: TaskDimension[] = [
     id: "anticipability",
     title: "Predictability",
     blurb:
-      "gpt-5-mini rubric score 1–10: how predictable it is that the agent would need the required memory (store-at-ingestion or search-at-task). 10 = dead-on cued; 1 = no cue. Grouped high (10) / med (9) / low (≤8).",
+      "GPT-5 Mini rubric score 1–10: how predictable it is that the agent would need the required memory (store-at-ingestion or search-at-task). 10 = dead-on cued; 1 = no cue. Grouped high (10) / med (9) / low (≤8).",
     levels: buildLevels(
       "anticipability",
       ANTICIPABILITY_BUCKETS,
@@ -440,7 +442,7 @@ export const TASK_DIMENSIONS: TaskDimension[] = [
     id: "adversarial",
     title: "Adversarial traps",
     blurb:
-      "Whether the trace actively works against the agent — patched or stale facts, confusable entities, a confidently wrong speaker.",
+      "Whether the trace actively works against the agent: patched or stale facts, confusable entities, a confidently wrong speaker.",
     levels: buildLevels(
       "adversarial",
       [

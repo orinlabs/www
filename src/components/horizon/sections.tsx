@@ -6,6 +6,8 @@ import {
   ContentFlagsFigure,
   DifficultyAxesFigure,
   DifficultyTrendFigures,
+  RecencyByDifficultyFigure,
+  TokensVsPassFigure,
 } from "./figures";
 
 export function IntroSection() {
@@ -32,32 +34,93 @@ export function DifficultyDriversSection() {
   return (
     <Section title="Memory Isn't Predictable">
       <p>
-        Harnesses have two ways of doing long-horizon memory: <strong>search</strong> and <strong>store</strong>.
+        Every harness remembers a long trace in one of two ways: take notes as
+        you go, or look things up later. Note-takers (OpenClaw's LCM, Hermes)
+        write down whatever seems important while ingesting the trace.
+        Look-uppers (RLM, RAG, Claude Code, Codex) keep the raw trace and
+        search it at task time with <code>grep</code>, semantic retrieval, or
+        RLM.
       </p>
 
       <p>
-      The <strong>search</strong> strategy lets the agent search through the trace using <code>grep</code>, semantic search (RAG), or methods like RLM. The <strong>store</strong> strategy is the reverse: the agent stores realtime learnings in a database or Markdown file for use later. OpenClaw (LCM) and Hermes primarily use this approach.
+        On the same model (Claude Opus 4.8), RLM passes 56% of tasks and
+        OpenClaw (LCM) passes 58%. Of the tasks RLM fails, 73% are also failed
+        by OpenClaw (LCM). The overlap points to a cause shared by both
+        strategies rather than a weakness in either implementation.
       </p>
 
       <p>
-        On the same model (claude-opus-4.8), neither approach saturates Horizon: RLM passes 56% while OpenClaw (LCM) passes 53%. Of the tasks RLM misses, 76% are missed by OpenClaw (LCM) too.
-      </p>
-
-      <p>
-      The core problem is that it's impossible to predict what an agent needs to remember. For <strong>store</strong> strategies, the agent needs to decide which trace learnings to store <i>before</i> seeing the task. Nearly every time OpenClaw (LCM) and Hermes failed a task, it was because the agent didn't identify the required learning(s) as important enough to store. Sometimes they stored too much information, forcing them to into a <b>search</b> strategy over their own memory.
-      </p>
-
-      <p>
-      For <strong>search</strong> strategies, a similar problem exists: the agent can only retroactively search for things it <i>expects</i>. In the example task above the agent has no reason to suspect that <code>curl</code> is broken, so it won't search the trace to check. Nearly every time RLM, RAG, Claude Code, or Codex failed a task, it was because of this issue. Additionally, existing search functions like keyword, semantic, FTS5, and BM25 lack the ability to accurately search the trace for counterfactuals, experiential links, and other non-textual connections.
+        The shared cause is prediction. A note-taker decides what to write
+        down before any task exists: in nearly every OpenClaw (LCM) and Hermes
+        failure, the required information was never stored. A look-upper
+        decides what to search for, and it only searches for what it already
+        expects: in the example task above, nothing suggests an attachment
+        might fail to open, so the agent never searches the trace for one that
+        did. Nearly every RLM, RAG, Claude Code, and Codex failure follows this
+        pattern.
       </p>
 
       <DifficultyTrendFigures />
 
-      <p>As tasks increase in difficulty, the required learning becomes more unexpected, buried in more data, and may even require multiple data points to extract the required pattern.</p>
+      <p>
+        The benchmark-wide data matches this mechanism. Pass rates fall along
+        exactly the axes that make the prediction harder: lower predictability
+        of the required memory, deeper burial in the trace, and more memories
+        that must be combined.
+      </p>
     </Section>
   );
 }
 
+
+export function ModelLeverSection() {
+  return (
+    <Section title="Scaling Laws">
+      <p>
+        <strong>Models are improving at easy and medium tasks, much less at
+        hard ones.</strong> A year of model releases is worth +22pp of pass
+        rate on easy tasks and +29pp on medium, but only +8pp on hard (the
+        red series in the release-date chart). The hard-task progress that does
+        exist is concentrated in harnesses that search: RLM rises +20pp per
+        year, from 1.5% (GPT-5 Mini) to 21.5% (Claude Opus 4.8); OpenClaw
+        (LCM) rises half as fast; RAG and Hermes do not rise, and no model
+        exceeds 8% on hard tasks under RAG.
+      </p>
+
+      <p>
+        <strong>Test-time scaling only works on some harnesses.</strong>{" "}
+        Across all 24 runs, tokens per task and pass rate correlate at
+        r&nbsp;=&nbsp;0.17. Within harnesses the picture splits: RLM is the
+        only harness where more tokens track more passes (r&nbsp;=&nbsp;+0.31
+        across its models). OpenClaw (LCM) runs the other way
+        (r&nbsp;=&nbsp;-0.76): its lightest run is its best, 57% at 60k
+        tokens per task, while its token-hungriest models are its weakest.
+        RAG is flat (r&nbsp;=&nbsp;-0.03): more tokens retrieve no more
+        memory.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+        <RecencyByDifficultyFigure />
+        <TokensVsPassFigure />
+      </div>
+
+      <p>
+        The mechanism behind both: RLM uses the model itself to search the
+        trace, so reasoning gains and extra compute convert into retrieval
+        gains. RAG's embedding retrieval does not improve when the model
+        does, and the note-takers' storage decisions happen at ingestion
+        time, where a smarter task-time model cannot reach them.
+      </p>
+
+      <p>
+        The one lever that scales on the hardest tasks is model-driven search
+        over the raw history. Better models make better searchers. They do
+        not fix a fixed retriever, and they do not buy memory through more
+        tokens.
+      </p>
+    </Section>
+  );
+}
 
 export function IntegritySection() {
   return (

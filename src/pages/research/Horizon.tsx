@@ -10,6 +10,7 @@ import {
   HorizonLeaderboard,
   HorizonResults,
   IntegritySection,
+  ModelLeverSection,
   TaskAnatomySection,
 } from '../../components/horizon';
 import { ResearchArticle, Section } from '../../components/WhitePaper';
@@ -92,6 +93,8 @@ export default function Horizon() {
       <TaskAnatomySection />
 
       <DifficultyDriversSection />
+
+      <ModelLeverSection />
 
       <IntegritySection />
 

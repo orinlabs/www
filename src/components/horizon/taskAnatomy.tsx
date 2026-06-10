@@ -1,7 +1,7 @@
 // What-is-a-task section for the Horizon page. Everything here grounds the
 // abstract idea of a "task" in one concrete, real-shaped example (an agent that
-// learned curl is broken on its machine, then gets a fresh download task) and
-// walks it end to end:
+// once saw a .docx worksheet fail to open on a student's Chromebook, then gets
+// a fresh send-practice-materials task) and walks it end to end:
 //   Beat 1  TaskTimelineFigure  — a trace + a task, with each blown up.
 //   Beat 2  TaskOutcomes         — what passing vs failing looks like here.
 // The integrity checks (oracle / anti-oracle / perfect-context / env-only) are
@@ -42,7 +42,8 @@ function Figure({
 // ---------------------------------------------------------------------------
 // Beat 1: the trace + task timeline, rendered from a static figure. A wide
 // "historical trace" box and a small "task" box, each magnified to show what's
-// inside (the agent learning curl is broken; a fresh inbound download task).
+// inside (a .docx worksheet failing to open on the student's Chromebook months
+// ago; a fresh request to send practice materials).
 // ---------------------------------------------------------------------------
 
 export function TaskTimelineFigure() {
@@ -50,12 +51,12 @@ export function TaskTimelineFigure() {
     <Figure>
       <img
         src="/example_task.png"
-        alt="A historical trace of millions of tokens over months, paired with a single new task. One slice of the trace is magnified to show the agent hitting a broken curl and falling back to wget; the task is an inbound SMS asking it to download a release file."
+        alt="A historical trace of millions of tokens over months, paired with a single new task. One slice of the trace is magnified to show a worksheet sent as a .docx failing to open on the student's Chromebook before a PDF link works; the task is a new request to send practice materials."
         className="w-full block dark:hidden max-w-2xl"
       />
       <img
         src="/example_task_dark.png"
-        alt="A historical trace of millions of tokens over months, paired with a single new task. One slice of the trace is magnified to show the agent hitting a broken curl and falling back to wget; the task is an inbound SMS asking it to download a release file."
+        alt="A historical trace of millions of tokens over months, paired with a single new task. One slice of the trace is magnified to show a worksheet sent as a .docx failing to open on the student's Chromebook before a PDF link works; the task is a new request to send practice materials."
         className="w-full hidden dark:block max-w-2xl"
       />
     </Figure>
@@ -100,20 +101,22 @@ export function TaskOutcomes() {
     <Figure
       caption={
         <>
-          The task passes only if the agent takes the ideal action — reaching for{" "}
-          <code>wget</code> directly. Re-hitting the known-broken <code>curl</code>{" "}
-          counts as a miss, even though the file does eventually download.
+          The task passes only if the agent takes the ideal action: sending the
+          materials as a PDF link directly. Re-sending a <code>.docx</code>{" "}
+          attachment counts as a miss, even though the student does eventually
+          get working materials.
         </>
       }
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-neutral-200 dark:divide-neutral-800">
         <Outcome pass={false} className="pb-4 sm:pb-0 sm:pr-8">
-          Reaches for <code>curl</code> by default, hits the same broken-libssl
-          error it saw months ago, then falls back to <code>wget</code>. It
-          repeated a mistake its own history had already solved.
+          Sends a <code>.docx</code> attachment by default, the student reports
+          it won't open (the same failure it saw months ago), and session time
+          is lost converting it. It repeated a mistake its own history had
+          already solved.
         </Outcome>
         <Outcome pass className="pt-4 sm:pt-0 sm:pl-8">
-          Recalls the lesson and runs <code>wget</code> on the first try — the
+          Recalls the failed handoff and sends a PDF link on the first try: the
           ideal action, no wasted failure.
         </Outcome>
       </div>
@@ -143,7 +146,15 @@ export function TaskAnatomySection() {
       <TaskTimelineFigure />
 
       <p>
-        For example: the agent in this task learned months ago that <code>curl</code> is broken on its machine and that <code>wget</code> works instead. This is buried deep in the trace, hidden by a bunch of other agent activity. When a new download request arrives, the task tests whether the agent has learned to use <code>wget</code> on the first try. Lessons can be anywhere in the trace, occur multiple times, or even require multiple data points to extract the required pattern.
+        For example: months ago in this trace, the agent sent a worksheet as a{" "}
+        <code>.docx</code> attachment, the student could not open it on a
+        school-issued Chromebook, and part of the session was lost before a PDF
+        link worked. Nothing in that exchange is marked as a preference or a
+        rule; it is one failed handoff inside months of routine activity. When
+        a new request to send practice materials arrives, the task tests
+        whether the agent sends a PDF link on the first try. Lessons can be
+        anywhere in the trace, occur multiple times, or require multiple data
+        points to extract the required pattern.
       </p>
       <p>
         Horizon contains 195 tasks, but is private to prevent overfitting and
@@ -167,8 +178,8 @@ export function TaskAnatomySection() {
         of traces, to show how the benchmark is structured.
       </p>
       <p>
-        Each task runs in an environment with real tools — email and SMS
-        inboxes, and more — and is graded on completion, cost, and speed, judged
+        Each task runs in an environment with real tools (email and SMS
+        inboxes, and more) and is graded on completion, cost, and speed, judged
         from the final environment state by an LLM plus deterministic checks.
       </p>
 
