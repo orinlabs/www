@@ -16,7 +16,7 @@ import {
 import { ResearchArticle, Section } from '../../components/WhitePaper';
 
 const HERO_TITLE = "Introducing Horizon";
-const HERO_ABSTRACT = "We're releasing Horizon, a benchmark that measures an agent's ability to take ideal actions from past experience. Each task requires understanding months of real interactions with customers across millions of tokens to succeed."
+const HERO_ABSTRACT = "We're releasing Horizon, a benchmark that measures an agent's ability learn from past experience. Each task requires understanding months of real interactions with customers across millions of tokens to succeed."
 
 // Full-width hero: the benchmark image with the title/subtitle/authors/date
 // overlaid in the lower-left. The nav is layered on top by the Layout.
