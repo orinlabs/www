@@ -435,7 +435,7 @@ export const TASK_DIMENSIONS: TaskDimension[] = [
     id: "anticipability",
     title: "Predictability",
     blurb:
-      "GPT-5 Mini rubric score 1–10: how predictable it is that the agent would need the required memory (store-at-ingestion or search-at-task). 10 = dead-on cued; 1 = no cue. Grouped high (10) / med (9) / low (≤8).",
+      "GPT-5 Mini rubric score 1–10: how predictable it is that the agent would need the required learning (store-at-ingestion or search-at-task). 10 = dead-on cued; 1 = no cue. Grouped high (10) / med (9) / low (≤8).",
     levels: buildLevels(
       "anticipability",
       ANTICIPABILITY_BUCKETS,
@@ -446,7 +446,7 @@ export const TASK_DIMENSIONS: TaskDimension[] = [
     id: "burial_depth",
     title: "Burial depth",
     blurb:
-      "How far through the trace the required memory first appears (burial_depth ÷ trace_lines). Bins are equal-sized groups of tasks from near the start (left) to near the end (right).",
+      "How far through the trace the required learning first appears (burial_depth ÷ trace_lines). Bins are equal-sized groups of tasks from near the start (left) to near the end (right).",
     levels: buildLevelsByClassifier(mapBurialDepthBucket, BURIAL_DEPTH_BUCKETS),
   },
   {
@@ -575,7 +575,7 @@ export const TREND_AXES: TrendAxis[] = [
   {
     id: "anticipability",
     title: "Predictability",
-    subtitle: "How predictable the needed memory is",
+    subtitle: "How predictable the needed learning is",
     data: buildHarnessTrendRows(
       "anticipability",
       ANTICIPABILITY_BUCKETS,
@@ -585,7 +585,7 @@ export const TREND_AXES: TrendAxis[] = [
   {
     id: "burial_depth",
     title: "Burial depth",
-    subtitle: "% through trace where learning appears",
+    subtitle: "% through trace where required learning first appears",
     data: buildHarnessTrendRowsByClassifier(
       mapBurialDepthBucket,
       BURIAL_DEPTH_BUCKETS,
@@ -594,7 +594,7 @@ export const TREND_AXES: TrendAxis[] = [
   {
     id: "n_hops",
     title: LEARNINGS_REQUIRED_TITLE,
-    subtitle: "How many facts must be combined to pass",
+    subtitle: "How many learnings must be combined to pass",
     data: buildHarnessTrendRows(
       "n_hops",
       [...LEARNINGS_REQUIRED_BUCKETS],
@@ -684,7 +684,7 @@ export const DIFFICULTY_AXES: DifficultyAxis[] = [
   },
   {
     key: "md",
-    title: "Memory depth",
+    title: "Misdirection",
     drop: "−6.6pp",
     data: [
       { level: "low", RLM: 59.7, ClaudeCode: 47.5, RAG: 38.7, Hermes: 41.9, ALL: 47.0 },

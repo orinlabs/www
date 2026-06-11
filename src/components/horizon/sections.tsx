@@ -16,7 +16,7 @@ export function IntroSection() {
         longer and longer. Coding harnesses can work autonomously for hours,
         while products like OpenClaw and Hermes have grown exponentially. But
         long-horizon agents frequently fall into the same traps: they lose track
-        of what's going on, misremember what happened previously, and can't
+        of what's going on, forget what they learned previously, and can't
         consistently learn on the job. This is what Horizon measures.
       </p>
 
@@ -32,7 +32,7 @@ export function DifficultyDriversSection() {
   return (
     <Section title="Harnesses fail in the same ways">
       <p>
-        We categorize tasks based on three dimensions: predictability, burial depth, and number of learnings required. Predictability is how easy it is to predict what the agent will need to remember. Burial depth is how far through the trace the required memory first appears. Number of learnings required is how many separate facts from the trace must be learned and combined to pass the task.
+        We categorize tasks based on three dimensions: predictability, burial depth, and number of learnings required. Predictability is how easy it is to predict what the agent will need to learn. Burial depth is how far through the trace the required learning first appears. Number of learnings required is how many separate facts from the trace must be learned and combined to pass the task.
       </p>
 
       <DifficultyTrendFigures />
@@ -48,13 +48,13 @@ export function DifficultyDriversSection() {
 
 export function ModelLeverSection() {
   return (
-    <Section title="Memory scales slowly">
+    <Section title="Learning scales slowly">
       <p>
         Models are slowly getting better at Horizon, suggesting that scaling pretraining and reinforcement learning improves a model's ability to learn from long-horizon traces. However, the <b>improvement rate</b> of models is much slower on hard tasks, suggesting that intelligence alone may not be enough to learn effectively from long-horizon traces.
       </p>
 
       <p>
-        Scaling test-time compute is weakly correlated with pass rate, but correlation varies widely between harnesses. Harnesses like OpenClaw and Hermes primarily rely on accumulating memory over time for fast access at test time, while harnesses like RLM and RAG spend more tokens on searching the trace during the task. Our sample is small, but harnesses that accumulate do not seem to benefit from additional test-time scaling while harnesses that search do improve.
+        Scaling test-time compute is weakly correlated with pass rate, but correlation varies widely between harnesses. Harnesses like OpenClaw and Hermes primarily rely on accumulating learnings over time for fast access at test time, while harnesses like RLM and RAG spend more tokens on searching the trace during the task. Our sample is small, but harnesses that accumulate do not seem to benefit from additional test-time scaling while harnesses that search do improve.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">

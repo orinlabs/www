@@ -1655,7 +1655,7 @@ export function DifficultyTrendFigures() {
 
   return (
     <Figure
-      caption="Pass rate by harness across each axis level (easiest → hardest left to right), pooled across all models on that harness. Burial depth bins are equal-sized groups of tasks by how far through the trace (in %) the required memory first appears."
+      caption="Pass rate by harness across each axis level (easiest → hardest left to right), pooled across all models on that harness. Burial depth bins are equal-sized groups of tasks by how far through the trace (in %) the required learning first appears."
     >
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4 text-xs font-medium text-neutral-600 dark:text-neutral-300">
         {TREND_FAMILIES.map((f) => (
@@ -1905,7 +1905,7 @@ export function ConvergenceFigure() {
   const data = CONVERGENCE;
   return (
     <Figure
-      title="The adversarial gap collapses as memories get harder to find"
+      title="The adversarial gap collapses as learnings get harder to find"
       caption={
         <>
           Pass rate by semantic distance, split by whether the task is
@@ -2277,7 +2277,7 @@ export function RecencyByDifficultyFigure() {
 
 // Tokens per task vs. pass rate, one dot per run, colored by harness. The
 // dashed line is the least-squares fit; its weak slope and low r are the claim
-// (test-time scaling does not buy memory). Computed from RESULTS on load.
+// (test-time scaling does not buy learning). Computed from RESULTS on load.
 // Hover snaps to the closest dot (same pattern as HorizonChart).
 export function TokensVsPassFigure() {
   const s = useChartStyle();
