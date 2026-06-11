@@ -1227,7 +1227,7 @@ export function ContentFlagsFigure() {
 
 const TREND_LINE_SNAP_RADIUS = 28;
 const TREND_PANEL_HEIGHT = 286;
-const TREND_CHART_MARGIN = { top: 32, right: 16, left: 4, bottom: 4 };
+const TREND_CHART_MARGIN = { top: 24, right: 16, left: 4, bottom: 4 };
 
 interface TrendChartPoint {
   x: number;
@@ -1305,6 +1305,7 @@ function HarnessTrendPanel({
   hoveredHarness,
   onHoverLine,
   onClearLine,
+  yAxisLabel,
 }: {
   data: Record<string, number | string>[];
   height: number;
@@ -1313,8 +1314,9 @@ function HarnessTrendPanel({
   hoveredHarness: string | null;
   onHoverLine: (harnessId: string | null) => void;
   onClearLine: () => void;
+  yAxisLabel?: string;
 }) {
-  const { gridStroke, axisProps, surface } = style;
+  const { gridStroke, axisProps, surface, axisStroke } = style;
   const pointsRef = useRef<TrendChartPoint[]>([]);
   pointsRef.current = [];
 
@@ -1406,8 +1408,21 @@ function HarnessTrendPanel({
             domain={[0, 70]}
             ticks={[0, 20, 40, 60]}
             tickFormatter={(v: unknown) => `${v}%`}
-            width={34}
+            width={yAxisLabel ? 50 : 34}
             {...axisProps}
+            label={
+              yAxisLabel
+                ? {
+                    value: yAxisLabel,
+                    angle: -90,
+                    position: "insideLeft",
+                    offset: 8,
+                    fill: axisStroke,
+                    fontSize: TICK_FONT,
+                    style: { textAnchor: "middle" },
+                  }
+                : undefined
+            }
           />
           {TREND_FAMILIES.map((f) => {
             const c = color(f.colorKey);
@@ -1628,7 +1643,7 @@ export function PassRateByAxisFigure({
   );
 }
 
-// Three small multiples: anticipability, burial depth, and reasoning hops —
+// Three small multiples: predictability, burial depth, and learnings required —
 // one series per harness. Pooled across models.
 export function DifficultyTrendFigures() {
   const style = useChartStyle();
@@ -1640,9 +1655,9 @@ export function DifficultyTrendFigures() {
 
   return (
     <Figure
-      caption="Pass rate by harness across each axis level (easiest → hardest left to right), pooled across all models on that harness."
+      caption="Pass rate by harness across each axis level (easiest → hardest left to right), pooled across all models on that harness. Burial depth bins are equal-sized groups of tasks by how far through the trace (in %) the required memory first appears."
     >
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 text-xs font-medium text-neutral-600 dark:text-neutral-300">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4 text-xs font-medium text-neutral-600 dark:text-neutral-300">
         {TREND_FAMILIES.map((f) => (
           <div
             key={f.id}
@@ -1662,11 +1677,16 @@ export function DifficultyTrendFigures() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-4 items-end">
-        {TREND_AXES.map((ax) => (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-4 items-end md:-ml-4">
+        {TREND_AXES.map((ax, i) => (
           <div key={ax.id} className="flex flex-col">
-            <div className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 text-center leading-none mb-1 min-h-[1rem]">
-              {ax.title}
+            <div className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 text-center leading-tight min-h-[2rem]">
+              <div>{ax.title}</div>
+              {ax.subtitle && (
+                <div className="mt-0.5 text-[10px] font-normal text-neutral-500 dark:text-neutral-400 leading-snug">
+                  {ax.subtitle}
+                </div>
+              )}
             </div>
             {ax.chart === "bar" ? (
               <HarnessTrendHistogram
@@ -1687,6 +1707,7 @@ export function DifficultyTrendFigures() {
                 hoveredHarness={activeHarness}
                 onHoverLine={setHoveredLine}
                 onClearLine={() => setHoveredLine(null)}
+                yAxisLabel={i === 0 ? "Pass rate" : undefined}
               />
             )}
           </div>

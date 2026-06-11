@@ -32,15 +32,15 @@ export function DifficultyDriversSection() {
   return (
     <Section title="Harnesses fail in the same ways">
       <p>
-        We categorize tasks based on three dimensions: predictability, burial depth, and reasoning hops. Predictability is how easy it is to predict what the agent will need to remember, burial depth is how deep in the trace the required memory is, and reasoning hops is how many separate facts from the trace must be chained together to pass the task.
+        We categorize tasks based on three dimensions: predictability, burial depth, and number of learnings required. Predictability is how easy it is to predict what the agent will need to remember. Burial depth is how far through the trace the required memory first appears. Number of learnings required is how many separate facts from the trace must be learned and combined to pass the task.
       </p>
 
       <DifficultyTrendFigures />
 
       <p> 
-        All harnesses show similar patterns across these dimensions. Predicatability and reasoning hops are the clearest detractors. This makes sense, as Horizon's hardest tasks tend to be the least predictable and require multiple hops. The data also suggests that agents are better at learning from their early and late experiences than their middle ones, similar to in-context rot [et al](https://arxiv.org/abs/2307.03172).</p>
+        All harnesses show similar patterns where predicatability and number of learnings required are the clearest detractors. This makes sense, as Horizon's hardest tasks tend to be the least predictable and require more learnings. The data also suggests that agents are better at learning from their early and late experiences than their middle ones, similar to in-context rot.</p>
 
-        <p>Future work will prioritize tasks that are less predicable and require more hops, like testing if the agent can recognize implicit but unexpected patterns in realistic traces.</p>
+        <p>Future work will prioritize tasks that are less predicable and require more learnings, like testing if the agent can recognize implicit but unexpected patterns in realistic traces.</p>
     </Section>
   );
 }

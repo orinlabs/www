@@ -318,6 +318,21 @@ function mapAnticipabilityBucket(
 
 const BURIAL_DEPTH_QUANTILE_COUNT = 5;
 
+const LEARNINGS_REQUIRED_TITLE = "Number of learnings required";
+
+const LEARNINGS_REQUIRED_BUCKETS = [
+  { key: "1", label: "1" },
+  { key: "2", label: "2" },
+  { key: "3+", label: "3+" },
+] as const;
+
+function mapLearningsRequiredBucket(
+  v: TaskMeta[keyof TaskMeta],
+): string | null {
+  if (v == null) return null;
+  return Number(v) >= 3 ? "3+" : String(v);
+}
+
 function burialDepthQuantileBounds(
   tasks: Record<string, TaskMeta>,
   count: number,
@@ -335,19 +350,30 @@ function burialDepthQuantileBounds(
   return bounds;
 }
 
+function formatBurialDepthPct(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value * 100)));
+}
+
+// Compact range labels ("0–3", "3–16", …) so five ticks fit a narrow panel;
+// the panel subtitle explains that the unit is % through the trace.
+function buildBurialDepthBuckets(bounds: number[]): { key: string; label: string }[] {
+  const bucketCount = bounds.length + 1;
+  return Array.from({ length: bucketCount }, (_, i) => {
+    const lo = i === 0 ? 0 : bounds[i - 1];
+    const hi = i < bounds.length ? bounds[i] : 1;
+    const loPct = formatBurialDepthPct(lo);
+    const hiPct = formatBurialDepthPct(hi);
+    return { key: `q${i + 1}`, label: `${loPct}–${hiPct}` };
+  });
+}
+
 const BURIAL_DEPTH_BOUNDS = burialDepthQuantileBounds(
   COMBINED.tasks,
   BURIAL_DEPTH_QUANTILE_COUNT,
 );
 
-// Q1 = shallowest (low ratio) → Q5 = deepest; ~equal task counts per bin.
-const BURIAL_DEPTH_BUCKETS = Array.from(
-  { length: BURIAL_DEPTH_QUANTILE_COUNT },
-  (_, i) => ({
-    key: `q${i + 1}`,
-    label: `Q${i + 1}`,
-  }),
-);
+// Shallowest (near trace start) → deepest (near trace end); ~equal task counts per bin.
+const BURIAL_DEPTH_BUCKETS = buildBurialDepthBuckets(BURIAL_DEPTH_BOUNDS);
 
 function mapBurialDepthBucket(meta: TaskMeta): string | null {
   if (meta.burial_depth == null || !meta.trace_lines) return null;
@@ -396,17 +422,13 @@ function buildLevelsByClassifier(
 export const TASK_DIMENSIONS: TaskDimension[] = [
   {
     id: "n_hops",
-    title: "Reasoning hops",
+    title: LEARNINGS_REQUIRED_TITLE,
     blurb:
-      "How many separate facts from the trace must be chained together to answer.",
+      "How many separate facts from the trace the agent must learn and combine to pass the task.",
     levels: buildLevels(
       "n_hops",
-      [
-        { key: "1", label: "1 hop" },
-        { key: "2", label: "2 hops" },
-        { key: "3+", label: "3+ hops" },
-      ],
-      (v) => (Number(v) >= 3 ? "3+" : String(v)),
+      [...LEARNINGS_REQUIRED_BUCKETS],
+      mapLearningsRequiredBucket,
     ),
   },
   {
@@ -424,7 +446,7 @@ export const TASK_DIMENSIONS: TaskDimension[] = [
     id: "burial_depth",
     title: "Burial depth",
     blurb:
-      "How deep in the trace the required memory starts (burial_depth ÷ trace_lines), grouped into quintiles Q1 (shallowest) through Q5 (deepest).",
+      "How far through the trace the required memory first appears (burial_depth ÷ trace_lines). Bins are equal-sized groups of tasks from near the start (left) to near the end (right).",
     levels: buildLevelsByClassifier(mapBurialDepthBucket, BURIAL_DEPTH_BUCKETS),
   },
   {
@@ -496,6 +518,7 @@ export const TREND_FAMILIES: TrendFamily[] = (() => {
 export interface TrendAxis {
   id: string;
   title: string;
+  subtitle?: string;
   data: Record<string, number | string>[];
   // Grouped bar chart when sparse per-point n makes a line chart noisy.
   chart?: "line" | "bar";
@@ -552,6 +575,7 @@ export const TREND_AXES: TrendAxis[] = [
   {
     id: "anticipability",
     title: "Predictability",
+    subtitle: "How predictable the needed memory is",
     data: buildHarnessTrendRows(
       "anticipability",
       ANTICIPABILITY_BUCKETS,
@@ -561,6 +585,7 @@ export const TREND_AXES: TrendAxis[] = [
   {
     id: "burial_depth",
     title: "Burial depth",
+    subtitle: "% through trace where learning appears",
     data: buildHarnessTrendRowsByClassifier(
       mapBurialDepthBucket,
       BURIAL_DEPTH_BUCKETS,
@@ -568,15 +593,12 @@ export const TREND_AXES: TrendAxis[] = [
   },
   {
     id: "n_hops",
-    title: "Reasoning hops",
+    title: LEARNINGS_REQUIRED_TITLE,
+    subtitle: "How many facts must be combined to pass",
     data: buildHarnessTrendRows(
       "n_hops",
-      [
-        { key: "1", label: "1 hop" },
-        { key: "2", label: "2 hops" },
-        { key: "3+", label: "3+ hops" },
-      ],
-      (v) => (Number(v) >= 3 ? "3+" : String(v)),
+      [...LEARNINGS_REQUIRED_BUCKETS],
+      mapLearningsRequiredBucket,
     ),
   },
 ];
@@ -642,12 +664,12 @@ export const DIFFICULTY_FAMILIES: DifficultyFamily[] = [
 export const DIFFICULTY_AXES: DifficultyAxis[] = [
   {
     key: "n_hops",
-    title: "Reasoning hops",
+    title: LEARNINGS_REQUIRED_TITLE,
     drop: "−18.4pp",
     data: [
-      { level: "1-hop", RLM: 65.8, ClaudeCode: 53.8, RAG: 50.6, Hermes: 46.8, ALL: 54.3 },
-      { level: "2-hop", RLM: 47.8, ClaudeCode: 38.5, RAG: 29.3, Hermes: 29.3, ALL: 36.2 },
-      { level: "3-hop", RLM: 56.5, ClaudeCode: 39.1, RAG: 21.7, Hermes: 26.1, ALL: 35.9 },
+      { level: "1", RLM: 65.8, ClaudeCode: 53.8, RAG: 50.6, Hermes: 46.8, ALL: 54.3 },
+      { level: "2", RLM: 47.8, ClaudeCode: 38.5, RAG: 29.3, Hermes: 29.3, ALL: 36.2 },
+      { level: "3+", RLM: 56.5, ClaudeCode: 39.1, RAG: 21.7, Hermes: 26.1, ALL: 35.9 },
     ],
   },
   {
