@@ -1,10 +1,8 @@
 // Article sections for the Horizon page. Each section is a self-contained
 // block of prose (and figures) so the page itself is just a composition.
 
-import { Section, Subsection } from "../WhitePaper";
+import { Section } from "../WhitePaper";
 import {
-  ContentFlagsFigure,
-  DifficultyAxesFigure,
   DifficultyTrendFigures,
   RecencyByDifficultyFigure,
   TokensVsPassFigure,
