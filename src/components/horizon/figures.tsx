@@ -2269,40 +2269,58 @@ export function TokensVsPassFigure() {
   } | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  const { pts, harnesses, fit, domain } = useMemo(() => {
-    const pts = RESULTS.filter((d) => d.tokens != null).map((d) => ({
+  const { pts, harnesses, fits, domain } = useMemo(() => {
+    const allPts = RESULTS.filter((d) => d.tokens != null).map((d) => ({
       id: d.id,
       x: d.tokens as number,
       y: d.completion,
       model: d.model,
       agentType: d.agentType,
     }));
+    // Drop harnesses with fewer than 3 runs: too few dots to read a
+    // token-scaling trend, and no fit line to explain them.
+    const runsPerHarness = new Map<AgentType, number>();
+    for (const p of allPts)
+      runsPerHarness.set(p.agentType, (runsPerHarness.get(p.agentType) ?? 0) + 1);
+    const pts = allPts.filter((p) => (runsPerHarness.get(p.agentType) ?? 0) >= 3);
     const harnesses = AGENT_TYPES.filter((h) =>
       pts.some((p) => p.agentType === h),
     );
 
-    const n = pts.length;
-    const mx = pts.reduce((acc, d) => acc + d.x, 0) / n;
-    const my = pts.reduce((acc, d) => acc + d.y, 0) / n;
-    let sxy = 0;
-    let sxx = 0;
-    let syy = 0;
-    for (const d of pts) {
-      sxy += (d.x - mx) * (d.y - my);
-      sxx += (d.x - mx) ** 2;
-      syy += (d.y - my) ** 2;
-    }
-    const slope = sxy / sxx;
-    const fit = {
-      slope,
-      intercept: my - slope * mx,
-      r: sxy / Math.sqrt(sxx * syy),
-    };
-
     const xMax = Math.max(...pts.map((d) => d.x));
     const domain: [number, number] = [0, Math.ceil(xMax / 250_000) * 250_000];
 
-    return { pts, harnesses, fit, domain };
+    // One least-squares fit per harness with >= 3 runs, extended across the
+    // full x-domain (drawn at half opacity; clipped at the plot edges).
+    const fits = harnesses.flatMap((h) => {
+      const data = pts.filter((p) => p.agentType === h);
+      if (data.length < 3) return [];
+      const n = data.length;
+      const mx = data.reduce((acc, d) => acc + d.x, 0) / n;
+      const my = data.reduce((acc, d) => acc + d.y, 0) / n;
+      let sxy = 0;
+      let sxx = 0;
+      let syy = 0;
+      for (const d of data) {
+        sxy += (d.x - mx) * (d.y - my);
+        sxx += (d.x - mx) ** 2;
+        syy += (d.y - my) ** 2;
+      }
+      const slope = sxy / sxx;
+      const intercept = my - slope * mx;
+      return [
+        {
+          harness: h,
+          r: sxy / Math.sqrt(sxx * syy),
+          seg: [
+            { x: domain[0], y: intercept + slope * domain[0] },
+            { x: domain[1], y: intercept + slope * domain[1] },
+          ] as [{ x: number; y: number }, { x: number; y: number }],
+        },
+      ];
+    });
+
+    return { pts, harnesses, fits, domain };
   }, []);
 
   // Pixel positions of rendered dots, collected during render so a hover
@@ -2375,6 +2393,15 @@ export function TokensVsPassFigure() {
               style={{ background: agentColor(h, isDark) }}
             />
             {h}
+            {(() => {
+              const f = fits.find((x) => x.harness === h);
+              return f ? (
+                <span className="font-normal text-neutral-400 dark:text-neutral-500">
+                  r={f.r >= 0 ? "+" : ""}
+                  {f.r.toFixed(2)}
+                </span>
+              ) : null;
+            })()}
           </div>
         ))}
       </div>
@@ -2421,27 +2448,24 @@ export function TokensVsPassFigure() {
                 style: { textAnchor: "middle" },
               }}
             />
-            <ReferenceLine
-              ifOverflow="extendDomain"
-              stroke={s.ink}
-              strokeWidth={2}
-              strokeDasharray="6 4"
-              strokeOpacity={
-                hoveredHarness != null || hovered != null ? 0.15 : 1
-              }
-              segment={[
-                { x: domain[0], y: fit.intercept + fit.slope * domain[0] },
-                { x: domain[1], y: fit.intercept + fit.slope * domain[1] },
-              ]}
-              label={{
-                value: `r=${fit.r.toFixed(2)}`,
-                position: "insideBottomRight",
-                fill: s.muted,
-                fontSize: 11,
-                opacity:
-                  hoveredHarness != null || hovered != null ? 0.15 : 1,
-              }}
-            />
+            {fits.map((f) => (
+              <ReferenceLine
+                key={`fit-${f.harness}`}
+                ifOverflow="hidden"
+                stroke={agentColor(f.harness, isDark)}
+                strokeWidth={2}
+                strokeDasharray="6 4"
+                strokeOpacity={
+                  (hoveredHarness != null && hoveredHarness !== f.harness) ||
+                  hovered != null
+                    ? 0.15
+                    : hoveredHarness === f.harness
+                      ? 0.9
+                      : 0.5
+                }
+                segment={[...f.seg]}
+              />
+            ))}
             <Scatter data={pts} isAnimationActive={false} shape={renderDot}>
               {pts.map((p) => (
                 <Cell

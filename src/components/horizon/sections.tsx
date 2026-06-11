@@ -32,42 +32,17 @@ export function IntroSection() {
 
 export function DifficultyDriversSection() {
   return (
-    <Section title="Memory Isn't Predictable">
+    <Section title="Harnesses fail in the same ways">
       <p>
-        Every harness remembers a long trace in one of two ways: take notes as
-        you go, or look things up later. Note-takers (OpenClaw's LCM, Hermes)
-        write down whatever seems important while ingesting the trace.
-        Look-uppers (RLM, RAG, Claude Code, Codex) keep the raw trace and
-        search it at task time with <code>grep</code>, semantic retrieval, or
-        RLM.
-      </p>
-
-      <p>
-        On the same model (Claude Opus 4.8), RLM passes 56% of tasks and
-        OpenClaw (LCM) passes 58%. Of the tasks RLM fails, 73% are also failed
-        by OpenClaw (LCM). The overlap points to a cause shared by both
-        strategies rather than a weakness in either implementation.
-      </p>
-
-      <p>
-        The shared cause is prediction. A note-taker decides what to write
-        down before any task exists: in nearly every OpenClaw (LCM) and Hermes
-        failure, the required information was never stored. A look-upper
-        decides what to search for, and it only searches for what it already
-        expects: in the example task above, nothing suggests an attachment
-        might fail to open, so the agent never searches the trace for one that
-        did. Nearly every RLM, RAG, Claude Code, and Codex failure follows this
-        pattern.
+        We categorize tasks based on three dimensions: predictability, burial depth, and reasoning hops. Predictability is how easy it is to predict what the agent will need to remember, burial depth is how deep in the trace the required memory is, and reasoning hops is how many separate facts from the trace must be chained together to pass the task.
       </p>
 
       <DifficultyTrendFigures />
 
-      <p>
-        The benchmark-wide data matches this mechanism. Pass rates fall along
-        exactly the axes that make the prediction harder: lower predictability
-        of the required memory, deeper burial in the trace, and more memories
-        that must be combined.
-      </p>
+      <p> 
+        All harnesses show similar patterns across these dimensions. Predicatability and reasoning hops are the clearest detractors. This makes sense, as Horizon's hardest tasks tend to be the least predictable and require multiple hops. The data also suggests that agents are better at learning from their early and late experiences than their middle ones, similar to in-context rot [et al](https://arxiv.org/abs/2307.03172).</p>
+
+        <p>Future work will prioritize tasks that are less predicable and require more hops, like testing if the agent can recognize implicit but unexpected patterns in realistic traces.</p>
     </Section>
   );
 }
@@ -75,28 +50,13 @@ export function DifficultyDriversSection() {
 
 export function ModelLeverSection() {
   return (
-    <Section title="Scaling Laws">
+    <Section title="Memory scales slowly">
       <p>
-        <strong>Models are improving at easy and medium tasks, much less at
-        hard ones.</strong> A year of model releases is worth +22pp of pass
-        rate on easy tasks and +29pp on medium, but only +8pp on hard (the
-        red series in the release-date chart). The hard-task progress that does
-        exist is concentrated in harnesses that search: RLM rises +20pp per
-        year, from 1.5% (GPT-5 Mini) to 21.5% (Claude Opus 4.8); OpenClaw
-        (LCM) rises half as fast; RAG and Hermes do not rise, and no model
-        exceeds 8% on hard tasks under RAG.
+        Models are slowly getting better at Horizon, suggesting that scaling pretraining and reinforcement learning improves a model's ability to learn from long-horizon traces. However, the <b>improvement rate</b> of models is much slower on hard tasks, suggesting that intelligence alone may not be enough to learn effectively from long-horizon traces.
       </p>
 
       <p>
-        <strong>Test-time scaling only works on some harnesses.</strong>{" "}
-        Across all 24 runs, tokens per task and pass rate correlate at
-        r&nbsp;=&nbsp;0.17. Within harnesses the picture splits: RLM is the
-        only harness where more tokens track more passes (r&nbsp;=&nbsp;+0.31
-        across its models). OpenClaw (LCM) runs the other way
-        (r&nbsp;=&nbsp;-0.76): its lightest run is its best, 57% at 60k
-        tokens per task, while its token-hungriest models are its weakest.
-        RAG is flat (r&nbsp;=&nbsp;-0.03): more tokens retrieve no more
-        memory.
+        Scaling test-time compute is weakly correlated with pass rate, but correlation varies widely between harnesses. Harnesses like OpenClaw and Hermes primarily rely on accumulating memory over time for fast access at test time, while harnesses like RLM and RAG spend more tokens on searching the trace during the task. Our sample is small, but harnesses that accumulate do not seem to benefit from additional test-time scaling while harnesses that search do improve.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
@@ -105,19 +65,9 @@ export function ModelLeverSection() {
       </div>
 
       <p>
-        The mechanism behind both: RLM uses the model itself to search the
-        trace, so reasoning gains and extra compute convert into retrieval
-        gains. RAG's embedding retrieval does not improve when the model
-        does, and the note-takers' storage decisions happen at ingestion
-        time, where a smarter task-time model cannot reach them.
+        Importantly, none of the tasks in Horizon are challenging to reason through. When we ran an oracle with perfect context, it only used a few thousand tokens to successfully complete the task. This suggests that test-time scaling may not be necessary with the right harnesses.
       </p>
-
-      <p>
-        The one lever that scales on the hardest tasks is model-driven search
-        over the raw history. Better models make better searchers. They do
-        not fix a fixed retriever, and they do not buy memory through more
-        tokens.
-      </p>
+      
     </Section>
   );
 }
@@ -125,7 +75,7 @@ export function ModelLeverSection() {
 export function IntegritySection() {
   return (
     <Section title="Integrity">
-      <p>To ensure that each task is fair, we did four tests.</p>
+      <p>To ensure that each task is fair, we built four test agents.</p>
       <ol>
         <li>
           <strong>Oracle</strong>: a script to deterministically solve each task.
