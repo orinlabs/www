@@ -68,7 +68,12 @@ export function HorizonHero() {
 
 export default function Horizon() {
   useEffect(() => {
+    const previousTitle = document.title;
+    document.title = 'Introducing Horizon | Orin Labs';
     Prism.highlightAll();
+    return () => {
+      document.title = previousTitle;
+    };
   }, []);
 
   return (
