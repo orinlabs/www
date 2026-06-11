@@ -1388,7 +1388,7 @@ function HarnessTrendPanel({
   return (
     <div style={{ height }} onMouseMove={handleMove} onMouseLeave={onClearLine}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={TREND_CHART_MARGIN}>
+        <ComposedChart data={data} margin={TREND_CHART_MARGIN}>
           <CartesianGrid
             strokeDasharray={GRID_DASH}
             stroke={gridStroke}
@@ -1402,6 +1402,7 @@ function HarnessTrendPanel({
             {...axisProps}
           />
           <YAxis
+            yAxisId="rate"
             type="number"
             domain={[0, 70]}
             ticks={[0, 20, 40, 60]}
@@ -1416,6 +1417,7 @@ function HarnessTrendPanel({
             return (
               <Line
                 key={f.id}
+                yAxisId="rate"
                 dataKey={f.id}
                 stroke={c}
                 strokeWidth={active ? 3 : 2}
@@ -1435,6 +1437,7 @@ function HarnessTrendPanel({
             return (
               <Line
                 key={`labels-${f.id}`}
+                yAxisId="rate"
                 dataKey={f.id}
                 stroke="none"
                 strokeWidth={0}
@@ -1446,7 +1449,7 @@ function HarnessTrendPanel({
               </Line>
             );
           })()}
-        </LineChart>
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );
