@@ -50,14 +50,11 @@ export function HorizonHero() {
           >
             ·
           </span>
-          <a
-            href="https://driftwood.sh/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline transition-colors"
-          >
+          
+          <span className="text-neutral-400 dark:text-neutral-500">
             Driftwood AI
-          </a>
+          </span>
+
           <span className="text-neutral-400 dark:text-neutral-500">|</span>
           <span>June 2026</span>
         </div>
