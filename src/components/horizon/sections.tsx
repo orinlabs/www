@@ -30,7 +30,7 @@ export function IntroSection() {
 
 export function DifficultyDriversSection() {
   return (
-    <Section title="Harnesses fail in the same ways">
+    <Section title="Agents fail in the same ways">
       <p>
         We categorize tasks based on three dimensions: predictability, burial depth, and number of learnings required. Predictability is how easy it is to predict what the agent will need to learn. Burial depth is how far through the trace the required learning first appears. Number of learnings required is how many separate facts from the trace must be learned and combined to pass the task.
       </p>
