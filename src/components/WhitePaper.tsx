@@ -71,15 +71,6 @@ export function ResearchArticle({
                 >
                   {author}
                 </Link>
-              ) : author === "Driftwood AI" ? (
-                <a
-                  href="https://driftwood.sh/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline transition-colors"
-                >
-                  {author}
-                </a>
               ) : (
                 <span>{author}</span>
               )}

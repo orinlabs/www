@@ -44,17 +44,6 @@ export function HorizonHero() {
           <Link to="/" className="text-primary hover:underline transition-colors">
             Orin Labs
           </Link>
-          <span
-            aria-hidden
-            className="text-neutral-400 dark:text-neutral-500 select-none"
-          >
-            ·
-          </span>
-          
-          <span className="text-neutral-400 dark:text-neutral-500">
-            Driftwood AI
-          </span>
-
           <span className="text-neutral-400 dark:text-neutral-500">|</span>
           <span>June 2026</span>
         </div>
@@ -76,7 +65,7 @@ export default function Horizon() {
   return (
     <ResearchArticle
       title={HERO_TITLE}
-      authors={["Orin Labs", "Driftwood AI"]}
+      authors={["Orin Labs"]}
       date="June 2026"
       abstract={HERO_ABSTRACT}
       hideHeader
