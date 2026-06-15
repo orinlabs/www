@@ -88,9 +88,10 @@ export default function ScalingChart() {
   }, []);
 
   const isDarkMode =
-    document.documentElement.classList.contains("dark") ||
-    document.body.classList.contains("dark") ||
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
+    typeof document !== "undefined" &&
+    (document.documentElement.classList.contains("dark") ||
+      document.body.classList.contains("dark") ||
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   const gridStroke = isDarkMode ? "#525252" : "#e5e5e5";
   const axisStroke = isDarkMode ? "#a0aec0" : "#171717";
