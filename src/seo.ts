@@ -8,6 +8,7 @@ import { ROLES, type Role } from './data/roles.ts';
 
 const SITE_URL = 'https://orinlabs.ai';
 const OG_IMAGE = `${SITE_URL}/og.png`;
+const HORIZON_OG_IMAGE = `${SITE_URL}/horizon-og.png`;
 const AUTHOR = 'Orin Labs';
 
 const ORGANIZATION = {
@@ -26,6 +27,7 @@ interface RouteMeta {
   title: string;
   description: string;
   ogType?: string;
+  ogImage?: string;
   jsonLd?: object;
 }
 
@@ -63,6 +65,7 @@ const STATIC_META: Record<string, RouteMeta> = {
     title: 'Introducing Horizon | Orin Labs',
     description: HORIZON_DESCRIPTION,
     ogType: 'article',
+    ogImage: HORIZON_OG_IMAGE,
     jsonLd: {
       '@context': 'https://schema.org',
       '@graph': [
@@ -97,8 +100,9 @@ const STATIC_META: Record<string, RouteMeta> = {
           author: ORGANIZATION,
           publisher: ORGANIZATION,
           datePublished: '2026-06-01',
+          dateModified: '2026-06-15',
           url: `${SITE_URL}/research/horizon`,
-          image: OG_IMAGE,
+          image: HORIZON_OG_IMAGE,
           isPartOf: { '@type': 'WebSite', name: 'Orin Labs', url: SITE_URL },
           about: { '@id': `${SITE_URL}/research/horizon#dataset` },
         },
@@ -255,6 +259,7 @@ export function headFor(pathname: string): string {
   const meta = metaFor(pathname);
   const canonical = `${SITE_URL}${pathname === '/' ? '' : pathname}`;
   const ogType = meta.ogType ?? 'website';
+  const ogImage = meta.ogImage ?? OG_IMAGE;
 
   const tags = [
     `<title>${escapeAttr(meta.title)}</title>`,
@@ -265,14 +270,14 @@ export function headFor(pathname: string): string {
     `<meta property="og:description" content="${escapeAttr(meta.description)}" />`,
     `<meta property="og:type" content="${ogType}" />`,
     `<meta property="og:url" content="${escapeAttr(canonical)}" />`,
-    `<meta property="og:image" content="${escapeAttr(OG_IMAGE)}" />`,
+    `<meta property="og:image" content="${escapeAttr(ogImage)}" />`,
     `<meta property="og:site_name" content="Orin Labs" />`,
     `<meta property="og:locale" content="en_US" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:site" content="@0rinlabs" />`,
     `<meta name="twitter:title" content="${escapeAttr(meta.title)}" />`,
     `<meta name="twitter:description" content="${escapeAttr(meta.description)}" />`,
-    `<meta name="twitter:image" content="${escapeAttr(OG_IMAGE)}" />`,
+    `<meta name="twitter:image" content="${escapeAttr(ogImage)}" />`,
   ];
 
   if (meta.jsonLd) {
