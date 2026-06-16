@@ -632,6 +632,29 @@ export function HorizonLeaderboard() {
     );
   }, []);
 
+  // Best value in each score column; cells matching their column max are
+  // highlighted (ties highlight every match). Values are pre-rounded to 1
+  // decimal in data.ts, so exact equality is safe.
+  const maxOverall = Math.max(...rows.map((r) => r.completion));
+  const maxEasy = Math.max(...rows.map((r) => r.difficulty.easy));
+  const maxMedium = Math.max(...rows.map((r) => r.difficulty.medium));
+  const maxHard = Math.max(...rows.map((r) => r.difficulty.hard));
+
+  const winner = (v: number, max: number) =>
+    v === max && max > 0
+      ? "bg-emerald-100 dark:bg-emerald-500/20 font-semibold text-emerald-700 dark:text-emerald-300"
+      : "";
+
+  // Call out when the harness that leads overall isn't the one that leads on
+  // hard tasks. rows is sorted by completion, so find() resolves ties to the
+  // strongest overall row.
+  const overallWinner = rows.find((r) => r.completion === maxOverall);
+  const hardWinner = rows.find((r) => r.difficulty.hard === maxHard);
+  const splitWinners =
+    overallWinner != null &&
+    hardWinner != null &&
+    overallWinner.id !== hardWinner.id;
+
   return (
     <div className="my-8 overflow-x-auto">
       <table className="w-full text-sm border-collapse">
@@ -675,25 +698,45 @@ export function HorizonLeaderboard() {
               <td className="py-2 px-4 text-neutral-700 dark:text-neutral-300 tabular-nums">
                 {row.model}
               </td>
-              <td className="py-2 px-4 text-right tabular-nums font-medium text-neutral-800 dark:text-neutral-200">
+              <td
+                className={cn(
+                  "py-2 px-4 text-right tabular-nums font-medium text-neutral-800 dark:text-neutral-200",
+                  winner(row.completion, maxOverall),
+                )}
+              >
                 <span className="mr-1.5 font-normal text-neutral-400 dark:text-neutral-600">
                   {fmtCount(row.counts.overall)}
                 </span>
                 {fmtPct(row.completion)}
               </td>
-              <td className="py-2 px-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
+              <td
+                className={cn(
+                  "py-2 px-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300",
+                  winner(row.difficulty.easy, maxEasy),
+                )}
+              >
                 <span className="mr-1.5 text-neutral-400 dark:text-neutral-600">
                   {fmtCount(row.counts.easy)}
                 </span>
                 {fmtPct(row.difficulty.easy)}
               </td>
-              <td className="py-2 px-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
+              <td
+                className={cn(
+                  "py-2 px-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300",
+                  winner(row.difficulty.medium, maxMedium),
+                )}
+              >
                 <span className="mr-1.5 text-neutral-400 dark:text-neutral-600">
                   {fmtCount(row.counts.medium)}
                 </span>
                 {fmtPct(row.difficulty.medium)}
               </td>
-              <td className="py-2 pl-4 pr-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
+              <td
+                className={cn(
+                  "py-2 pl-4 pr-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300",
+                  winner(row.difficulty.hard, maxHard),
+                )}
+              >
                 <span className="mr-1.5 text-neutral-400 dark:text-neutral-600">
                   {fmtCount(row.counts.hard)}
                 </span>
@@ -703,6 +746,12 @@ export function HorizonLeaderboard() {
           ))}
         </tbody>
       </table>
+      {splitWinners && hardWinner && overallWinner && (
+        <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+          {displayAgentType(hardWinner.agentType)} leads on Hard tasks, while{" "}
+          {displayAgentType(overallWinner.agentType)} leads overall.
+        </p>
+      )}
       <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400 italic">
         Preview run, subject to change.
       </p>

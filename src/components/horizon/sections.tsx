@@ -40,7 +40,7 @@ export function DifficultyDriversSection() {
       <p> 
         All harnesses show similar patterns where predictability and number of learnings required are the clearest detractors. This makes sense, as Horizon's hardest tasks tend to be the least predictable and require more learnings. The data also suggests that agents are better at learning from their early and late experiences than their middle ones, similar to in-context rot.</p>
 
-        <p>Future work will prioritize tasks that are less predicable and require more learnings, like testing if the agent can recognize implicit but unexpected patterns in realistic traces.</p>
+        <p>Future work will prioritize tasks that are less predictable and require more learnings, like testing if the agent can recognize implicit but unexpected patterns in realistic traces.</p>
     </Section>
   );
 }
@@ -106,6 +106,69 @@ export function IntegritySection() {
 
       <p>
         Testing a human baseline is impossible (even reading the traces is equivalent to 1,300 Harry Potter books), but each task has been reviewed by a human and deemed reasonable.
+      </p>
+    </Section>
+  );
+}
+
+export function TakeawaysSection() {
+  return (
+    <Section title="Takeaways">
+      <ul>
+        <li>
+          <strong>Horizon is unsolved.</strong> State-of-the-art agents score
+          around 21% on the hardest section.
+        </li>
+        <li>
+          <strong>It's representative of real products.</strong> Horizon is built
+          from real agent logs and failures, not just random hard tasks.
+        </li>
+        <li>
+          <strong>The bottleneck is not model intelligence.</strong> Models are
+          hardly getting better on the hardest tasks, even as they improve
+          elsewhere.
+        </li>
+        <li>
+          <strong>None of the tasks are impossible.</strong> We manually verified
+          each case, and a human with the right context solves all of them.
+        </li>
+      </ul>
+    </Section>
+  );
+}
+
+export function ParticipateSection() {
+  return (
+    <p className="research-prose text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+      Building a long-horizon agent? Evaluate it against Horizon —{" "}
+      <a
+        href="mailto:contact@orinlabs.com"
+        className="underline hover:text-neutral-700 dark:hover:text-neutral-300"
+      >
+        get in touch
+      </a>{" "}
+      or see the{" "}
+      <a
+        href="https://github.com/orinlabs/horizon-1"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline hover:text-neutral-700 dark:hover:text-neutral-300"
+      >
+        repo
+      </a>
+      .
+    </p>
+  );
+}
+
+export function ThanksSection() {
+  return (
+    <Section title="Thanks">
+      <p>
+        {/* TODO: replace with final acknowledgements. */}
+        Thanks to [collaborators, design partners, and annotators] who helped
+        build, review, and stress-test Horizon, and to the customers who allowed
+        us to learn from their real agent traces.
       </p>
     </Section>
   );

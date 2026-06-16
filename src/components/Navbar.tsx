@@ -51,9 +51,9 @@ export function Navbar({
       <div className="flex items-center justify-between gap-4">
         <Link to="/" className="flex items-center gap-2">
           <Logo className={cn("w-8 h-8", overlay ? "text-white" : "text-primary")} />
-          <h1 className={cn("text-xl sm:text-2xl font-medium", titleColor)}>
+          <span className={cn("text-xl sm:text-2xl font-medium", titleColor)}>
             Orin Labs
-          </h1>
+          </span>
         </Link>
 
         <button
