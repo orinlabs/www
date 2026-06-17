@@ -1227,7 +1227,7 @@ export function ContentFlagsFigure() {
 
 const TREND_LINE_SNAP_RADIUS = 28;
 const TREND_PANEL_HEIGHT = 286;
-const TREND_CHART_MARGIN = { top: 24, right: 16, left: 4, bottom: 4 };
+const TREND_CHART_MARGIN = { top: 24, right: 16, left: 4, bottom: 28 };
 
 interface TrendChartPoint {
   x: number;
@@ -1306,6 +1306,7 @@ function HarnessTrendPanel({
   onHoverLine,
   onClearLine,
   yAxisLabel,
+  xAxisLabel,
 }: {
   data: Record<string, number | string>[];
   height: number;
@@ -1315,6 +1316,7 @@ function HarnessTrendPanel({
   onHoverLine: (harnessId: string | null) => void;
   onClearLine: () => void;
   yAxisLabel?: string;
+  xAxisLabel?: string;
 }) {
   const { gridStroke, axisProps, surface, axisStroke } = style;
   const pointsRef = useRef<TrendChartPoint[]>([]);
@@ -1402,6 +1404,17 @@ function HarnessTrendPanel({
             scale="point"
             padding={{ left: 24, right: 24 }}
             {...axisProps}
+            label={
+              xAxisLabel
+                ? {
+                    value: xAxisLabel,
+                    position: "insideBottom",
+                    offset: -12,
+                    fill: axisStroke,
+                    fontSize: TICK_FONT,
+                  }
+                : undefined
+            }
           />
           <YAxis
             type="number"
@@ -1475,6 +1488,7 @@ function HarnessTrendHistogram({
   hoveredHarness,
   onHoverHarness,
   onClearHarness,
+  xAxisLabel,
 }: {
   data: Record<string, number | string>[];
   height: number;
@@ -1483,8 +1497,9 @@ function HarnessTrendHistogram({
   hoveredHarness: string | null;
   onHoverHarness: (harnessId: string | null) => void;
   onClearHarness: () => void;
+  xAxisLabel?: string;
 }) {
-  const { gridStroke, axisProps } = style;
+  const { gridStroke, axisProps, axisStroke } = style;
 
   const harnessOpacity = (harnessId: string) => {
     if (hoveredHarness == null) return 0.85;
@@ -1535,7 +1550,22 @@ function HarnessTrendHistogram({
             stroke={gridStroke}
             vertical={false}
           />
-          <XAxis dataKey="level" type="category" {...axisProps} />
+          <XAxis
+            dataKey="level"
+            type="category"
+            {...axisProps}
+            label={
+              xAxisLabel
+                ? {
+                    value: xAxisLabel,
+                    position: "insideBottom",
+                    offset: -12,
+                    fill: axisStroke,
+                    fontSize: TICK_FONT,
+                  }
+                : undefined
+            }
+          />
           <YAxis
             type="number"
             domain={[0, 70]}
@@ -1678,7 +1708,18 @@ export function DifficultyTrendFigures() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-4 items-end md:-ml-4">
-        {TREND_AXES.map((ax, i) => (
+        {TREND_AXES.map((ax, i) => {
+          // Axis name plus a direction cue. Predictability and learnings run
+          // easy -> hard left to right; burial depth is U-shaped (agents do
+          // better at the start/end of the trace), so it reads "early -> late"
+          // rather than implying a difficulty direction.
+          const xAxisLabel =
+            {
+              anticipability: "Predictability (harder \u2192)",
+              burial_depth: "Burial depth (early \u2192 late)",
+              n_hops: "Learnings required (harder \u2192)",
+            }[ax.id] ?? ax.title;
+          return (
           <div key={ax.id} className="flex flex-col">
             <div className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 text-center leading-tight min-h-[2rem]">
               <div>{ax.title}</div>
@@ -1697,6 +1738,7 @@ export function DifficultyTrendFigures() {
                 hoveredHarness={activeHarness}
                 onHoverHarness={setHoveredLine}
                 onClearHarness={() => setHoveredLine(null)}
+                xAxisLabel={xAxisLabel}
               />
             ) : (
               <HarnessTrendPanel
@@ -1708,10 +1750,12 @@ export function DifficultyTrendFigures() {
                 onHoverLine={setHoveredLine}
                 onClearLine={() => setHoveredLine(null)}
                 yAxisLabel={i === 0 ? "Pass rate" : undefined}
+                xAxisLabel={xAxisLabel}
               />
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </Figure>
   );
@@ -2150,7 +2194,7 @@ export function RecencyByDifficultyFigure() {
     };
 
   return (
-    <Figure title="Pass rate vs. model release date">
+    <Figure title="Hard tasks aren't getting easier as models improve">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
         {DIFFICULTY_BUCKETS.map(({ id, label }) => (
           <div
@@ -2397,7 +2441,7 @@ export function TokensVsPassFigure() {
   };
 
   return (
-    <Figure title="Tokens per task vs. pass rate">
+    <Figure title="Harnesses scale reasoning differently">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
         {harnesses.map((h) => (
           <div

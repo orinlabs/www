@@ -15,6 +15,9 @@ export {
   IntegritySection,
   IntroSection,
   ModelLeverSection,
+  ParticipateSection,
+  TakeawaysSection,
+  ThanksSection,
 } from "./sections";
 export {
   TaskAnatomySection,

@@ -11,12 +11,14 @@ import {
   HorizonResults,
   IntegritySection,
   ModelLeverSection,
+  ParticipateSection,
+  TakeawaysSection,
   TaskAnatomySection,
 } from '../../components/horizon';
 import { ResearchArticle, Section } from '../../components/WhitePaper';
 
 const HERO_TITLE = "Introducing Horizon";
-const HERO_ABSTRACT = "We're releasing Horizon, a benchmark that measures an agent's ability learn from past experience. Each task requires understanding months of real interactions with customers across millions of tokens to succeed."
+const HERO_ABSTRACT = "We're releasing Horizon, a benchmark that measures an agent's ability to learn from past experience. Each task requires understanding months of real interactions with customers across millions of tokens to succeed."
 
 // Full-width hero: the benchmark image with the title/subtitle/authors/date
 // overlaid in the lower-left. The nav is layered on top by the Layout.
@@ -72,7 +74,7 @@ export default function Horizon() {
     >
       <Section className="mt-8">
         <p>
-          Horizon is derived from failures we saw running Claw-like agents with real customers over the last year. We believe the future will be full of persisent background agents that act by themselves, but the clear adoption bottleneck is that agents still cannot reliably learn over time.
+          Horizon is derived from failures we saw running Claw-like agents with real customers over the last year. We believe the future will be full of persistent background agents that act by themselves, but the clear adoption bottleneck is that agents still cannot reliably learn over time.
         </p>
         <p>
           Horizon makes no distinction between models and harnesses, aiming instead to measure the learning ability of the agent.
@@ -89,13 +91,18 @@ export default function Horizon() {
 
       <IntegritySection />
 
+      <TakeawaysSection />
+
       <Section title="All Results">
         <HorizonResults />
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 italic">
+          *All data was collected with proper user permissions.
+        </p>
       </Section>
 
-      <p className="research-prose text-sm italic mb-12">
-        *All data was collected with proper user permissions.
-      </p>
+      {/* <ThanksSection /> hidden until launch. */}
+
+      <ParticipateSection />
     </ResearchArticle>
   );
 }
