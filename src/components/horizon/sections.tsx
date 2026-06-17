@@ -30,10 +30,11 @@ export function IntroSection() {
 
 export function DifficultyDriversSection() {
   return (
-    <Section title="Agents fail in the same ways">
+    <Section title="Learning is unpredicatable">
       <p>
         We categorize tasks based on three dimensions: predictability, burial depth, and number of learnings required. Predictability is how easy it is to predict what the agent will need to learn. Burial depth is how far through the trace the required learning first appears. Number of learnings required is how many separate facts from the trace must be learned and combined to pass the task.
       </p>
+
 
       <DifficultyTrendFigures />
 
@@ -78,24 +79,24 @@ export function IntegritySection() {
         <li>
           <strong>Oracle</strong>: a script to deterministically solve each task.
           We made sure that this reliably scored 100% with low variance, showing
-          that our completion criteria were consistent.
+          that our rubrics are consistent.
         </li>
         <li>
           <strong>Anti-Oracle</strong>: a script that does nothing. We made sure
           that this reliably scored 0% with low variance, showing that our
-          completion criteria were consistent.
+          rubrics are consistent.
         </li>
         <li>
           <strong>PerfectContext</strong>: for each task, we manually fed the
           agent the important lines from the trace. We made sure that this
           reliably scored 100% with low variance, showing that each task is
-          solvable with the right context.
+          easily solvable with the right context.
         </li>
         <li>
           <strong>EnvironmentOnly</strong>: an agent that has no way to access
           the trace, and can only interact with the task's environment. Since
           each environment is stateful (email inboxes, sms inboxes, etc),
-          ensuring a 0% score with low variance shows that the solution cannot be
+          ensuring a 0% score with low variance verifies that the solution cannot be
           derived from the environment.
         </li>
       </ol>
@@ -105,7 +106,7 @@ export function IntegritySection() {
       </p>
 
       <p>
-        Testing a human baseline is impossible (even reading the traces is equivalent to 1,300 Harry Potter books), but each task has been reviewed by a human and deemed reasonable.
+        Testing a human baseline is impossible (even reading the traces is equivalent to 1,300 Harry Potter books), but each task has been reviewed by a human and deemed reasonable. Agent implementations are available in our <a href="https://github.com/orinlabs/horizon-1" target="_blank" rel="noopener noreferrer">public repo</a>.
       </p>
     </Section>
   );
@@ -114,25 +115,12 @@ export function IntegritySection() {
 export function TakeawaysSection() {
   return (
     <Section title="Takeaways">
-      <ul>
-        <li>
-          <strong>Horizon is unsolved.</strong> State-of-the-art agents score
-          around 21% on the hardest section.
-        </li>
-        <li>
-          <strong>It's representative of real products.</strong> Horizon is built
-          from real agent logs and failures, not just random hard tasks.
-        </li>
-        <li>
-          <strong>The bottleneck is not model intelligence.</strong> Models are
-          hardly getting better on the hardest tasks, even as they improve
-          elsewhere.
-        </li>
-        <li>
-          <strong>None of the tasks are impossible.</strong> We manually verified
-          each case, and a human with the right context solves all of them.
-        </li>
-      </ul>
+    <p>
+      The clearest takeaway from Horizon is that when learnings are not predicatable, both search and accumulation strategies fail. None of Horizon's tasks are cognitively challenging, and while models are getting better at searching traces, we are also excited about representation learning and harness research as potential solutions.
+    </p>
+    
+    <p>Future versions of Horizon will focus on low predictability pattern matching tasks, as we believe this is the most important remaining capability for agents to operate autonomously in the messy real world. If you're interested in working on this with us, <a href="orinlabs.ai" className="underline hover:text-neutral-700 dark:hover:text-neutral-300">we're hiring</a>.
+    </p>
     </Section>
   );
 }
@@ -161,13 +149,11 @@ export function ParticipateSection() {
   );
 }
 
-// NOTE: Hidden from the page until launch (not rendered in Horizon.tsx).
 export function ThanksSection() {
   return (
-    <Section title="Thanks">
+    <Section title="Thank Yous">
       <p>
-        Thanks to Furong Huang and Daytona Startup Grid, and to the customers
-        who allowed us to learn from their real agent traces.
+        Thank you to Aayush Gupta, Furong Huang, Mehul Arora, Sean McLeish, Hamidah Oderinwale and more for reviewing this post. We are also grateful to the teams at Daytona, Harbor, OpenAI, and Anthropic for their support.
       </p>
     </Section>
   );

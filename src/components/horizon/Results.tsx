@@ -645,16 +645,6 @@ export function HorizonLeaderboard() {
       ? "bg-emerald-100 dark:bg-emerald-500/20 font-semibold text-emerald-700 dark:text-emerald-300"
       : "";
 
-  // Call out when the harness that leads overall isn't the one that leads on
-  // hard tasks. rows is sorted by completion, so find() resolves ties to the
-  // strongest overall row.
-  const overallWinner = rows.find((r) => r.completion === maxOverall);
-  const hardWinner = rows.find((r) => r.difficulty.hard === maxHard);
-  const splitWinners =
-    overallWinner != null &&
-    hardWinner != null &&
-    overallWinner.id !== hardWinner.id;
-
   return (
     <div className="my-8 overflow-x-auto">
       <table className="w-full text-sm border-collapse">
@@ -746,12 +736,6 @@ export function HorizonLeaderboard() {
           ))}
         </tbody>
       </table>
-      {splitWinners && hardWinner && overallWinner && (
-        <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
-          {displayAgentType(hardWinner.agentType)} leads on Hard tasks, while{" "}
-          {displayAgentType(overallWinner.agentType)} leads overall.
-        </p>
-      )}
       <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400 italic">
         Preview run, subject to change.
       </p>

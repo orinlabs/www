@@ -14,6 +14,7 @@ import {
   ParticipateSection,
   TakeawaysSection,
   TaskAnatomySection,
+  ThanksSection,
 } from '../../components/horizon';
 import { ResearchArticle, Section } from '../../components/WhitePaper';
 
@@ -67,7 +68,7 @@ export default function Horizon() {
   return (
     <ResearchArticle
       title={HERO_TITLE}
-      authors={["Orin Labs"]}
+      authors={["Bryan Houlton", "Aayush Gupta"]}
       date="June 2026"
       abstract={HERO_ABSTRACT}
       hideHeader
@@ -89,12 +90,26 @@ export default function Horizon() {
 
       <ModelLeverSection />
 
+      <TakeawaysSection />
+
       <IntegritySection />
 
-      <TakeawaysSection />
+      <ThanksSection />
+
 
       <Section title="All Results">
         <HorizonResults />
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          Download the{" "}
+          <a
+            href="/horizon-results.json"
+            download
+            className="underline hover:text-neutral-700 dark:hover:text-neutral-300"
+          >
+            raw results (JSON)
+          </a>{" "}
+          — per-task metadata and per-run cases behind every number above.
+        </p>
         <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 italic">
           *All data was collected with proper user permissions.
         </p>

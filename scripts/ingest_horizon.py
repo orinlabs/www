@@ -26,6 +26,8 @@ DEFAULT_SOURCE = (
     / "horizon1_runs_export.json"
 )
 OUT = REPO / "src" / "components" / "horizon" / "combinedResults.ts"
+# Public, downloadable copy of the same derived data (linked from the page).
+PUBLIC_JSON = REPO / "public" / "horizon-results.json"
 
 # Export agent name -> the raw harness id displayHarness() maps to a label.
 AGENT_TO_HARNESS = {
@@ -124,9 +126,27 @@ def main() -> None:
     OUT.write_text(f"{HEADER}{payload};\n")
 
     meta = data.get("meta", {})
+    # Public download mirrors the runtime data, plus source provenance so the
+    # standalone file is self-describing. Pretty-printed for readability.
+    public = {
+        "meta": {
+            "source": "Horizon (Orin Labs)",
+            "generated_at": meta.get("generated_at"),
+            "note": (
+                "Per-task metadata (difficulty + axes) and per-run cases "
+                "(task id, pass, cost, tokens, time). Same data the leaderboard "
+                "is derived from."
+            ),
+        },
+        **combined,
+    }
+    PUBLIC_JSON.write_text(
+        json.dumps(public, indent=2, ensure_ascii=False) + "\n"
+    )
+
     agents = sorted({r["harness"] for r in runs})
     print(
-        f"Wrote {OUT.relative_to(REPO)}: "
+        f"Wrote {OUT.relative_to(REPO)} and {PUBLIC_JSON.relative_to(REPO)}: "
         f"{len(runs)} runs, {len(combined['tasks'])} tasks "
         f"(harnesses: {', '.join(agents)}; "
         f"source generated_at {meta.get('generated_at', '?')})"

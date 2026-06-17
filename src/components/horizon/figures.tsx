@@ -2194,7 +2194,7 @@ export function RecencyByDifficultyFigure() {
     };
 
   return (
-    <Figure title="Hard tasks aren't getting easier as models improve">
+    <Figure title="Models are only slowly improving on hard tasks">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
         {DIFFICULTY_BUCKETS.map(({ id, label }) => (
           <div
