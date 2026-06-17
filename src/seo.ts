@@ -26,13 +26,23 @@ const ORGANIZATION = {
 interface RouteMeta {
   title: string;
   description: string;
+  // Shorter variant for social cards (og:/twitter:); platforms truncate around
+  // ~125 chars. Falls back to `description` when omitted.
+  ogDescription?: string;
   ogType?: string;
   ogImage?: string;
   jsonLd?: object;
 }
 
+// Used for schema.org (no strict length limit there).
 const HORIZON_DESCRIPTION =
   "Horizon is a benchmark that measures an agent's ability to learn from past experience. Each of its 195 tasks requires understanding months of real customer interactions across millions of tokens to succeed.";
+// SERP-optimized meta description (~150 chars).
+const HORIZON_META_DESCRIPTION =
+  "Horizon is a benchmark measuring an AI agent's ability to learn from past experience across 195 tasks drawn from months of real customer interactions.";
+// Social-card description (~125 chars).
+const HORIZON_OG_DESCRIPTION =
+  'Horizon measures how well AI agents learn from past experience — 195 tasks drawn from months of real customer interactions.';
 
 const STATIC_META: Record<string, RouteMeta> = {
   '/': {
@@ -63,7 +73,8 @@ const STATIC_META: Record<string, RouteMeta> = {
   },
   '/research/horizon': {
     title: 'Introducing Horizon | Orin Labs',
-    description: HORIZON_DESCRIPTION,
+    description: HORIZON_META_DESCRIPTION,
+    ogDescription: HORIZON_OG_DESCRIPTION,
     ogType: 'article',
     ogImage: HORIZON_OG_IMAGE,
     jsonLd: {
@@ -260,6 +271,7 @@ export function headFor(pathname: string): string {
   const canonical = `${SITE_URL}${pathname === '/' ? '' : pathname}`;
   const ogType = meta.ogType ?? 'website';
   const ogImage = meta.ogImage ?? OG_IMAGE;
+  const ogDescription = meta.ogDescription ?? meta.description;
 
   const tags = [
     `<title>${escapeAttr(meta.title)}</title>`,
@@ -267,7 +279,7 @@ export function headFor(pathname: string): string {
     `<meta name="author" content="${escapeAttr(AUTHOR)}" />`,
     `<link rel="canonical" href="${escapeAttr(canonical)}" />`,
     `<meta property="og:title" content="${escapeAttr(meta.title)}" />`,
-    `<meta property="og:description" content="${escapeAttr(meta.description)}" />`,
+    `<meta property="og:description" content="${escapeAttr(ogDescription)}" />`,
     `<meta property="og:type" content="${ogType}" />`,
     `<meta property="og:url" content="${escapeAttr(canonical)}" />`,
     `<meta property="og:image" content="${escapeAttr(ogImage)}" />`,
@@ -276,7 +288,7 @@ export function headFor(pathname: string): string {
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:site" content="@0rinlabs" />`,
     `<meta name="twitter:title" content="${escapeAttr(meta.title)}" />`,
-    `<meta name="twitter:description" content="${escapeAttr(meta.description)}" />`,
+    `<meta name="twitter:description" content="${escapeAttr(ogDescription)}" />`,
     `<meta name="twitter:image" content="${escapeAttr(ogImage)}" />`,
   ];
 

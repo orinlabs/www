@@ -113,9 +113,12 @@ export default function OgHorizonCapture() {
             </tbody>
           </table>
 
-          <div className="mt-3 flex items-center text-[18px] text-neutral-400">
+          <div className="mt-3 flex items-center justify-between text-[18px]">
             <span className="font-medium text-neutral-500">
               orinlabs.ai/research/horizon
+            </span>
+            <span className="font-semibold text-primary">
+              Read the benchmark →
             </span>
           </div>
         </div>
