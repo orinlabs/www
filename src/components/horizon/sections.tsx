@@ -32,7 +32,7 @@ export function DifficultyDriversSection() {
   return (
     <Section title="Learning is unpredictable">
       <p>
-        We categorize tasks based on three dimensions: predictability, burial depth, and number of learnings required. Predictability is how easy it is to predict what the agent will need to learn, manually categorized. Burial depth is how many tokens into the trace the required fact first appears. Number of learnings required is how many separate facts from the trace must be learned and combined to pass the task.
+        We categorize tasks based on three dimensions: predictability, burial depth, and number of learnings required. Predictability is how easy it is to predict what the agent will need to learn, manually categorized. Burial depth is how far back from the present task the required fact sits, as a percentage of the trace. Number of learnings required is how many separate facts from the trace must be learned and combined to pass the task.
       </p>
 
 

@@ -47,6 +47,7 @@ TASK_FIELDS = [
     ("burial_depth", "burial_depth"),
     ("burial_depth_tokens", "burial_depth_tokens"),
     ("trace_lines", "trace_lines"),
+    ("trace_tokens", "trace_tokens"),
     ("md", "misdirection"),
     ("n_hops", "n_hops"),
     ("family", "family"),

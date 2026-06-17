@@ -28,6 +28,8 @@ export interface TaskMeta {
   burial_depth?: number;
   burial_depth_tokens?: number;
   trace_lines?: number;
+  trace_tokens?: number;
+  trace_tokens?: number;
   misdirection?: string;
   n_hops?: number;
   family?: string | null;

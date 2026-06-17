@@ -333,49 +333,64 @@ function mapLearningsRequiredBucket(
   return Number(v) >= 3 ? "3+" : String(v);
 }
 
+// "Burial depth" = how far back from the present the required fact sits, as a
+// fraction of the whole trace. The task trigger is appended at the very end of
+// the trace, so we measure tokens from the task back to the fact
+// (trace_tokens − burial_depth_tokens, where burial_depth_tokens is the
+// distance from the oldest event) over total trace tokens. Deeper = older.
+function burialDepthFraction(meta: TaskMeta): number | null {
+  if (meta.trace_tokens == null || meta.burial_depth_tokens == null) return null;
+  if (!meta.trace_tokens) return null;
+  return (meta.trace_tokens - meta.burial_depth_tokens) / meta.trace_tokens;
+}
+
 function burialDepthQuantileBounds(
   tasks: Record<string, TaskMeta>,
   count: number,
-): { bounds: number[]; max: number } {
-  const depths = Object.values(tasks)
-    .filter((t) => t.burial_depth_tokens != null)
-    .map((t) => t.burial_depth_tokens!)
+): number[] {
+  const fracs = Object.values(tasks)
+    .map(burialDepthFraction)
+    .filter((d): d is number => d != null)
     .sort((a, b) => a - b);
-  const n = depths.length;
-  if (!n || count < 2) return { bounds: [], max: 0 };
+  const n = fracs.length;
+  if (!n || count < 2) return [];
   const bounds: number[] = [];
   for (let i = 1; i < count; i++) {
-    bounds.push(depths[Math.floor((i * n) / count) - 1]);
+    bounds.push(fracs[Math.floor((i * n) / count) - 1]);
   }
-  return { bounds, max: depths[n - 1] };
+  return bounds;
 }
 
-// Compact range labels ("0–1k", "1k–5k", …) so five ticks fit a narrow panel.
-function buildBurialDepthBuckets(
-  bounds: number[],
-  max: number,
-): { key: string; label: string }[] {
+function formatBurialDepthPct(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value * 100)));
+}
+
+// Compact range labels ("0–35", "35–64", …) so five ticks fit a narrow panel;
+// the panel subtitle explains that the unit is % back from the present task.
+function buildBurialDepthBuckets(bounds: number[]): { key: string; label: string }[] {
   const bucketCount = bounds.length + 1;
   return Array.from({ length: bucketCount }, (_, i) => {
     const lo = i === 0 ? 0 : bounds[i - 1];
-    const hi = i < bounds.length ? bounds[i] : max;
-    return { key: `q${i + 1}`, label: `${fmtTokens(lo)}–${fmtTokens(hi)}` };
+    const hi = i < bounds.length ? bounds[i] : 1;
+    const loPct = formatBurialDepthPct(lo);
+    const hiPct = formatBurialDepthPct(hi);
+    return { key: `q${i + 1}`, label: `${loPct}–${hiPct}` };
   });
 }
 
-const { bounds: BURIAL_DEPTH_BOUNDS, max: BURIAL_DEPTH_MAX } =
-  burialDepthQuantileBounds(COMBINED.tasks, BURIAL_DEPTH_QUANTILE_COUNT);
-
-// Shallowest (fewest tokens) → deepest (most tokens); ~equal task counts per bin.
-const BURIAL_DEPTH_BUCKETS = buildBurialDepthBuckets(
-  BURIAL_DEPTH_BOUNDS,
-  BURIAL_DEPTH_MAX,
+const BURIAL_DEPTH_BOUNDS = burialDepthQuantileBounds(
+  COMBINED.tasks,
+  BURIAL_DEPTH_QUANTILE_COUNT,
 );
 
+// Shallowest (recent, near the task) → deepest (oldest); ~equal task counts per bin.
+const BURIAL_DEPTH_BUCKETS = buildBurialDepthBuckets(BURIAL_DEPTH_BOUNDS);
+
 function mapBurialDepthBucket(meta: TaskMeta): string | null {
-  if (meta.burial_depth_tokens == null) return null;
+  const frac = burialDepthFraction(meta);
+  if (frac == null) return null;
   for (let i = 0; i < BURIAL_DEPTH_BOUNDS.length; i++) {
-    if (meta.burial_depth_tokens <= BURIAL_DEPTH_BOUNDS[i]) return `q${i + 1}`;
+    if (frac <= BURIAL_DEPTH_BOUNDS[i]) return `q${i + 1}`;
   }
   return `q${BURIAL_DEPTH_QUANTILE_COUNT}`;
 }
@@ -442,7 +457,7 @@ export const TASK_DIMENSIONS: TaskDimension[] = [
     id: "burial_depth",
     title: "Burial depth",
     blurb:
-      "How many tokens into the trace the required fact first appears. Bins are equal-sized groups of tasks from shallow (left) to deep (right).",
+      "How far back from the present task the required fact sits, as a % of the trace (deeper = older memory). Bins are equal-sized groups of tasks from shallow/recent (left) to deep/old (right).",
     levels: buildLevelsByClassifier(mapBurialDepthBucket, BURIAL_DEPTH_BUCKETS),
   },
   {
@@ -581,7 +596,7 @@ export const TREND_AXES: TrendAxis[] = [
   {
     id: "burial_depth",
     title: "Burial depth",
-    subtitle: "# of tokens into the trace where the required fact first appears",
+    subtitle: "% back from the present task to where the required fact sits",
     data: buildHarnessTrendRowsByClassifier(
       mapBurialDepthBucket,
       BURIAL_DEPTH_BUCKETS,
