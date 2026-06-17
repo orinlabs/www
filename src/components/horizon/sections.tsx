@@ -30,9 +30,9 @@ export function IntroSection() {
 
 export function DifficultyDriversSection() {
   return (
-    <Section title="Learning is unpredicatable">
+    <Section title="Learning is unpredictable">
       <p>
-        We categorize tasks based on three dimensions: predictability, burial depth, and number of learnings required. Predictability is how easy it is to predict what the agent will need to learn, manually categorized. Burial depth is how far through the trace the required learning first appears. Number of learnings required is how many separate facts from the trace must be learned and combined to pass the task.
+        We categorize tasks based on three dimensions: predictability, burial depth, and number of learnings required. Predictability is how easy it is to predict what the agent will need to learn, manually categorized. Burial depth is how many tokens into the trace the required fact first appears. Number of learnings required is how many separate facts from the trace must be learned and combined to pass the task.
       </p>
 
 
@@ -118,7 +118,7 @@ export function TakeawaysSection() {
   return (
     <Section title="Takeaways">
     <p>
-      The clearest takeaway from Horizon is that when learnings are not predicatable, both search and accumulation strategies fail. None of Horizon's tasks are cognitively challenging, and while models are getting better at searching traces, we are also excited about representation learning and harness research as potential solutions.
+      The clearest takeaway from Horizon is that when learnings are not predictable, both search and accumulation strategies fail. None of Horizon's tasks are cognitively challenging, and while models are getting better at searching traces, we are also excited about representation learning and harness research as potential solutions.
     </p>
     
     <p>Future versions of Horizon will focus on low predictability pattern matching tasks, as we believe this is the most important remaining capability for agents to operate autonomously in the messy real world. If you're interested in working on this with us, <a href="orinlabs.ai" className="underline hover:text-neutral-700 dark:hover:text-neutral-300">we're hiring</a>.

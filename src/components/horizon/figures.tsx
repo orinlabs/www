@@ -1685,7 +1685,7 @@ export function DifficultyTrendFigures() {
 
   return (
     <Figure
-      caption="Pass rate by harness across each axis level (easiest → hardest left to right), pooled across all models on that harness. Burial depth bins are equal-sized groups of tasks by how far through the trace (in %) the required learning first appears."
+      caption="Pass rate by harness across each axis level (easiest → hardest left to right), pooled across all models on that harness. Burial depth bins are equal-sized groups of tasks by how many tokens into the trace the required fact first appears."
     >
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4 text-xs font-medium text-neutral-600 dark:text-neutral-300">
         {TREND_FAMILIES.map((f) => (
@@ -1716,7 +1716,7 @@ export function DifficultyTrendFigures() {
           const xAxisLabel =
             {
               anticipability: "Predictability (harder \u2192)",
-              burial_depth: "Burial depth (early \u2192 late)",
+              burial_depth: "# of tokens (shallow \u2192 deep)",
               n_hops: "Learnings required (harder \u2192)",
             }[ax.id] ?? ax.title;
           return (

@@ -26,6 +26,7 @@ export interface TaskMeta {
   difficulty: DifficultyBucket | null;
   anticipability?: number;
   burial_depth?: number;
+  burial_depth_tokens?: number;
   trace_lines?: number;
   misdirection?: string;
   n_hops?: number;
@@ -279,7 +280,7 @@ export function poolByTaskFieldByHarness(
 }
 
 // Like poolByTaskField, but classifies from the full task metadata (e.g.
-// burial_depth / trace_lines ratio).
+// burial_depth token count).
 export function poolByTaskClassifier(
   data: CombinedData,
   classify: (meta: TaskMeta) => string | null,

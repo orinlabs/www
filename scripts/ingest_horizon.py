@@ -45,6 +45,7 @@ TASK_FIELDS = [
     ("difficulty", "difficulty"),
     ("anticipability", "anticipability"),
     ("burial_depth", "burial_depth"),
+    ("burial_depth_tokens", "burial_depth_tokens"),
     ("trace_lines", "trace_lines"),
     ("md", "misdirection"),
     ("n_hops", "n_hops"),
