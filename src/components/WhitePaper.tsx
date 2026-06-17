@@ -106,7 +106,7 @@ export function Section({ number, title, children, className }: SectionProps) {
   return (
     <section className={cn("mb-12 max-w-5xl", className)}>
       {title && (
-        <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-6 flex items-baseline gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 flex items-baseline gap-3">
           {number && (
             <span className="text-primary font-mono text-lg">{number}.</span>
           )}
