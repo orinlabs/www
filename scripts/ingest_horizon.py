@@ -50,6 +50,7 @@ TASK_FIELDS = [
     ("trace_tokens", "trace_tokens"),
     ("md", "misdirection"),
     ("n_hops", "n_hops"),
+    ("n_memory_sites", "n_memory_sites"),
     ("family", "family"),
     ("category", "category"),
     ("adversarial", "adversarial"),

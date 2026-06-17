@@ -31,6 +31,7 @@ export interface TaskMeta {
   trace_tokens?: number;
   misdirection?: string;
   n_hops?: number;
+  n_memory_sites?: number;
   family?: string | null;
   category?: string;
   adversarial?: boolean;
