@@ -212,7 +212,7 @@ export function HorizonChart({
     );
 
   return (
-    <div className="my-8 -ml-2 sm:-ml-10">
+    <div className="mt-8 -ml-2 sm:-ml-10">
       <div className="flex flex-col items-start gap-4 mb-4 ml-2 sm:ml-10 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h4 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
@@ -467,7 +467,7 @@ export function HorizonModelChart() {
     hoveredHarness != null && hoveredHarness !== harness ? 0.15 : 1;
 
   return (
-    <div className="my-8">
+    <div>
       <h4 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
         Same model, different harness
       </h4>
@@ -646,7 +646,7 @@ export function HorizonLeaderboard() {
       : "";
 
   return (
-    <div className="my-8 overflow-x-auto">
+    <div className="overflow-x-auto">
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b-2 border-neutral-300 dark:border-neutral-700 text-left">
@@ -756,7 +756,7 @@ export function HorizonTable({
 }) {
   const isDark = useIsDark();
   return (
-    <div className={cn("my-8 overflow-x-auto", className)}>
+    <div className={cn("overflow-x-auto", className)}>
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b-2 border-neutral-300 dark:border-neutral-700 text-left">
@@ -831,8 +831,16 @@ export function HorizonTable({
         </tbody>
       </table>
       <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400 italic">
-        Preview run, subject to change. Specific agents may incur a cost of data ingestion.
-      </p>
+        Preview run, subject to change. All data was collected with proper user permissions.
+          Download the{" "}
+          <a
+            href="/horizon-results.json"
+            download
+            className="underline hover:text-neutral-700 dark:hover:text-neutral-300"
+          >
+            raw results (JSON)
+          </a>.
+        </p>
     </div>
   );
 }

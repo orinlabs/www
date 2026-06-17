@@ -40,15 +40,15 @@ export function HorizonHero() {
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 dark:text-neutral-100 leading-tight max-w-4xl">
           {HERO_TITLE}
         </h1>
-        <p className="mt-4 text-base text-neutral-600/80 dark:text-neutral-400/80 leading-normal tracking-wide max-w-lg lg:max-w-2xl">
+        <p className="mt-4 text-base text-neutral-700 dark:text-neutral-300 leading-normal tracking-wide max-w-lg lg:max-w-2xl">
           {HERO_ABSTRACT}
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-2 text-neutral-600 dark:text-neutral-400 text-base">
-          <Link to="/" className="text-primary hover:underline transition-colors">
-            Orin Labs
-          </Link>
-          <span className="text-neutral-400 dark:text-neutral-500">|</span>
-          <span>June 2026</span>
+          <span className="text-neutral-600/80 dark:text-neutral-400/80">
+            Bryan Houlton & Aayush Gupta
+          </span>
+          <span className="text-neutral-600/80 dark:text-neutral-400/80">|</span>
+          <span className="text-neutral-600/80 dark:text-neutral-400/80">June 17, 2026</span>
         </div>
       </div>
     </>
@@ -97,27 +97,13 @@ export default function Horizon() {
       <ThanksSection />
 
 
+
       <Section title="All Results">
         <HorizonResults />
-        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-          Download the{" "}
-          <a
-            href="/horizon-results.json"
-            download
-            className="underline hover:text-neutral-700 dark:hover:text-neutral-300"
-          >
-            raw results (JSON)
-          </a>{" "}
-          — per-task metadata and per-run cases behind every number above.
-        </p>
-        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 italic">
-          *All data was collected with proper user permissions.
-        </p>
+       
       </Section>
 
-      {/* <ThanksSection /> hidden until launch. */}
-
-      <ParticipateSection />
+      
     </ResearchArticle>
   );
 }

@@ -32,7 +32,7 @@ export function DifficultyDriversSection() {
   return (
     <Section title="Learning is unpredicatable">
       <p>
-        We categorize tasks based on three dimensions: predictability, burial depth, and number of learnings required. Predictability is how easy it is to predict what the agent will need to learn. Burial depth is how far through the trace the required learning first appears. Number of learnings required is how many separate facts from the trace must be learned and combined to pass the task.
+        We categorize tasks based on three dimensions: predictability, burial depth, and number of learnings required. Predictability is how easy it is to predict what the agent will need to learn, manually categorized. Burial depth is how far through the trace the required learning first appears. Number of learnings required is how many separate facts from the trace must be learned and combined to pass the task.
       </p>
 
 
@@ -108,6 +108,8 @@ export function IntegritySection() {
       <p>
         Testing a human baseline is impossible (even reading the traces is equivalent to 1,300 Harry Potter books), but each task has been reviewed by a human and deemed reasonable. Agent implementations are available in our <a href="https://github.com/orinlabs/horizon-1" target="_blank" rel="noopener noreferrer">public repo</a>.
       </p>
+
+      <p>We did not get a chance to benchmark Anthropic's Fable 5 before it was removed.</p>
     </Section>
   );
 }
@@ -153,7 +155,7 @@ export function ThanksSection() {
   return (
     <Section title="Thank Yous">
       <p>
-        Thank you to Aayush Gupta, Furong Huang, Mehul Arora, Sean McLeish, Hamidah Oderinwale and more for reviewing this post. We are also grateful to the teams at Daytona, Harbor, OpenAI, and Anthropic for their support.
+        Thank you to Dr. Furong Huang, Mehul Arora, Sean McLeish, Hamidah Oderinwale and others for reviewing this post. We are also grateful to the teams at Daytona, Harbor, OpenAI, and Anthropic for their support.
       </p>
     </Section>
   );
