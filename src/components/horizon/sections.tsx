@@ -39,7 +39,7 @@ export function DifficultyDriversSection() {
       <DifficultyTrendFigures />
 
       <p> 
-        All harnesses show similar patterns where predictability and number of learnings required are the clearest detractors. This makes sense, as Horizon's hardest tasks tend to be the least predictable and require more learnings. The data also suggests that agents are better at learning from their early and late experiences than their middle ones, similar to in-context rot.</p>
+        All harnesses show similar patterns where predictability and number of learnings required are the clearest detractors. This makes sense, as Horizon's hardest tasks tend to be the least predictable and require more learnings. The data also suggests that agents do slightly worse when the learning is buried deeper back in history.</p>
 
         <p>Future work will prioritize tasks that are less predictable and require more learnings, like testing if the agent can recognize implicit but unexpected patterns in realistic traces.</p>
     </Section>
