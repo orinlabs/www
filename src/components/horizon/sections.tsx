@@ -142,7 +142,7 @@ export function ParticipateSection() {
     <p className="research-prose text-sm text-neutral-500 dark:text-neutral-400 mb-4">
       Building a long-horizon agent? Evaluate it against Horizon —{" "}
       <a
-        href="mailto:contact@orinlabs.com"
+        href="mailto:founders@orinlabs.ai"
         className="underline hover:text-neutral-700 dark:hover:text-neutral-300"
       >
         get in touch
@@ -161,14 +161,13 @@ export function ParticipateSection() {
   );
 }
 
+// NOTE: Hidden from the page until launch (not rendered in Horizon.tsx).
 export function ThanksSection() {
   return (
     <Section title="Thanks">
       <p>
-        {/* TODO: replace with final acknowledgements. */}
-        Thanks to [collaborators, design partners, and annotators] who helped
-        build, review, and stress-test Horizon, and to the customers who allowed
-        us to learn from their real agent traces.
+        Thanks to Furong Huang and Daytona Startup Grid, and to the customers
+        who allowed us to learn from their real agent traces.
       </p>
     </Section>
   );

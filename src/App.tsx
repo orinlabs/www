@@ -13,6 +13,7 @@ import {
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
+import OgHorizonCapture from './pages/OgHorizonCapture';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Research from './pages/Research';
 import Horizon, { HorizonHero } from './pages/research/Horizon';
@@ -129,6 +130,7 @@ function App() {
             </Layout>
           }
         />
+        <Route path="/og-horizon-capture" element={<OgHorizonCapture />} />
         <Route
           path="*"
           element={

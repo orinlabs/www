@@ -14,7 +14,6 @@ import {
   ParticipateSection,
   TakeawaysSection,
   TaskAnatomySection,
-  ThanksSection,
 } from '../../components/horizon';
 import { ResearchArticle, Section } from '../../components/WhitePaper';
 
@@ -92,19 +91,18 @@ export default function Horizon() {
 
       <IntegritySection />
 
-      <Section title="All Results">
-        <HorizonResults />
-      </Section>
-
       <TakeawaysSection />
 
-      <ThanksSection />
+      <Section title="All Results">
+        <HorizonResults />
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 italic">
+          *All data was collected with proper user permissions.
+        </p>
+      </Section>
+
+      {/* <ThanksSection /> hidden until launch. */}
 
       <ParticipateSection />
-
-      <p className="research-prose text-sm italic mb-12">
-        *All data was collected with proper user permissions.
-      </p>
     </ResearchArticle>
   );
 }
