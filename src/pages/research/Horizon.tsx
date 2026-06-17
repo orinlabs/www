@@ -3,7 +3,6 @@ import 'prismjs/components/prism-json';
 import { useEffect } from 'react';
 
 import Prism from 'prismjs';
-import { Link } from 'react-router-dom';
 
 import {
   DifficultyDriversSection,
@@ -11,7 +10,6 @@ import {
   HorizonResults,
   IntegritySection,
   ModelLeverSection,
-  ParticipateSection,
   TakeawaysSection,
   TaskAnatomySection,
   ThanksSection,
