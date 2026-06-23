@@ -40,7 +40,7 @@ export default function Layout({ children, hero }: LayoutProps) {
         hero
           ? "min-h-screen p-0 md:p-8 md:pt-12 gap-6 sm:gap-8"
           : isWide
-            ? "h-screen overflow-hidden pt-6 sm:pt-8 gap-6 p-4 sm:p-6 lg:p-8"
+            ? "h-screen overflow-hidden"
             : "min-h-screen pt-6 sm:pt-8 gap-12 sm:gap-16 p-4 sm:p-6 lg:p-8",
       )}
     >
@@ -51,8 +51,12 @@ export default function Layout({ children, hero }: LayoutProps) {
             <Navbar />
           </div>
         </div>
+      ) : isWide ? (
+        <div className="w-full z-10 border-b border-neutral-200 dark:border-neutral-800 px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <Navbar />
+        </div>
       ) : (
-        <div className={cn("site-col z-10", isWide && "is-wide")}>
+        <div className="site-col z-10">
           <Navbar />
         </div>
       )}
@@ -67,8 +71,8 @@ export default function Layout({ children, hero }: LayoutProps) {
       ) : (
         <div
           className={cn(
-            "site-col flex-1 flex flex-col",
-            isWide && "is-wide min-h-0 overflow-hidden",
+            "flex-1 flex flex-col",
+            isWide ? "w-full min-h-0 overflow-hidden" : "site-col",
           )}
         >
           <div

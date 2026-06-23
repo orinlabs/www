@@ -25,10 +25,21 @@ import TermsOfService from './pages/TermsOfService';
 
 function useSmoothScroll() {
   const lenisRef = useRef<Lenis | null>(null);
+  const rafRef = useRef<number>(0);
   const { pathname } = useLocation();
+  const isHandbook = pathname.startsWith('/handbook');
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    if (isHandbook) {
+      if (lenisRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        lenisRef.current.destroy();
+        lenisRef.current = null;
+      }
       return;
     }
 
@@ -38,22 +49,21 @@ function useSmoothScroll() {
     });
     lenisRef.current = lenis;
 
-    let rafId = 0;
     function raf(time: number) {
       lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
+      rafRef.current = requestAnimationFrame(raf);
     }
-    rafId = requestAnimationFrame(raf);
+    rafRef.current = requestAnimationFrame(raf);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      cancelAnimationFrame(rafRef.current);
       lenis.destroy();
       lenisRef.current = null;
     };
-  }, []);
+  }, [isHandbook]);
 
   useEffect(() => {
-    if (pathname.startsWith('/handbook')) {
+    if (isHandbook) {
       return;
     }
 
@@ -62,7 +72,7 @@ function useSmoothScroll() {
     } else {
       window.scrollTo(0, 0);
     }
-  }, [pathname]);
+  }, [isHandbook, pathname]);
 }
 
 function App() {
