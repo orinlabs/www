@@ -6,7 +6,9 @@ import { cn } from "slate-ui";
 
 import { Logo } from "./Logo";
 
-const NAV_ITEMS = [{ label: "Join Us", path: "/#join-us" }];
+const NAV_ITEMS = [
+  { label: "Join Us", path: "/#join-us" },
+];
 
 // Shared site nav. `overlay` switches to light-on-image styling so it can sit
 // inside a hero image; `className` lets the caller constrain width/alignment.

@@ -56,9 +56,6 @@ export default function Home() {
       To achieve this, we combine long-horizon training with new architectures, benchmarks, environments, safety research, and real deployments. Already our agents have been running for years, acting independently in the real world.
       </p>
 
-      <p>
-      We are a small group of engineers and researchers working to solve a short list of fundamental societal bottlenecks. If this sounds interesting, please reach out.
-      </p>
       </div>
 
       {/* Join Us */}

@@ -164,10 +164,52 @@ html {
   animation: page-transition 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+@keyframes handbook-page-transition {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.handbook-page-transition {
+  animation: handbook-page-transition 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Shared centered column for nav/content/footer. Mirrors the old
+   `max-w-3xl xl:max-w-4xl` reading width, but the max-width is animated so the
+   layout can expand cleanly into the wide handbook view when switching routes
+   (the Layout component instance persists across route changes). */
+.site-col {
+  width: 100%;
+  max-width: 48rem;
+  transition: max-width 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 1280px) {
+  .site-col {
+    max-width: 56rem;
+  }
+}
+
+.site-col.is-wide {
+  max-width: 90rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .beacon-badge::after,
+  .handbook-page-transition,
   .page-transition {
     animation: none;
+  }
+
+  .site-col {
+    transition: none;
   }
 }
 
@@ -195,6 +237,50 @@ body {
   ol {
     @apply list-decimal list-outside;
   }
+}
+
+.handbook-prose {
+  @apply text-neutral-700 dark:text-neutral-300;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.handbook-prose h2 {
+  @apply mt-12 first:mt-0 mb-4 border-b border-neutral-200 pb-2 text-2xl font-semibold text-neutral-900 dark:border-neutral-800 dark:text-neutral-100;
+}
+
+.handbook-prose h3 {
+  @apply mt-10 mb-3 text-xl font-semibold text-neutral-900 dark:text-neutral-100;
+}
+
+.handbook-prose h4 {
+  @apply mt-8 mb-3 text-lg font-semibold text-neutral-800 dark:text-neutral-200;
+}
+
+.handbook-prose p {
+  @apply mb-5;
+}
+
+.handbook-prose ul,
+.handbook-prose ol {
+  @apply mb-5 pl-6 space-y-2;
+}
+
+.handbook-prose ul {
+  @apply list-disc;
+}
+
+.handbook-prose ol {
+  @apply list-decimal;
+}
+
+.handbook-prose a {
+  @apply text-primary underline underline-offset-2 hover:no-underline;
+}
+
+.handbook-prose code {
+  @apply rounded bg-neutral-200 px-1.5 py-0.5 text-sm text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300;
+  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
 }
 
 table.rounded-lg {

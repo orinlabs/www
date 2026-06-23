@@ -11,6 +11,7 @@ import {
 } from 'react-router-dom';
 
 import Layout from './components/Layout';
+import Handbook from './pages/Handbook';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 import OgHorizonCapture from './pages/OgHorizonCapture';
@@ -52,6 +53,10 @@ function useSmoothScroll() {
   }, []);
 
   useEffect(() => {
+    if (pathname.startsWith('/handbook')) {
+      return;
+    }
+
     if (lenisRef.current) {
       lenisRef.current.scrollTo(0, { immediate: true });
     } else {
@@ -111,6 +116,22 @@ function App() {
           element={
             <Layout>
               <Role />
+            </Layout>
+          }
+        />
+        <Route
+          path="/handbook"
+          element={
+            <Layout>
+              <Handbook />
+            </Layout>
+          }
+        />
+        <Route
+          path="/handbook/:slug"
+          element={
+            <Layout>
+              <Handbook />
             </Layout>
           }
         />

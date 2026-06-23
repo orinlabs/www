@@ -23,7 +23,9 @@ export function JoinUs({ padded = true }: { padded?: boolean }) {
       </div>
 
       <p className="text-neutral-700 dark:text-neutral-300">
-      We are a small group of engineers and researchers working to solve a short list of fundamental societal bottlenecks. If this sounds interesting, please reach out.
+        We are a small group of engineers and researchers working to solve a short
+        list of fundamental societal bottlenecks. If this sounds interesting,
+        please reach out.
       </p>
 
       <div className="flex flex-col items-stretch w-full divide-y dark:divide-neutral-700">

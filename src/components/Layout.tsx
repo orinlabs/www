@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { LinkedinIcon, TwitterIcon } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { cn } from "slate-ui";
 
 import { Navbar } from "./Navbar";
 
@@ -14,6 +15,11 @@ interface LayoutProps {
 
 export default function Layout({ children, hero }: LayoutProps) {
   const { pathname } = useLocation();
+
+  // The handbook uses a wide, two-column (sidebar + content) layout. We widen
+  // the shared `.site-col` so the nav/content/footer expand to (near) full
+  // page; the max-width transition animates the change as you switch routes.
+  const isWide = pathname.startsWith("/handbook");
 
   useEffect(() => {
     const hash = window.location.hash.slice(1);
@@ -29,11 +35,14 @@ export default function Layout({ children, hero }: LayoutProps) {
 
   return (
     <div
-      className={
+      className={cn(
+        "bg-neutral-50 dark:bg-neutral-900 flex flex-col items-center",
         hero
-          ? "bg-neutral-50 dark:bg-neutral-900 flex flex-col items-center min-h-screen p-0 md:p-8 md:pt-12 gap-6 sm:gap-8"
-          : "bg-neutral-50 dark:bg-neutral-900 flex flex-col items-center min-h-screen pt-6 sm:pt-8 gap-12 sm:gap-16 p-4 sm:p-6 lg:p-8"
-      }
+          ? "min-h-screen p-0 md:p-8 md:pt-12 gap-6 sm:gap-8"
+          : isWide
+            ? "h-screen overflow-hidden pt-6 sm:pt-8 gap-6 p-4 sm:p-6 lg:p-8"
+            : "min-h-screen pt-6 sm:pt-8 gap-12 sm:gap-16 p-4 sm:p-6 lg:p-8",
+      )}
     >
       {hero ? (
         <div className="relative w-full overflow-hidden md:rounded-2xl border-b md:border md:rounded-xl border-neutral-200 dark:border-neutral-800 h-[70vh] bg-[#f4f3ef] dark:bg-[#262626]">
@@ -43,27 +52,45 @@ export default function Layout({ children, hero }: LayoutProps) {
           </div>
         </div>
       ) : (
-        <Navbar className="max-w-3xl xl:max-w-4xl z-10" />
+        <div className={cn("site-col z-10", isWide && "is-wide")}>
+          <Navbar />
+        </div>
       )}
 
-      <div
-        key={pathname}
-        className={
-          hero
-            ? "page-transition w-full px-8 sm:px-10 lg:px-12 flex-1 flex flex-col gap-12 sm:gap-18"
-            : "page-transition w-full max-w-3xl xl:max-w-4xl flex-1 flex flex-col gap-12 sm:gap-18"
-        }
-      >
-        {children}
-      </div>
+      {hero ? (
+        <div
+          key={pathname}
+          className="page-transition w-full px-8 sm:px-10 lg:px-12 flex-1 flex flex-col gap-12 sm:gap-18"
+        >
+          {children}
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "site-col flex-1 flex flex-col",
+            isWide && "is-wide min-h-0 overflow-hidden",
+          )}
+        >
+          <div
+            key={isWide ? "handbook" : pathname}
+            className={cn(
+              "page-transition flex-1 flex flex-col",
+              isWide ? "min-h-0 overflow-hidden" : "gap-12 sm:gap-18",
+            )}
+          >
+            {children}
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
-      <footer
-        className={
+      {!isWide && <footer
+        className={cn(
+          "z-10 flex flex-col md:flex-row border-t border-neutral-200 dark:border-neutral-800 mt-12 gap-4 md:gap-6 py-8 md:py-12",
           hero
-            ? "w-full max-w-3xl xl:max-w-4xl z-10 flex flex-col md:flex-row border-t border-neutral-200 dark:border-neutral-800 mt-12 gap-4 md:gap-6 py-8 md:py-12 px-8 md:px-0"
-            : "w-full max-w-3xl xl:max-w-4xl z-10 flex flex-col md:flex-row border-t border-neutral-200 dark:border-neutral-800 mt-12 gap-4 md:gap-6 py-8 md:py-12"
-        }
+            ? "w-full max-w-3xl xl:max-w-4xl px-8 md:px-0"
+            : cn("site-col", isWide && "is-wide"),
+        )}
       >
         <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
           <p className="text-sm text-neutral-600 dark:text-neutral-400">
@@ -103,7 +130,7 @@ export default function Layout({ children, hero }: LayoutProps) {
             </a>
           </div>
         </div>
-      </footer>
+      </footer>}
     </div>
   );
 }

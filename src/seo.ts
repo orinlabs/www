@@ -5,6 +5,10 @@
 // "structured data" and "citation readiness" scores.
 
 import { ROLES, type Role } from './data/roles.ts';
+import {
+  HANDBOOK_PAGES,
+  type HandbookPage,
+} from './data/handbook.generated.ts';
 
 const SITE_URL = 'https://orinlabs.ai';
 const OG_IMAGE = `${SITE_URL}/og.png`;
@@ -146,6 +150,11 @@ const STATIC_META: Record<string, RouteMeta> = {
       datePublished: '2025-11-01',
     }),
   },
+  '/handbook': {
+    title: 'Handbook — Orin Labs',
+    description: 'The Orin Labs company handbook.',
+    jsonLd: webPageJsonLd('Handbook', `${SITE_URL}/handbook`),
+  },
   '/privacy': {
     title: 'Privacy Policy — Orin Labs',
     description: 'How Orin Labs collects, uses, and protects your information.',
@@ -231,8 +240,20 @@ function roleMeta(role: Role): RouteMeta {
   };
 }
 
+function handbookMeta(page: HandbookPage): RouteMeta {
+  return {
+    title: `${page.title} — Handbook — Orin Labs`,
+    description: page.description || 'The Orin Labs company handbook.',
+    jsonLd: webPageJsonLd(page.title, `${SITE_URL}/handbook/${page.slug}`),
+  };
+}
+
 const ROLE_META: Record<string, RouteMeta> = Object.fromEntries(
   ROLES.map((role) => [`/roles/${role.slug}`, roleMeta(role)]),
+);
+
+const HANDBOOK_META: Record<string, RouteMeta> = Object.fromEntries(
+  HANDBOOK_PAGES.map((page) => [`/handbook/${page.slug}`, handbookMeta(page)]),
 );
 
 const DEFAULT_META: RouteMeta = {
@@ -243,11 +264,12 @@ const DEFAULT_META: RouteMeta = {
 // Every public route that should be prerendered to static HTML.
 export const ROUTES: string[] = [
   ...Object.keys(STATIC_META),
+  ...HANDBOOK_PAGES.map((page) => `/handbook/${page.slug}`),
   ...ROLES.map((role) => `/roles/${role.slug}`),
 ];
 
 function metaFor(pathname: string): RouteMeta {
-  return STATIC_META[pathname] ?? ROLE_META[pathname] ?? DEFAULT_META;
+  return STATIC_META[pathname] ?? HANDBOOK_META[pathname] ?? ROLE_META[pathname] ?? DEFAULT_META;
 }
 
 function escapeAttr(value: string): string {
