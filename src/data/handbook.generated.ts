@@ -37,19 +37,14 @@ export const HANDBOOK_PAGES = [
     "order": 10,
     "items": [
       {
-        "title": "Introduction",
-        "slug": "introduction",
-        "level": 2
+        "title": "Mission",
+        "slug": "mission",
+        "level": 3
       },
       {
-        "title": "Mission & Values",
-        "slug": "mission-and-values",
-        "level": 2
-      },
-      {
-        "title": "Our Story",
-        "slug": "our-story",
-        "level": 2
+        "title": "Culture",
+        "slug": "culture",
+        "level": 3
       }
     ],
     "authors": [
@@ -60,15 +55,12 @@ export const HANDBOOK_PAGES = [
         "avatarUrl": "https://avatars.githubusercontent.com/u/44454017?v=4"
       }
     ],
-    "body": "## Introduction\n\n## Mission & Values\n\n## Our Story",
+    "body": "### Mission\n\nOur mission is to bring the AI takeoff to the physical world. AI can build software; we believe it should also be able to build physical infrastructure. To do this, we’re training AI to fully manage construction and infrastructure projects.\n\n### Culture\n\nWe are building a team of intentional people who could go work anywhere else, but are choosing to work on this mission. We take our work here seriously, show up on time, hold each other to a high bar, take feedback quickly, and think from first principles. We work extremely hard but love learning, find art and creativity in everything we can, and have a ton of fun.\n\nWe believe that building this culture requires an in-person team, and expect members to be fully in-person roughly by EOY. In the meantime, we’d want to have at least one week per month in person as a team and can facilitate this between DC and SF.",
     "sourcePath": "src/content/handbook/company.md",
     "lastEditor": {
       "name": "Bryan Houlton",
       "email": "brhoulton@gmail.com",
-      "date": "",
-      "githubUsername": "bryanhoulton",
-      "githubUrl": "https://github.com/bryanhoulton",
-      "avatarUrl": "https://github.com/bryanhoulton.png?size=96"
+      "date": "2026-06-22T22:17:31-07:00"
     }
   },
   {
@@ -80,6 +72,11 @@ export const HANDBOOK_PAGES = [
       {
         "title": "Communication",
         "slug": "communication",
+        "level": 2
+      },
+      {
+        "title": "Writing Over Meetings",
+        "slug": "writing-over-meetings",
         "level": 2
       },
       {
@@ -106,61 +103,12 @@ export const HANDBOOK_PAGES = [
         "avatarUrl": "https://avatars.githubusercontent.com/u/44454017?v=4"
       }
     ],
-    "body": "## Communication\n\n## Meetings\n\n## Decision Making\n\n## Remote Work",
+    "body": "## Communication\n\n## Writing Over Meetings\n\nWe prefer writing over meetings. If a meeting seems pointless or could be handled in writing, call it out.\n\n## Meetings\n\n## Decision Making\n\n## Remote Work",
     "sourcePath": "src/content/handbook/how-we-work.md",
     "lastEditor": {
       "name": "Bryan Houlton",
       "email": "brhoulton@gmail.com",
-      "date": "",
-      "githubUsername": "bryanhoulton",
-      "githubUrl": "https://github.com/bryanhoulton",
-      "avatarUrl": "https://github.com/bryanhoulton.png?size=96"
-    }
-  },
-  {
-    "slug": "people",
-    "title": "People",
-    "description": "People, compensation, and benefits handbook section.",
-    "order": 30,
-    "items": [
-      {
-        "title": "Compensation",
-        "slug": "compensation",
-        "level": 2
-      },
-      {
-        "title": "Benefits",
-        "slug": "benefits",
-        "level": 2
-      },
-      {
-        "title": "Time Off",
-        "slug": "time-off",
-        "level": 2
-      },
-      {
-        "title": "Career Development",
-        "slug": "career-development",
-        "level": 2
-      }
-    ],
-    "authors": [
-      {
-        "name": "Bryan Houlton",
-        "githubUsername": "bryanhoulton",
-        "githubUrl": "https://github.com/bryanhoulton",
-        "avatarUrl": "https://avatars.githubusercontent.com/u/44454017?v=4"
-      }
-    ],
-    "body": "## Compensation\n\n## Benefits\n\n## Time Off\n\n## Career Development",
-    "sourcePath": "src/content/handbook/people.md",
-    "lastEditor": {
-      "name": "Bryan Houlton",
-      "email": "brhoulton@gmail.com",
-      "date": "",
-      "githubUsername": "bryanhoulton",
-      "githubUrl": "https://github.com/bryanhoulton",
-      "avatarUrl": "https://github.com/bryanhoulton.png?size=96"
+      "date": "2026-06-22T22:17:31-07:00"
     }
   },
   {
@@ -180,6 +128,11 @@ export const HANDBOOK_PAGES = [
         "level": 2
       },
       {
+        "title": "No AI-Written Content",
+        "slug": "no-ai-written-content",
+        "level": 2
+      },
+      {
         "title": "Expenses",
         "slug": "expenses",
         "level": 2
@@ -193,15 +146,12 @@ export const HANDBOOK_PAGES = [
         "avatarUrl": "https://avatars.githubusercontent.com/u/44454017?v=4"
       }
     ],
-    "body": "## Code of Conduct\n\n## Security\n\n## Expenses",
+    "body": "## Code of Conduct\n\n## Security\n\n## No AI-Written Content\n\nDo not use AI to write. Draft and edit directly so the words reflect what we actually mean and how we actually operate.\n\n## Expenses",
     "sourcePath": "src/content/handbook/policies.md",
     "lastEditor": {
       "name": "Bryan Houlton",
       "email": "brhoulton@gmail.com",
-      "date": "",
-      "githubUsername": "bryanhoulton",
-      "githubUrl": "https://github.com/bryanhoulton",
-      "avatarUrl": "https://github.com/bryanhoulton.png?size=96"
+      "date": "2026-06-22T22:17:31-07:00"
     }
   }
 ] satisfies HandbookPage[];

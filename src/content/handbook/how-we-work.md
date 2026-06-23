@@ -8,6 +8,10 @@ authors:
 
 ## Communication
 
+## Writing Over Meetings
+
+We prefer writing over meetings. If a meeting seems pointless or could be handled in writing, call it out.
+
 ## Meetings
 
 ## Decision Making

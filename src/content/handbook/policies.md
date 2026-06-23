@@ -10,4 +10,8 @@ authors:
 
 ## Security
 
+## No AI-Written Content
+
+Do not use AI to write. Draft and edit directly so the words reflect what we actually mean and how we actually operate.
+
 ## Expenses
