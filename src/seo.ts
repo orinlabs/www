@@ -155,6 +155,11 @@ const STATIC_META: Record<string, RouteMeta> = {
     description: 'The Orin Labs company handbook.',
     jsonLd: webPageJsonLd('Handbook', `${SITE_URL}/handbook`),
   },
+  '/404': {
+    title: 'Page Not Found — Orin Labs',
+    description: "The page you're looking for doesn't exist or may have moved.",
+    jsonLd: webPageJsonLd('Page Not Found', `${SITE_URL}/404`),
+  },
   '/privacy': {
     title: 'Privacy Policy — Orin Labs',
     description: 'How Orin Labs collects, uses, and protects your information.',
@@ -266,7 +271,7 @@ export const ROUTES: string[] = [
   ...Object.keys(STATIC_META),
   ...HANDBOOK_PAGES.map((page) => `/handbook/${page.slug}`),
   ...ROLES.map((role) => `/roles/${role.slug}`),
-];
+].filter((route) => route !== '/404');
 
 function metaFor(pathname: string): RouteMeta {
   return STATIC_META[pathname] ?? HANDBOOK_META[pathname] ?? ROLE_META[pathname] ?? DEFAULT_META;

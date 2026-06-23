@@ -46,4 +46,12 @@ for (const url of ROUTES) {
   console.log(`prerendered ${url} -> ${outPath.slice(root.length + 1)}`);
 }
 
-console.log(`\nPrerendered ${count} route(s).`);
+const notFound = render('/404');
+const notFoundPage = template
+  .replace('<!--app-head-->', notFound.head)
+  .replace('<!--app-html-->', notFound.html);
+const notFoundPath = join(distDir, '404.html');
+writeFileSync(notFoundPath, notFoundPage);
+console.log(`prerendered /404 -> ${notFoundPath.slice(root.length + 1)}`);
+
+console.log(`\nPrerendered ${count} route(s) plus 404.html.`);
