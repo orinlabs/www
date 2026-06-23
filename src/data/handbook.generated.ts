@@ -32,9 +32,9 @@ export interface HandbookPage {
 export const HANDBOOK_PAGES = [
   {
     "slug": "company",
-    "title": "Company",
-    "description": "Company handbook section.",
-    "order": 10,
+    "title": "About Us",
+    "description": "An overview of Orin Labs.",
+    "order": 1,
     "items": [
       {
         "title": "Mission",
@@ -55,43 +55,23 @@ export const HANDBOOK_PAGES = [
         "avatarUrl": "https://avatars.githubusercontent.com/u/44454017?v=4"
       }
     ],
-    "body": "### Mission\n\nOur mission is to bring the AI takeoff to the physical world. AI can build software; we believe it should also be able to build physical infrastructure. To do this, we’re training AI to fully manage construction and infrastructure projects.\n\n### Culture\n\nWe are building a team of intentional people who could go work anywhere else, but are choosing to work on this mission. We take our work here seriously, show up on time, hold each other to a high bar, take feedback quickly, and think from first principles. We work extremely hard but love learning, find art and creativity in everything we can, and have a ton of fun.\n\nWe believe that building this culture requires an in-person team, and expect members to be fully in-person roughly by EOY. In the meantime, we’d want to have at least one week per month in person as a team and can facilitate this between DC and SF.",
+    "body": "### Mission\n\nOur mission is to bring the AI takeoff to the physical world. AI can build software; we believe it should also be able to build physical infrastructure. To do this, we're training AI to fully manage construction and infrastructure projects.\n\n### Culture\n\nWe are building a team of intentional people who could go work anywhere else, but are choosing to work on this mission. We take our work here seriously, show up on time, hold each other to a high bar, take feedback quickly, and think from first principles. We work extremely hard but love learning, find art and creativity in everything we can, and have a ton of fun.\n\nWe believe that building this culture requires an in-person team, and expect members to be fully in-person roughly by EOY. In the meantime, we'd want to have at least one week per month in person as a team and can facilitate this between DC and SF.",
     "sourcePath": "src/content/handbook/company.md",
     "lastEditor": {
       "name": "Bryan Houlton",
       "email": "brhoulton@gmail.com",
-      "date": "2026-06-22T22:37:28-07:00"
+      "date": "2026-06-23T15:11:27-07:00"
     }
   },
   {
     "slug": "how-we-work",
     "title": "How We Work",
     "description": "Operating practices handbook section.",
-    "order": 20,
+    "order": 10,
     "items": [
       {
         "title": "Communication",
         "slug": "communication",
-        "level": 2
-      },
-      {
-        "title": "Writing Over Meetings",
-        "slug": "writing-over-meetings",
-        "level": 2
-      },
-      {
-        "title": "Meetings",
-        "slug": "meetings",
-        "level": 2
-      },
-      {
-        "title": "Decision Making",
-        "slug": "decision-making",
-        "level": 2
-      },
-      {
-        "title": "Remote Work",
-        "slug": "remote-work",
         "level": 2
       }
     ],
@@ -103,12 +83,40 @@ export const HANDBOOK_PAGES = [
         "avatarUrl": "https://avatars.githubusercontent.com/u/44454017?v=4"
       }
     ],
-    "body": "## Communication\n\n## Writing Over Meetings\n\nWe prefer writing over meetings. If a meeting seems pointless or could be handled in writing, call it out.\n\n## Meetings\n\n## Decision Making\n\n## Remote Work",
+    "body": "## Communication\n\nWe prefer writing over meetings. If a meeting seems pointless or could be handled in writing, call it out.\n\nUsing AI for writing is banned. You may use AI to research or prep your writing, but if you recieve an AI-written communication from another employee, you should ask them to write it themselves. This includes emails, Slack, PR comments, etc. If the writing is supposed to be read by someone, write it yourself.\n\nCode is intended to be run, not read, so we encourage you to use AI to generate code. See [Engineering](/handbook/engineering).",
     "sourcePath": "src/content/handbook/how-we-work.md",
     "lastEditor": {
       "name": "Bryan Houlton",
       "email": "brhoulton@gmail.com",
-      "date": "2026-06-22T22:37:28-07:00"
+      "date": "2026-06-23T15:10:47-07:00"
+    }
+  },
+  {
+    "slug": "engineering",
+    "title": "Engineering",
+    "description": "The principles that guide our engineering.",
+    "order": 20,
+    "items": [
+      {
+        "title": "Responsibility of an Engineer",
+        "slug": "responsibility-of-an-engineer",
+        "level": 3
+      }
+    ],
+    "authors": [
+      {
+        "name": "Bryan Houlton",
+        "githubUsername": "bryanhoulton",
+        "githubUrl": "https://github.com/bryanhoulton",
+        "avatarUrl": "https://avatars.githubusercontent.com/u/44454017?v=4"
+      }
+    ],
+    "body": "### Responsibility of an Engineer\n\n- Own the understanding of their code\n  - LLMs are great at writing code faster, but you _cannot outsource your understanding_.\n  - The best way to prevent this is to design tight, constrained systems before ever using AI. Design, then have the AI build the system that you already understand deeply.\n  - Do not trust AI. You need design strict constraints into your systems. AI might understand your intent now, but will it in 5 sessions? 10? It will not.\n    - Precommits and lint rules are great for this. Want this module to be completely isolated? Write a lint rule preventing anything from importing it.\n    - Where you can, default to configurability over composability. Type systems and strict configs are great constraints to impose on AI.\n- An engineer is responsible for understand what's happening in their systems. It's ok if you don't know how exactly the loop is written, but it's not OK if you don't understand your system at a conceptual level. You should be able to describe how the logic and data is flowing, why certain design choices were made, etc. You should be able to quickly and confidently bring another engineer up to speed on the system you've built, even if AI wrote the code.\n- Look at the data! With your own eyes! Don't trust AI!",
+    "sourcePath": "src/content/handbook/engineering.md",
+    "lastEditor": {
+      "name": "Bryan Houlton",
+      "email": "brhoulton@gmail.com",
+      "date": "2026-06-23T15:46:22-07:00"
     }
   },
   {

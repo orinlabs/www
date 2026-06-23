@@ -24,11 +24,76 @@ function inlineMarkdown(value: string): string {
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/_([^_]+)_/g, '<em>$1</em>')
     .replace(
       /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
       '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
     )
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+}
+
+interface ListLine {
+  indent: number;
+  ordered: boolean;
+  text: string;
+}
+
+function parseListLine(line: string): ListLine | null {
+  const match = line.match(/^(\s*)([-*+]|\d+\.)\s+(.+)$/);
+  if (!match) return null;
+
+  return {
+    indent: match[1].length,
+    ordered: /\d+\./.test(match[2]),
+    text: match[3],
+  };
+}
+
+function renderList(lines: string[]): string {
+  const listLines = lines.map(parseListLine).filter((line): line is ListLine => line !== null);
+
+  function renderLevel(start: number, indent: number): { html: string; next: number } {
+    const ordered = listLines[start].ordered;
+    const tag = ordered ? 'ol' : 'ul';
+    let html = `<${tag}>`;
+    let index = start;
+
+    while (index < listLines.length) {
+      const line = listLines[index];
+      if (line.indent < indent || line.ordered !== ordered) break;
+
+      if (line.indent > indent) {
+        const nested = renderLevel(index, line.indent);
+        html += nested.html;
+        index = nested.next;
+        continue;
+      }
+
+      html += `<li>${inlineMarkdown(line.text)}`;
+      index += 1;
+
+      while (index < listLines.length && listLines[index].indent > indent) {
+        const nested = renderLevel(index, listLines[index].indent);
+        html += nested.html;
+        index = nested.next;
+      }
+
+      html += '</li>';
+    }
+
+    html += `</${tag}>`;
+    return { html, next: index };
+  }
+
+  let html = '';
+  let index = 0;
+  while (index < listLines.length) {
+    const rendered = renderLevel(index, listLines[index].indent);
+    html += rendered.html;
+    index = rendered.next;
+  }
+
+  return html;
 }
 
 function slugify(value: string): string {
@@ -60,20 +125,9 @@ function markdownToHtml(markdown: string): string {
         return `<h${level} id="${id}">${inlineMarkdown(heading[2])}</h${level}>`;
       }
 
-      if (block.split('\n').every((line) => /^-\s+/.test(line))) {
-        const items = block
-          .split('\n')
-          .map((line) => `<li>${inlineMarkdown(line.replace(/^-\s+/, ''))}</li>`)
-          .join('');
-        return `<ul>${items}</ul>`;
-      }
-
-      if (block.split('\n').every((line) => /^\d+\.\s+/.test(line))) {
-        const items = block
-          .split('\n')
-          .map((line) => `<li>${inlineMarkdown(line.replace(/^\d+\.\s+/, ''))}</li>`)
-          .join('');
-        return `<ol>${items}</ol>`;
+      const lines = block.split('\n');
+      if (lines.every((line) => parseListLine(line))) {
+        return renderList(lines);
       }
 
       return `<p>${inlineMarkdown(block.replace(/\n/g, ' '))}</p>`;

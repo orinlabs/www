@@ -274,6 +274,11 @@ body {
   @apply list-decimal;
 }
 
+.handbook-prose li > ul,
+.handbook-prose li > ol {
+  @apply mt-2 mb-0;
+}
+
 .handbook-prose a {
   @apply text-primary underline underline-offset-2 hover:no-underline;
 }
