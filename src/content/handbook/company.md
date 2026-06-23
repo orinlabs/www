@@ -1,6 +1,6 @@
 ---
-title: Company
-description: Company handbook section.
+title: About Us
+description: An overview of Orin Labs.
 order: 1
 authors:
   - bryanhoulton
