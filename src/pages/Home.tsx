@@ -1,3 +1,6 @@
+import { ArrowRightIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
 import { JoinUs } from '../components/Hiring';
 
 export default function Home() {
@@ -5,7 +8,7 @@ export default function Home() {
     <>
       <div className="flex flex-col gap-3">
 
-        {/*<Link
+        <Link
           to="/research/horizon"
           className="group flex items-center justify-between gap-4 rounded-xl border border-primary/20 bg-primary/5 dark:bg-primary/10 px-4 sm:px-6 py-3 hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
         >
@@ -21,7 +24,7 @@ export default function Home() {
             <span className="hidden sm:inline">Read more</span>
             <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </span>
-        </Link>*/}
+        </Link>
 
         {/* Hero */}
         <div className="relative overflow-hidden rounded-xl border border-neutral-200 dark:border-transparent bg-[#f4f5f0] dark:bg-neutral-900 min-h-[400px] sm:min-h-[480px] lg:min-h-[560px]">
