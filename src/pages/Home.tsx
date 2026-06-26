@@ -13,7 +13,7 @@ function scrollToDeployments(e: React.MouseEvent) {
 
 export default function Home() {
   return (
-    <main className="mx-auto flex w-full max-w-[92rem] flex-col px-8 sm:px-10 lg:px-12">
+    <main className="flex w-full flex-col px-8 sm:px-10 lg:px-12">
       <section className="relative h-[calc(100svh-4.5rem)] overflow-hidden bg-white pb-8 pt-8 sm:h-[calc(100svh-5.25rem)] sm:pb-10 sm:pt-10 lg:pb-12 lg:pt-12">
         <div className="flex h-full min-h-0 w-full flex-col justify-between gap-10">
           <div className="relative z-10">
@@ -44,7 +44,7 @@ export default function Home() {
       </section>
 
       <section className="relative -mx-8 overflow-hidden bg-black px-8 text-white sm:-mx-10 sm:px-10 lg:-mx-12 lg:px-12">
-        <div className="relative z-10 mx-auto grid min-h-[72svh] w-full max-w-[92rem] gap-8 py-40 md:grid-cols-[1fr_auto] md:items-center">
+        <div className="relative z-10 grid min-h-[72svh] w-full gap-8 py-40 md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <p className="text-sm font-medium text-primary-200">
               Contact

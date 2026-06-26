@@ -23,7 +23,7 @@ export default function Role() {
   }
 
   return (
-    <article className="mx-auto flex w-full max-w-[92rem] flex-col px-8 pb-24 pt-10 sm:px-10 sm:pb-32 sm:pt-14 lg:px-12">
+    <article className="flex w-full flex-col px-8 pb-24 pt-10 sm:px-10 sm:pb-32 sm:pt-14 lg:px-12">
       <Link
         to="/careers"
         className="inline-flex w-fit items-center gap-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-950"

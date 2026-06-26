@@ -59,7 +59,7 @@ export function FrontierResearch() {
 
         <div className="flex flex-col justify-center lg:pl-8">
           <h2 className="max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.04em] md:text-6xl">
-            Backed by a frontier research team
+            Frontier research, in-house
           </h2>
           <p className="mt-6 max-w-xl text-lg leading-8 text-neutral-700">
             We combine frontier agent research with hands-on deployments, then
@@ -70,7 +70,7 @@ export function FrontierResearch() {
             to="/research/horizon"
             className="group mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
           >
-            Read our research
+            Read more
             <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
           </Link>
         </div>

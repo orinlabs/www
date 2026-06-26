@@ -35,11 +35,6 @@ export default function Horizon() {
       authors={["Bryan Houlton", "Aayush Gupta"]}
       date="June 2026"
       abstract={HERO_ABSTRACT}
-      image={{
-        src: "/horizon-benchmark.png",
-        darkSrc: "/horizon-benchmark-dark.png",
-        alt: "Horizon benchmark preview",
-      }}
     >
       <Section>
         <p>

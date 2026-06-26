@@ -54,14 +54,14 @@ const RESEARCH_HERO_COPY =
 
 export default function Research() {
   return (
-    <main className="mx-auto flex w-full max-w-[92rem] flex-col px-6 pt-10 sm:px-10 sm:pt-24 lg:px-12">
+    <main className="flex w-full flex-col px-6 pt-10 sm:px-10 sm:pt-24 lg:px-12">
       <section className="grid gap-8 pb-10 lg:min-h-[58svh] sm:gap-10 sm:pb-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
         <div>
           <h1 className="mt-5 max-w-5xl text-[clamp(3.85rem,17vw,6rem)] font-semibold leading-[0.86] tracking-[-0.055em] text-neutral-950 sm:text-[clamp(4.25rem,10vw,7.5rem)] lg:text-[clamp(3.25rem,7.4vw,7.5rem)]">
             Safe<br /> Reliable<br />Autonomous
           </h1>
         </div>
-        <div className="max-w-2xl">
+        <div>
           <p className="w-full text-xl leading-[1.28] text-neutral-700 sm:text-2xl sm:leading-[1.25] lg:text-right">
             <span className="lg:hidden">{RESEARCH_HERO_COPY}</span>
             <BottomHeavyText className="hidden lg:block">
@@ -81,7 +81,7 @@ export default function Research() {
               RESEARCH_POST_TONES[index % RESEARCH_POST_TONES.length]
             }
           >
-            <div className="mx-auto grid min-h-72 w-full max-w-[92rem] gap-8 px-10 py-14 sm:px-14 sm:py-16 lg:grid-cols-[0.28fr_1fr_auto] lg:items-start lg:px-16">
+            <div className="grid min-h-72 w-full gap-8 px-10 py-14 sm:px-14 sm:py-16 lg:grid-cols-[0.28fr_1fr_auto] lg:items-start lg:px-16">
               <div className="flex items-center gap-3 text-sm opacity-60">
                 <span className="tabular-nums">
                   {String(index + 1).padStart(2, "0")}

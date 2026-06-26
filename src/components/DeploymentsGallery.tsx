@@ -26,27 +26,27 @@ interface Deployment {
 const DEPLOYMENTS: Deployment[] = [
   {
     id: 'ev',
-    industry: 'EV Charging',
+    industry: 'EV Chargers',
     icon: BatteryCharging,
-    title: 'Building 1,000 EV chargers',
+    title: 'L2 chargers built at scale',
     collapsedTitle: 'Chargers',
     collapsedTitleClass: 'tracking-[-0.01em]',
     summary:
-      'Site access, permits, crews, and inspections in one loop.',
-    image: '/project-backgrounds/field-install.jpg',
+      'Purchase orders, subcontractors, and data entry run by autonomous agents.',
+    image: 'https://transportation.stanford.edu/sites/g/files/sbiybj27281/files/styles/responsive_large/public/media/image/ev_charging_ehs_0.jpg?itok=438strui',
     imagePosition: 'center',
   },
   {
     id: 'epc',
-    industry: 'EPC permitting',
+    industry: 'Solar EPC',
     icon: FileCheck2,
-    title: 'Permitting processes',
-    collapsedTitle: 'Permits',
+    title: 'Autonomous solar build-outs',
+    collapsedTitle: 'Solar',
     collapsedTitleClass: 'tracking-[-0.01em]',
     summary:
-      'City comments, attachments, and blockers surfaced fast.',
-    image: '/project-backgrounds/small-build-out.jpg',
-    imagePosition: 'center 35%',
+      'Permits, sites, and commissioning run by autonomous agents.',
+    image: 'https://coldwellenergy.com/wp-content/uploads/2022/03/solar-panels-on-commercial-building.jpg',
+    imagePosition: 'center',
   },
   {
     id: 'gc',
@@ -148,7 +148,7 @@ function DeploymentPanel({
           : undefined
       }
       className={
-        'orin-deploy-panel group relative isolate min-h-[26rem] min-w-0 cursor-pointer overflow-hidden rounded-[1.75rem] text-white outline-none transition-[opacity,transform] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:ring-2 focus-visible:ring-primary-400 md:min-h-[34rem] ' +
+        'orin-deploy-panel group relative isolate h-full min-h-[26rem] min-w-0 cursor-pointer overflow-hidden rounded-[1.75rem] text-white outline-none transition-[opacity,transform] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:ring-2 focus-visible:ring-primary-400 md:min-h-[34rem] xl:min-h-0 ' +
         (isActive ? 'is-active' : '')
       }
     >
@@ -234,7 +234,7 @@ function DeploymentPanel({
           <h3 className="max-w-xl whitespace-nowrap !font-['Body'] text-3xl font-semibold leading-[1.04] drop-shadow md:text-5xl">
             {deployment.title}
           </h3>
-          <p className="mt-4 max-w-lg text-base leading-7 text-white/85 drop-shadow">
+          <p className="mt-4 text-base leading-7 text-white/85 drop-shadow">
             {deployment.summary}
           </p>
         </div>
@@ -360,7 +360,7 @@ export function DeploymentsGallery() {
     <section className="relative" id="deployments">
       <div
         ref={gridRef}
-        className="grid grid-cols-1 gap-3 transition-[grid-template-columns] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:[grid-template-columns:var(--deployment-columns)]"
+        className="grid grid-cols-1 gap-3 transition-[grid-template-columns] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:[grid-template-columns:var(--deployment-columns)] xl:h-[70vh]"
         style={{ '--deployment-columns': deploymentColumns } as CSSProperties}
       >
         {DEPLOYMENTS.map((deployment, index) => {

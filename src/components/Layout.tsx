@@ -15,13 +15,23 @@ interface LayoutProps {
   footerDark?: boolean;
 }
 
-const FOOTER_SECTIONS = [
+type FooterLink =
+  | { label: string; to: string; href?: never }
+  | { label: string; href: string; to?: never };
+
+interface FooterSection {
+  title: string;
+  links: FooterLink[];
+  socials?: boolean;
+}
+
+const FOOTER_SECTIONS: FooterSection[] = [
   {
     title: "Company",
     links: [
       { label: "Research", to: "/research" },
       { label: "Careers", to: "/careers" },
-      { label: "Contact us", href: "mailto:founders@orinlabs.ai" },
+      { label: "Handbook", to: "/handbook" },
     ],
   },
   {
@@ -41,6 +51,9 @@ const FOOTER_SECTIONS = [
     socials: true,
   },
 ];
+
+const FOOTER_WORD_VISIBLE_RATIO = 0.6;
+const FOOTER_WORD_OFFSET_RATIO = 0.1;
 
 export default function Layout({ children, hero, footerDark = false }: LayoutProps) {
   const { pathname } = useLocation();
@@ -86,12 +99,12 @@ export default function Layout({ children, hero, footerDark = false }: LayoutPro
 
     updateFooterHeight();
     const observer = new ResizeObserver(updateFooterHeight);
-    observer.observe(footer);
+    observer.observe(footer, { box: "border-box" });
 
     return () => {
       observer.disconnect();
     };
-  }, [isWide]);
+  }, [footerWordFontSize, isWide]);
 
   useEffect(() => {
     if (isWide) {
@@ -234,7 +247,7 @@ export default function Layout({ children, hero, footerDark = false }: LayoutPro
         </div>
       ) : (
         <div className="relative z-10 w-full bg-white px-8 py-4 sm:px-10 sm:py-5 lg:px-12">
-          <div className="mx-auto w-full max-w-[92rem]">
+          <div className="w-full">
             <Navbar />
           </div>
         </div>
@@ -280,34 +293,39 @@ export default function Layout({ children, hero, footerDark = false }: LayoutPro
       {!isWide && <footer
         ref={footerRef}
         className={cn(
-          "fixed inset-x-0 bottom-0 z-0 overflow-hidden px-8 pb-8 pt-[calc(var(--footer-word-size,5rem)*0.58+3rem)] sm:px-10 sm:pt-[calc(var(--footer-word-size,8rem)*0.58+3.5rem)] md:pb-10 lg:px-12 lg:pt-[calc(var(--footer-word-size,8rem)*0.58+4.5rem)]",
+          "fixed inset-x-0 bottom-0 z-0 overflow-hidden px-8 pb-8 pt-[calc(var(--footer-word-visible-size,3rem)+3rem)] sm:px-10 sm:pt-[calc(var(--footer-word-visible-size,4.8rem)+3.5rem)] md:pb-10 lg:px-12 lg:pt-[calc(var(--footer-word-visible-size,4.8rem)+4.5rem)]",
           footerDark ? "bg-neutral-950 text-white" : "bg-white text-neutral-950",
         )}
         style={
           footerWordFontSize === null
             ? undefined
-            : ({ "--footer-word-size": footerWordFontSize + "px" } as React.CSSProperties)
+            : ({
+                "--footer-word-size": footerWordFontSize + "px",
+                "--footer-word-visible-size": footerWordFontSize * FOOTER_WORD_VISIBLE_RATIO + "px",
+                "--footer-word-hidden-size": footerWordFontSize * FOOTER_WORD_OFFSET_RATIO + "px",
+              } as React.CSSProperties)
         }
       >
         <div
           ref={footerWordRef}
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-0 z-0 -translate-x-1/2 -translate-y-[40%] whitespace-nowrap bg-clip-text font-['Geist'] text-[clamp(5rem,22vw,24rem)] font-semibold uppercase leading-none tracking-[-0.08em] text-transparent"
+          className="pointer-events-none absolute left-1/2 top-0 z-0 whitespace-nowrap bg-clip-text font-['Geist'] text-[clamp(5rem,22vw,24rem)] font-semibold uppercase leading-none tracking-[-0.08em] text-transparent"
           style={{
             fontSize: footerWordFontSize === null ? undefined : footerWordFontSize + "px",
+            transform: "translate(-50%, calc(var(--footer-word-hidden-size, 2rem) * -1 - (var(--footer-word-visible-size, 3rem) * 0.4)))",
             backgroundImage:
               "linear-gradient(180deg, " +
               (footerDark
-                ? "#000000 0%, " + EFFECT_COLORS[footerColorIndex] + " 76%, " + EFFECT_COLORS[footerColorIndex] + " 100%)"
+                ? "#000000 0%, " + EFFECT_COLORS[footerColorIndex] + " 56%, " + EFFECT_COLORS[footerColorIndex] + " 100%)"
                 : EFFECT_COLORS[footerColorIndex] + " 0%, rgba(255,255,255,0.78) 78%, #ffffff 100%)"),
           }}
         >
           ORIN LABS
         </div>
-        <div className="relative z-10 mx-auto grid w-full max-w-[92rem] gap-10 sm:gap-16 lg:grid-cols-[1.1fr_1fr]">
+        <div className="relative z-10 grid w-full gap-10 sm:gap-16 lg:grid-cols-[1.1fr_1fr]">
           <div className="flex min-h-36 max-w-md flex-col justify-between gap-8 sm:min-h-64 sm:gap-16">
             <p className={cn("text-base leading-7", footerDark ? "text-white/70" : "text-neutral-600")}>
-            Scale operations with safe, autonomous agents that run physical build-outs.
+              Scale operations with safe, autonomous agents that run physical build-outs.
             </p>
             <p className={cn("text-sm", footerDark ? "text-white/45" : "text-neutral-500")}>
               &copy; {new Date().getFullYear()} Orin Labs. All rights reserved.

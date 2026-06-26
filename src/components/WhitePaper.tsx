@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 
 import { Link } from 'react-router-dom';
 import { cn } from 'slate-ui';
+import { ArrowLeftIcon } from 'lucide-react';
 
 interface ResearchArticleProps {
   title: string;
@@ -26,20 +27,21 @@ export function ResearchArticle({
 }: ResearchArticleProps) {
   if (hideHeader) {
     return (
-      <article className="research-article mx-auto flex w-full max-w-[92rem] flex-col px-8 pb-24 pt-12 sm:px-10 sm:pb-32 sm:pt-16 lg:px-12">
+      <article className="research-article flex w-full flex-col px-8 pb-24 pt-12 sm:px-10 sm:pb-32 sm:pt-16 lg:px-12">
         <div className="research-content w-full max-w-5xl">{children}</div>
       </article>
     );
   }
 
   return (
-    <article className="research-article mx-auto flex w-full max-w-[92rem] flex-col px-8 pb-24 pt-14 sm:px-10 sm:pb-32 sm:pt-20 lg:px-12">
-      <header className="grid min-h-[48svh] gap-10 border-b border-neutral-200 pb-14 lg:grid-cols-[1.12fr_0.88fr] lg:items-end">
+    <article className="research-article flex w-full flex-col px-8 pb-24 pt-14 sm:px-10 sm:pb-32 sm:pt-20 lg:px-12">
+      <header className="grid min-h-[48svh] gap-10 lg:grid-cols-[1.12fr_0.88fr] lg:items-end">
         <div>
           <Link
             to="/research"
-            className="text-sm font-medium text-primary-700 transition-colors hover:text-primary-900"
+            className="text-sm font-medium text-primary-700 transition-colors hover:text-primary-900 flex items-center gap-2 group"
           >
+          <ArrowLeftIcon className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
             Research
           </Link>
           <h1 className="secondary-page-title mt-5 max-w-6xl text-neutral-950">
@@ -47,7 +49,7 @@ export function ResearchArticle({
           </h1>
         </div>
 
-        <div className="max-w-2xl lg:pb-3">
+        <div className="max-w-2xl">
           <p className="text-xl font-medium leading-[1.28] text-neutral-950 sm:text-2xl">
             {abstract}
           </p>
@@ -76,7 +78,7 @@ export function ResearchArticle({
             </span>
             <span>{date}</span>
           </div>
-          <div className="mt-8 h-1.5 w-full rounded-full bg-neutral-950" />
+
         </div>
       </header>
 
