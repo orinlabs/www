@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   CartesianGrid,
   Legend,
@@ -6,7 +8,7 @@ import {
   ResponsiveContainer,
   XAxis,
   YAxis,
-} from 'recharts';
+} from "recharts";
 
 const data = [
   { interactions: 0, onlyShortTerm: 0, withLongTerm: 0, withVariable: 0 },
@@ -62,9 +64,41 @@ const data = [
 ];
 
 export default function ScalingChart() {
+  const [, setForceUpdate] = useState(0);
+
+  useEffect(() => {
+    // Force initial render to catch dark mode
+    setForceUpdate(1);
+
+    const observer = new MutationObserver(() => {
+      setForceUpdate((prev) => prev + 1);
+    });
+
+    // Observe both html and body for dark class changes
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const isDarkMode =
+    typeof document !== "undefined" &&
+    (document.documentElement.classList.contains("dark") ||
+      document.body.classList.contains("dark"));
+
+  const gridStroke = isDarkMode ? "#525252" : "#e5e5e5";
+  const axisStroke = isDarkMode ? "#a0aec0" : "#171717";
+  const blackLineStroke = isDarkMode ? "#ffffff" : "#000000";
+
   return (
-    <div className="my-8 p-6 bg-gray-50 rounded-lg border">
-      <h4 className="text-lg font-semibold text-gray-800 mb-6 text-center">
+    <div className="my-8 p-6 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h4 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200 mb-6 text-center">
         Tokens in Context
       </h4>
 
@@ -79,12 +113,12 @@ export default function ScalingChart() {
               bottom: 20,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
             <XAxis
               dataKey="interactions"
-              axisLine={{ stroke: "#000", strokeWidth: 2 }}
-              tickLine={{ stroke: "#000", strokeWidth: 1 }}
-              tick={{ fontSize: 12, fill: "#000" }}
+              axisLine={{ stroke: axisStroke, strokeWidth: 2 }}
+              tickLine={{ stroke: axisStroke, strokeWidth: 1 }}
+              tick={{ fontSize: 12, fill: axisStroke }}
               label={{
                 value: "Interactions",
                 position: "insideBottom",
@@ -93,9 +127,9 @@ export default function ScalingChart() {
               }}
             />
             <YAxis
-              axisLine={{ stroke: "#000", strokeWidth: 2 }}
-              tickLine={{ stroke: "#000", strokeWidth: 1 }}
-              tick={{ fontSize: 12, fill: "#000" }}
+              axisLine={{ stroke: axisStroke, strokeWidth: 2 }}
+              tickLine={{ stroke: axisStroke, strokeWidth: 1 }}
+              tick={{ fontSize: 12, fill: axisStroke }}
               label={{
                 value: "Tokens",
                 angle: -90,
@@ -119,7 +153,7 @@ export default function ScalingChart() {
             <Line
               type="monotone"
               dataKey="onlyShortTerm"
-              stroke="#000000"
+              stroke={blackLineStroke}
               strokeWidth={3}
               name="only short term: O(N) fast"
               dot={false}

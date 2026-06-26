@@ -1,285 +1,74 @@
-import { useEffect, useRef } from "react";
+import { BookDemoButton } from '../components/BookDemoButton';
+import { DeploymentsGallery } from '../components/DeploymentsGallery';
+import { FrontierResearch } from '../components/FrontierResearch';
+import { PlatformScrollSection } from '../components/PlatformScrollSection';
 
-import { ArrowDown, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
-import { cn } from "slate-ui";
-
-type Initiative = {
-  title: string;
-  description: string;
-};
-
-const initiatives: Initiative[] = [
-  {
-    title: "Proactivity",
-    description:
-      "Agents that control when they run, creating truly proactive experiences.",
-  },
-  {
-    title: "Memory",
-    description: "Agents that remember temporally, not just facts.",
-  },
-  {
-    title: "Delivery",
-    description:
-      "Agents trained to curate the perfect instructional experience for you.",
-  },
-];
-
-type WorkItem = {
-  title: string;
-  description: string;
-  image: string;
-  link?: string;
-  type: "product" | "research";
-};
-
-const workItems: WorkItem[] = [
-  {
-    title: "Acadia Learning",
-    description: "AI tutoring platform that grows with students over time.",
-    image: "/book.png",
-    link: "https://acadialearning.org",
-    type: "product",
-  },
-  {
-    title: "Proactive Agents",
-    description:
-      "Agents that schedule themselves, wake on events, and remember what matters over time.",
-    image: "/plane.png",
-    link: "/research/proactive-agents",
-    type: "research",
-  },
-  {
-    title: "Conversationality",
-    description:
-      "Voice agents that run independently, speak first, and handle interruptions naturally.",
-    image: "/person.png",
-    link: "/research/conversationality",
-    type: "research",
-  },
-];
-
-type Role = {
-  title: string;
-  description: string;
-  location: string;
-};
-
-const roles: Role[] = [
-  {
-    title: "Research Engineer",
-    description: "Discovering novel techniques for long-horizon learning.",
-    location: "San Francisco, CA",
-  },
-  {
-    title: "Product Engineer",
-    description: "Scaling our brands to millions of users.",
-    location: "San Francisco, CA",
-  },
-  {
-    title: "Infrastructure Engineer",
-    description: "Working on memory systems, proactive agent runtimes, etc.",
-    location: "San Francisco, CA",
-  },
-];
-
-const CONTACT_BUTTON = (
-  <a
-    href="https://cal.com/bryan-houlton-5uvxqc/orin-labs-contact"
-    target="_blank"
-    rel="noopener noreferrer"
-    className={cn(
-      "bg-primary text-white py-1 px-3 rounded-lg hover:bg-primary-400 transition-colors cursor-pointer",
-      "flex items-center gap-2 shadow-sm"
-    )}
-  >
-    Contact
-    <ArrowRight className="w-4 h-4" />
-  </a>
-);
+function scrollToDeployments(e: React.MouseEvent) {
+  const target = document.getElementById('deployments');
+  if (target) {
+    e.preventDefault();
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
 
 export default function Home() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.playbackRate = 0.5; // Play at half speed
-    }
-  }, []);
-
   return (
-    <>
-      {/* Hero */}
-      <div className="bg-primary group shadow-sm rounded-xl h-[70vh] relative overflow-hidden -mx-16">
-        <video
-          ref={videoRef}
-          src="/tree.mp4"
-          autoPlay
-          muted
-          playsInline
-          style={{
-            filter: "invert(1) brightness(0.40)",
-            translate: "0 64px",
-            mixBlendMode: "screen",
-          }}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="relative p-16">
-          <h1 className="text-7xl font-bold text-primary-100 flex flex-col">
-            <span>AI that</span>
-            <span className="text-white">grows up</span>
-            <span>with you</span>
-          </h1>
+    <main className="mx-auto flex w-full max-w-[92rem] flex-col px-8 sm:px-10 lg:px-12">
+      <section className="relative h-[calc(100svh-4.5rem)] overflow-hidden bg-white pb-8 pt-8 sm:h-[calc(100svh-5.25rem)] sm:pb-10 sm:pt-10 lg:pb-12 lg:pt-12">
+        <div className="flex h-full min-h-0 w-full flex-col justify-between gap-10">
+          <div className="relative z-10">
+            <h1 className="max-w-[82rem] text-[clamp(4.25rem,13.2vw,12.75rem)] font-semibold leading-[0.82] tracking-[-0.045em] text-neutral-950">
+              <span className="block">Scale operations</span>
+              <span className="block">with agents</span>
+            </h1>
+            <BookDemoButton className="mt-6 md:hidden" />
+          </div>
+
+          <div className="flex w-full flex-col gap-6">
+            <p className="max-w-2xl text-2xl leading-[1.25] text-neutral-700">
+              Safe, autonomous agents that run physical build-outs
+            </p>
+            <div className="orin-hero-bar h-1.5 w-full rounded-full bg-neutral-950 sm:w-[60%]" />
+          </div>
         </div>
+      </section>
 
-        <ArrowDown className="absolute bottom-16 group-hover:translate-y-2 transition-transform left-16 w-6 h-6 text-primary-100" />
-      </div>
+      <section className="w-full overflow-x-clip bg-white py-20 sm:py-28">
+        <div className="flex w-full flex-col gap-20 sm:gap-28">
+          <DeploymentsGallery />
 
-      {/* Initiatives */}
-      <div className="flex flex-col items-start -mt-16" id="initiatives">
-        <div className="flex items-center gap-8 w-full">
-          <h2 className="text-5xl font-semibold text-neutral-700 dark:text-neutral-300">
-            Initiatives
-          </h2>
+          <PlatformScrollSection />
 
-          <hr className="flex-1" />
+          <FrontierResearch />
         </div>
+      </section>
 
-        <div className="flex flex-col gap-4">
-          {initiatives.map((initiative, index) => (
-            <div
-              key={index}
-              className={cn(
-                "flex items-center gap-8 h-80",
-                index != initiatives.length - 1 && "border-b pb-8"
-              )}
+      <section className="relative -mx-8 overflow-hidden bg-black px-8 text-white sm:-mx-10 sm:px-10 lg:-mx-12 lg:px-12">
+        <div className="relative z-10 mx-auto grid min-h-[72svh] w-full max-w-[92rem] gap-8 py-40 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <p className="text-sm font-medium text-primary-200">
+              Contact
+            </p>
+            <h2 className="mt-4 max-w-3xl text-5xl font-semibold leading-[0.98] md:text-7xl">
+              Put agents to work inside your operations.
+            </h2>
+            <p className="mt-5 max-w-xl text-lg leading-8 text-white/70">
+              Book a call with our team to scope your first deployment — or jump
+              back up to watch an agent work.
+            </p>
+          </div>
+          <div className="flex w-fit flex-wrap items-center gap-3">
+            <BookDemoButton variant="light" />
+            <a
+              href="#deployments"
+              onClick={scrollToDeployments}
+              className="inline-flex w-fit items-center gap-2 rounded-full border border-white/30 px-5 py-3 text-sm font-medium text-white transition-colors hover:border-white/60 hover:bg-white/10"
             >
-              <span className="text-neutral-400 dark:text-neutral-600 text-4xl font-semibold font-mono shrink-0">
-                [{index + 1}]
-              </span>
-              <div className="flex flex-col gap-4">
-                <h3 className="text-4xl font-semibold text-neutral-900 dark:text-neutral-100">
-                  {initiative.title}
-                </h3>
-                <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-                  {initiative.description}
-                </p>
-              </div>
-            </div>
-          ))}
+              See it in action
+            </a>
+          </div>
         </div>
-      </div>
-
-      {/* Our Work */}
-      <div className="flex flex-col items-start w-full" id="our-work">
-        <div className="flex items-center gap-8 w-full mb-8">
-          <h2 className="text-5xl font-semibold text-neutral-700 dark:text-neutral-300">
-            Our Work
-          </h2>
-          <hr className="flex-1" />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-          {workItems.map((item) => {
-            const content = (
-              <div
-                className={cn(
-                  "group relative flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm",
-                  "bg-primary hover:shadow-md transition-shadow cursor-pointer"
-                )}
-              >
-                {/* Background image layer */}
-                <div
-                  className="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-500"
-                  style={{
-                    backgroundImage: `url(${item.image})`,
-                    filter: "invert(1) brightness(0.40)",
-                    mixBlendMode: "screen",
-                  }}
-                />
-
-                {/* Content overlay */}
-                <div className="relative z-20 flex flex-col gap-1 justify-between h-full p-4 text-white">
-                  <p className="text-xs ml-auto bg-primary-100 rounded px-1.5 py-0.5 w-fit capitalize text-primary">
-                    {item.type}
-                  </p>
-                  <h3 className="text-xl font-semibold group-hover:text-primary-50 transition-colors">
-                    {item.title}
-                  </h3>
-                </div>
-              </div>
-            );
-
-            if (!item.link) {
-              return <div key={item.title}>{content}</div>;
-            }
-
-            const isExternalLink = item.link.startsWith("http");
-
-            return isExternalLink ? (
-              <a
-                href={item.link}
-                key={item.title}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {content}
-              </a>
-            ) : (
-              <Link to={item.link} key={item.title}>
-                {content}
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Join Us */}
-      <div className="flex flex-col gap-8 items-start" id="join-us">
-        <div className="flex flex-col gap-4">
-          <h2 className="text-5xl font-semibold text-neutral-900 dark:text-neutral-100">
-            Join Us
-          </h2>
-          <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-            We are a small, San Francisco-based team focused on building AI to
-            teach. We are solving hard and important problems for real people.
-          </p>
-        </div>
-
-        {CONTACT_BUTTON}
-
-        <div className="flex flex-col items-stretch w-full">
-          <h2 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4 px-4 md:px-0">
-            Open Roles
-          </h2>
-
-          {roles.map((role) => (
-            <button
-              key={role.title}
-              className={cn(
-                "flex text-left flex-col items-start gap-1 w-full hover:bg-neutral-200",
-                "dark:hover:bg-neutral-800",
-                "p-4 md:-mx-4 transition-colors rounded-md group"
-              )}
-            >
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
-                <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100 shrink-0 group-hover:text-primary transition-colors">
-                  {role.title}
-                </p>
-
-                <p className="text-base text-neutral-400 dark:text-neutral-600 group-hover:text-neutral-600 dark:group-hover:text-neutral-400 transition-colors shrink-0 w-fit leading-relaxed">
-                  {role.location}
-                </p>
-              </div>
-
-              <p className="text-base text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-neutral-100 transition-colors max-w-2xl leading-relaxed">
-                {role.description}
-              </p>
-            </button>
-          ))}
-        </div>
-      </div>
-    </>
+      </section>
+    </main>
   );
 }

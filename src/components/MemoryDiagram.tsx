@@ -21,12 +21,18 @@ function MemoryBlock({
   children,
 }: MemoryBlockProps) {
   const colorClasses = {
-    "primary-50": "bg-primary-50 text-primary-700",
-    "primary-100": "bg-primary-100 text-primary-700",
-    "primary-200": "bg-primary-200 text-primary-800",
-    "primary-300": "bg-primary-300 text-primary-900",
-    "primary-400": "bg-primary-400 text-primary-900",
-    "primary-500": "bg-primary-500 text-white",
+    "primary-50":
+      "bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-200",
+    "primary-100":
+      "bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-200",
+    "primary-200":
+      "bg-primary-200 dark:bg-primary-700 text-primary-800 dark:text-primary-100",
+    "primary-300":
+      "bg-primary-300 dark:bg-primary-600 text-primary-900 dark:text-primary-100",
+    "primary-400":
+      "bg-primary-400 dark:bg-primary-500 text-primary-900 dark:text-white",
+    "primary-500":
+      "bg-primary-500 dark:bg-primary-400 text-white dark:text-primary-900",
   };
 
   const colSpans = {
@@ -52,7 +58,7 @@ function MemoryBlock({
 
 export default function MemoryDiagram() {
   return (
-    <div className="my-8 p-6 bg-gray-50 rounded-lg border">
+    <div className="my-8 p-6 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
       {/* Memory Grid - Top Section */}
       <div className="grid grid-cols-12 gap-1 mb-4">
         <MemoryBlock color="primary-50" colSpan={2}>
@@ -91,7 +97,7 @@ export default function MemoryDiagram() {
       </div>
 
       {/* Timeline labels */}
-      <div className="grid grid-cols-12 gap-1 text-xs text-gray-600">
+      <div className="grid grid-cols-12 gap-1 text-xs text-neutral-600 dark:text-neutral-400">
         <div className="col-span-1"></div>
         <div className="col-span-2 text-center">-N mo</div>
         <div className="col-span-2 text-center">-10wks</div>
@@ -100,7 +106,7 @@ export default function MemoryDiagram() {
       </div>
 
       {/* Arrow and transformation */}
-      <ArrowDown className="w-8 h-8 text-gray-600 mx-auto my-6" />
+      <ArrowDown className="w-8 h-8 text-neutral-600 dark:text-neutral-400 mx-auto my-6" />
 
       {/* Context Grid - Bottom Section */}
       <div className="mb-4">

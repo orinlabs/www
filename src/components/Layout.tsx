@@ -1,126 +1,379 @@
-import { ArrowRight, LinkedinIcon, TwitterIcon } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+
+import { LinkedinIcon, TwitterIcon } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "slate-ui";
 
-import { Logo } from "./Logo";
-
-const CONTACT_BUTTON = (
-  <a
-    href="https://cal.com/bryan-houlton-5uvxqc/orin-labs-contact"
-    target="_blank"
-    rel="noopener noreferrer"
-    className={cn(
-      "bg-primary text-white py-1 px-3 rounded-lg hover:bg-primary-400 transition-colors cursor-pointer",
-      "flex items-center gap-2 shadow-sm"
-    )}
-  >
-    Contact
-    <ArrowRight className="w-4 h-4" />
-  </a>
-);
+import { EFFECT_COLORS } from "../effectColors";
+import { Navbar } from "./Navbar";
 
 interface LayoutProps {
   children: React.ReactNode;
+  // When provided, the hero (image + overlaid title) renders full-width at the
+  // top with the nav set inside it, and the page root switches to p-8.
+  hero?: React.ReactNode;
+  footerDark?: boolean;
 }
 
-export default function Layout({ children }: LayoutProps) {
-  const handleNavClick = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    path: string
-  ) => {
-    if (path.includes("#")) {
-      e.preventDefault();
-      const hash = path.split("#")[1];
-      if (hash) {
-        const element = document.getElementById(hash);
-        if (element) {
+const FOOTER_SECTIONS = [
+  {
+    title: "Company",
+    links: [
+      { label: "Research", to: "/research" },
+      { label: "Careers", to: "/careers" },
+      { label: "Contact us", href: "mailto:founders@orinlabs.ai" },
+    ],
+  },
+  {
+    title: "Research",
+    links: [
+      { label: "Horizon", to: "/research/horizon" },
+      { label: "Long-horizon agents", to: "/research/long-horizon-agents" },
+      { label: "Conversationality", to: "/research/conversationality" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy", to: "/privacy" },
+      { label: "Terms", to: "/terms" },
+    ],
+    socials: true,
+  },
+];
+
+export default function Layout({ children, hero, footerDark = false }: LayoutProps) {
+  const { pathname } = useLocation();
+  const footerRef = useRef<HTMLElement | null>(null);
+  const footerSpacerRef = useRef<HTMLDivElement | null>(null);
+  const footerWordRef = useRef<HTMLDivElement | null>(null);
+  const footerWordVisibleRef = useRef(false);
+  const footerRevealInitializedRef = useRef(false);
+  const [footerHeight, setFooterHeight] = useState(0);
+  const [footerColorIndex, setFooterColorIndex] = useState(0);
+  const [footerWordFontSize, setFooterWordFontSize] = useState<number | null>(null);
+
+  // The handbook owns its own scroll container. Public pages stay on a single
+  // full-width white canvas so the fixed footer only appears after the page ends.
+  const isWide = pathname.startsWith("/handbook");
+
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      const element = document.getElementById(hash);
+      if (element) {
+        setTimeout(() => {
           element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
+        }, 0);
       }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isWide) {
+      setFooterHeight(0);
+      return;
+    }
+
+    const footer = footerRef.current;
+    if (!footer) {
+      return;
+    }
+
+    const updateFooterHeight = () => {
+      setFooterHeight(footer.getBoundingClientRect().height);
+    };
+
+    updateFooterHeight();
+    const observer = new ResizeObserver(updateFooterHeight);
+    observer.observe(footer);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isWide]);
+
+  useEffect(() => {
+    if (isWide) {
+      setFooterWordFontSize(null);
+      return;
+    }
+
+    const footer = footerRef.current;
+    const footerWord = footerWordRef.current;
+    if (!footer || !footerWord) {
+      return;
+    }
+
+    let frame: number | null = null;
+    let cancelled = false;
+
+    const updateFooterWordSize = () => {
+      frame = null;
+      const footerWidth = footer.getBoundingClientRect().width;
+      const wordWidth = footerWord.getBoundingClientRect().width;
+      const currentFontSize = Number.parseFloat(window.getComputedStyle(footerWord).fontSize);
+
+      if (footerWidth <= 0 || wordWidth <= 0 || currentFontSize <= 0) {
+        return;
+      }
+
+      const nextFontSize = (currentFontSize * footerWidth) / wordWidth;
+      setFooterWordFontSize((fontSize) =>
+        fontSize !== null && Math.abs(fontSize - nextFontSize) < 0.25 ? fontSize : nextFontSize,
+      );
+    };
+
+    const scheduleFooterWordSizeUpdate = () => {
+      if (frame !== null) {
+        return;
+      }
+
+      frame = window.requestAnimationFrame(updateFooterWordSize);
+    };
+
+    scheduleFooterWordSizeUpdate();
+
+    const observer = new ResizeObserver(scheduleFooterWordSizeUpdate);
+    observer.observe(footer);
+
+    window.addEventListener("resize", scheduleFooterWordSizeUpdate);
+    document.fonts.ready.then(() => {
+      if (!cancelled) {
+        scheduleFooterWordSizeUpdate();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
+      observer.disconnect();
+      window.removeEventListener("resize", scheduleFooterWordSizeUpdate);
+    };
+  }, [isWide]);
+
+  useEffect(() => {
+    if (isWide || footerHeight === 0) {
+      return;
+    }
+
+    let frame: number | null = null;
+
+    const updateFooterReveal = () => {
+      frame = null;
+      const spacer = footerSpacerRef.current;
+      const footerWord = footerWordRef.current;
+      if (!spacer || !footerWord) {
+        return;
+      }
+
+      const spacerRect = spacer.getBoundingClientRect();
+      const wordRect = footerWord.getBoundingClientRect();
+      const isRevealed = spacerRect.top <= wordRect.bottom - 8;
+
+      if (!footerRevealInitializedRef.current) {
+        footerRevealInitializedRef.current = true;
+        footerWordVisibleRef.current = isRevealed;
+        return;
+      }
+
+      if (isRevealed === footerWordVisibleRef.current) {
+        return;
+      }
+
+      footerWordVisibleRef.current = isRevealed;
+      if (isRevealed) {
+        setFooterColorIndex((index) => (index + 1) % EFFECT_COLORS.length);
+      }
+    };
+
+    const scheduleFooterRevealUpdate = () => {
+      if (frame !== null) {
+        return;
+      }
+
+      frame = window.requestAnimationFrame(updateFooterReveal);
+    };
+
+    updateFooterReveal();
+    window.addEventListener("scroll", scheduleFooterRevealUpdate, { passive: true });
+    window.addEventListener("resize", scheduleFooterRevealUpdate);
+
+    return () => {
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
+      window.removeEventListener("scroll", scheduleFooterRevealUpdate);
+      window.removeEventListener("resize", scheduleFooterRevealUpdate);
+    };
+  }, [footerHeight, isWide]);
 
   return (
-    <div className="bg-neutral-50 dark:bg-neutral-900 flex flex-col items-center min-h-screen pt-8 gap-16">
-      <nav className="w-full px-8 z-10 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <Logo className="text-primary w-8 h-8" />
-          <h1 className="text-2xl font-medium text-neutral-900 dark:text-neutral-100">
-            Orin Labs
-          </h1>
-        </Link>
-
-        <div className="flex items-center gap-8">
-          {[
-            { label: "Initiatives", path: "/#initiatives" },
-            { label: "Our Work", path: "/#our-work" },
-            { label: "Join Us", path: "/#join-us" },
-          ].map((item) => (
-            <Link
-              to={item.path}
-              key={item.path}
-              onClick={(e) => handleNavClick(e, item.path)}
-            >
-              <button className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:underline cursor-pointer transition-colors">
-                {item.label}
-              </button>
-            </Link>
-          ))}
-
-          {CONTACT_BUTTON}
-        </div>
-      </nav>
-
-      <div className="w-3xl flex-1 flex flex-col gap-32">{children}</div>
-
-      {/* Footer */}
-      <footer className="w-full px-8 z-10 flex border-t mt-8 h-96 items-end pb-8 relative overflow-hidden">
-        {/* Masked background layer */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to right, var(--neutral-50) 40%, var(--primary-500) 40%)",
-            maskImage: "linear-gradient(#fff, #fff), url(/footer.png)",
-            WebkitMaskImage: "linear-gradient(#fff, #fff), url(/footer.png)",
-            maskSize: "100%, 60%",
-            WebkitMaskSize: "100%, 60%",
-            maskPosition: "center, right center",
-            WebkitMaskPosition: "center, right center",
-            maskRepeat: "no-repeat",
-            WebkitMaskRepeat: "no-repeat",
-            maskMode: "luminance",
-            maskComposite: "exclude",
-            WebkitMaskComposite: "xor",
-          }}
-        />
-
-        {/* Content */}
-        <div className="relative z-10 flex items-center gap-4">
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            &copy; {new Date().getFullYear()} Orin Labs. All rights reserved.
-          </p>
-
-          <div className="flex items-center gap-2">
-            <a
-              href="https://x.com/0rinlabs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-primary-500 transition-colors cursor-pointer"
-            >
-              <TwitterIcon className="w-4 h-4" />
-            </a>
-            <a
-              href="https://www.linkedin.com/company/104572054/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-primary-500 transition-colors cursor-pointer"
-            >
-              <LinkedinIcon className="w-4 h-4" />
-            </a>
+    <div
+      className={cn(
+        "bg-white flex flex-col items-center",
+        hero
+          ? "min-h-screen p-0 md:p-8 md:pt-12 gap-6 sm:gap-8"
+          : isWide
+            ? "h-screen overflow-hidden"
+            : "min-h-screen",
+      )}
+    >
+      {hero ? (
+        <div className="relative w-full overflow-hidden border-b border-neutral-200 bg-[#f4f3ef] md:rounded-2xl md:border">
+          {hero}
+          <div className="absolute inset-x-0 top-0 z-20 px-6 sm:px-8 pt-8 pb-5 md:py-5">
+            <Navbar />
           </div>
         </div>
-      </footer>
+      ) : isWide ? (
+        <div className="relative z-10 w-full border-b border-neutral-200 dark:border-neutral-800 px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <Navbar />
+        </div>
+      ) : (
+        <div className="relative z-10 w-full bg-white px-8 py-4 sm:px-10 sm:py-5 lg:px-12">
+          <div className="mx-auto w-full max-w-[92rem]">
+            <Navbar />
+          </div>
+        </div>
+      )}
+
+      {hero ? (
+        <div
+          key={pathname}
+          className="page-transition relative z-10 flex w-full flex-1 flex-col gap-12 bg-white px-8 sm:gap-20 sm:px-10 lg:px-12"
+        >
+          {children}
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "relative z-10 flex-1 flex flex-col bg-white",
+            isWide
+              ? "w-full min-h-0 overflow-hidden"
+              : "w-full",
+          )}
+        >
+          <div
+            key={isWide ? "handbook" : pathname}
+            className={cn(
+              "page-transition flex-1 flex flex-col",
+              isWide && "min-h-0 overflow-hidden",
+            )}
+          >
+            {children}
+          </div>
+        </div>
+      )}
+
+      {!isWide && (
+        <div
+          ref={footerSpacerRef}
+          aria-hidden="true"
+          className="pointer-events-none shrink-0"
+          style={{ height: footerHeight }}
+        />
+      )}
+
+      {!isWide && <footer
+        ref={footerRef}
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-0 overflow-hidden px-8 pb-8 pt-[calc(var(--footer-word-size,5rem)*0.58+3rem)] sm:px-10 sm:pt-[calc(var(--footer-word-size,8rem)*0.58+3.5rem)] md:pb-10 lg:px-12 lg:pt-[calc(var(--footer-word-size,8rem)*0.58+4.5rem)]",
+          footerDark ? "bg-neutral-950 text-white" : "bg-white text-neutral-950",
+        )}
+        style={
+          footerWordFontSize === null
+            ? undefined
+            : ({ "--footer-word-size": footerWordFontSize + "px" } as React.CSSProperties)
+        }
+      >
+        <div
+          ref={footerWordRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-0 z-0 -translate-x-1/2 -translate-y-[40%] whitespace-nowrap bg-clip-text font-['Geist'] text-[clamp(5rem,22vw,24rem)] font-semibold uppercase leading-none tracking-[-0.08em] text-transparent"
+          style={{
+            fontSize: footerWordFontSize === null ? undefined : footerWordFontSize + "px",
+            backgroundImage:
+              "linear-gradient(180deg, " +
+              (footerDark
+                ? "#000000 0%, " + EFFECT_COLORS[footerColorIndex] + " 76%, " + EFFECT_COLORS[footerColorIndex] + " 100%)"
+                : EFFECT_COLORS[footerColorIndex] + " 0%, rgba(255,255,255,0.78) 78%, #ffffff 100%)"),
+          }}
+        >
+          ORIN LABS
+        </div>
+        <div className="relative z-10 mx-auto grid w-full max-w-[92rem] gap-10 sm:gap-16 lg:grid-cols-[1.1fr_1fr]">
+          <div className="flex min-h-36 max-w-md flex-col justify-between gap-8 sm:min-h-64 sm:gap-16">
+            <p className={cn("text-base leading-7", footerDark ? "text-white/70" : "text-neutral-600")}>
+            Scale operations with safe, autonomous agents that run physical build-outs.
+            </p>
+            <p className={cn("text-sm", footerDark ? "text-white/45" : "text-neutral-500")}>
+              &copy; {new Date().getFullYear()} Orin Labs. All rights reserved.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 sm:gap-8">
+            {FOOTER_SECTIONS.map((section) => (
+              <div key={section.title}>
+                <h3
+                  className={cn(
+                    "text-sm font-bold underline underline-offset-4",
+                    footerDark ? "text-white" : "text-neutral-950",
+                  )}
+                >
+                  {section.title}
+                </h3>
+                <div className={cn("mt-4 grid gap-3 text-sm", footerDark ? "text-white/60" : "text-neutral-600")}>
+                  {section.links.map((link) =>
+                    link.to !== undefined ? (
+                      <Link
+                        key={link.label}
+                        to={link.to}
+                        className={cn("transition-colors", footerDark ? "hover:text-white" : "hover:text-neutral-950")}
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        key={link.label}
+                        href={link.href}
+                        className={cn("transition-colors", footerDark ? "hover:text-white" : "hover:text-neutral-950")}
+                      >
+                        {link.label}
+                      </a>
+                    ),
+                  )}
+
+                  {section.socials && (
+                    <div className="flex items-center gap-3 pt-1">
+                      <a
+                        href="https://x.com/0rinlabs"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn("transition-colors", footerDark ? "hover:text-white" : "hover:text-primary")}
+                        aria-label="Orin Labs on X"
+                      >
+                        <TwitterIcon className="h-4 w-4" />
+                      </a>
+                      <a
+                        href="https://www.linkedin.com/company/104572054/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn("transition-colors", footerDark ? "hover:text-white" : "hover:text-primary")}
+                        aria-label="Orin Labs on LinkedIn"
+                      >
+                        <LinkedinIcon className="h-4 w-4" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </footer>}
     </div>
   );
 }

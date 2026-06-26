@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Area,
   CartesianGrid,
@@ -45,13 +46,27 @@ const mobileData = [
   },
 ];
 export default function RocketshipGrowth() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const gridStroke = isDark ? "#404040" : "#cbd5e1";
+  const textFill = isDark ? "#a0aec0" : "#64748b";
+
   return (
     <>
       {/* Desktop version */}
       <div className="hidden md:block h-[500px] w-full mx-auto relative">
         {/* "I am here" pointer */}
         <div className="absolute left-[19%] top-[63%] z-10 flex flex-col items-start">
-          <div className="text-sm font-semibold text-gray-700 mb-1 whitespace-nowrap">
+          <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 whitespace-nowrap">
             Today
           </div>
           <svg
@@ -110,7 +125,7 @@ export default function RocketshipGrowth() {
               strokeDasharray="0"
               vertical={true}
               horizontal={false}
-              stroke="#cbd5e1"
+              stroke={gridStroke}
               strokeWidth={1}
             />
             <XAxis
@@ -122,7 +137,7 @@ export default function RocketshipGrowth() {
               tick={{
                 fontSize: 12,
                 textAnchor: "middle",
-                fill: "#64748b",
+                fill: textFill,
                 width: 200,
               }}
             />
@@ -150,7 +165,7 @@ export default function RocketshipGrowth() {
       <div className="block md:hidden h-[500px] w-full mx-auto relative">
         {/* "I am here" pointer */}
         <div className="absolute left-[10%] top-[63%] z-10 flex flex-col items-start">
-          <div className="text-sm font-semibold text-gray-700 mb-1 whitespace-nowrap">
+          <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 whitespace-nowrap">
             Today
           </div>
           <svg
@@ -215,7 +230,7 @@ export default function RocketshipGrowth() {
               strokeDasharray="0"
               vertical={true}
               horizontal={false}
-              stroke="#cbd5e1"
+              stroke={gridStroke}
               strokeWidth={1}
             />
             <XAxis
@@ -227,7 +242,7 @@ export default function RocketshipGrowth() {
               tick={{
                 fontSize: 12,
                 textAnchor: "middle",
-                fill: "#64748b",
+                fill: textFill,
                 width: 200,
               }}
             />

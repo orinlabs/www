@@ -1,7 +1,8 @@
-import { ArrowRightIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowUpRightIcon } from 'lucide-react';
+import { Link } from 'react-router-dom'; 
 
-import { JoinUs } from '../components/Hiring';
+import { BottomHeavyText } from '../components/BottomHeavyText';
+import { InViewFade } from '../components/InViewFade';
 
 interface ResearchPost {
   id: string;
@@ -14,13 +15,22 @@ interface ResearchPost {
 
 const RESEARCH_POSTS: ResearchPost[] = [
   {
-    id: "proactive-agents",
-    title: "Building Proactive Agents",
+    id: "horizon",
+    title: "Introducing Horizon",
     description:
-      "We present a method for building proactive agents that work continuously over time, schedule their own activities, and create workflows dynamically. Unlike traditional agents that only respond to user input, proactive agents actively pursue goals without constant prompting.",
+      "Today, we're releasing a preview of Horizon, our benchmark that measures an agent's ability to acquire learnings from a long history and apply them to a task.",
+    date: "June 2026",
+    author: "Orin Labs",
+    path: "/research/horizon",
+  },
+  {
+    id: "long-horizon-agents",
+    title: "Building Long-Horizon Agents",
+    description:
+      "We present a method for building long-horizon agents that work continuously over time, schedule their own activities, and create workflows dynamically. Unlike traditional agents that only respond to user input, long-horizon agents actively pursue goals without constant prompting.",
     date: "October 2025",
     author: "Orin Labs",
-    path: "/research/proactive-agents",
+    path: "/research/long-horizon-agents",
   },
   {
     id: "conversationality",
@@ -33,73 +43,69 @@ const RESEARCH_POSTS: ResearchPost[] = [
   },
 ];
 
+const RESEARCH_POST_TONES = [
+  "bg-neutral-950 text-white",
+  "bg-primary-300 text-neutral-950",
+  "bg-neutral-100 text-neutral-950",
+];
+
+const RESEARCH_HERO_COPY =
+  "We are training AI to run megaprojects. We research continual learning, long-horizon tasks, and agent coordination.";
+
 export default function Research() {
   return (
-    <>
-      {/* Header */}
-      <div className="mb-12">
-        <h1 className="text-5xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">Research</h1>
-        <p className="text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed">
-          Exploring the frontiers of AI agents, autonomous systems, and the
-          future of human-computer interaction.
-        </p>
-      </div>
-
-      {/* Research Posts */}
-      <div className="space-y-8">
-        {RESEARCH_POSTS.map((post) => (
-          <article
-            key={post.id}
-            className="border-b border-neutral-200 dark:border-neutral-800 pb-8 last:border-b-0"
-          >
-            <Link
-              to={post.path}
-              className="block group hover:bg-neutral-200 dark:hover:bg-neutral-800 -m-4 p-4 rounded-lg transition-colors"
-            >
-              <div className="flex flex-col space-y-4">
-                <div>
-                  <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-primary transition-colors mb-2">
-                    {post.title}
-                  </h2>
-                  <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
-                    <Link
-                      to="/"
-                      className="text-primary underline hover:no-underline"
-                    >
-                      {post.author}
-                    </Link>
-                    <span>•</span>
-                    <span>{post.date}</span>
-                  </div>
-                </div>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
-                  {post.description}
-                </p>
-                <div className="flex items-center gap-1 text-primary font-medium">
-                  <span>Read more</span>
-                  <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </Link>
-          </article>
-        ))}
-      </div>
-
-      {/* Empty State for Future Posts */}
-      {RESEARCH_POSTS.length === 0 && (
-        <div className="text-center py-16">
-          <div className="text-neutral-400 dark:text-neutral-600 text-lg mb-4">
-            No research posts yet
-          </div>
-          <p className="text-neutral-600 dark:text-neutral-400">
-            Check back soon for our latest research and insights.
+    <main className="mx-auto flex w-full max-w-[92rem] flex-col px-6 pt-10 sm:px-10 sm:pt-24 lg:px-12">
+      <section className="grid gap-8 pb-10 lg:min-h-[58svh] sm:gap-10 sm:pb-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
+        <div>
+          <h1 className="mt-5 max-w-5xl text-[clamp(3.85rem,17vw,6rem)] font-semibold leading-[0.86] tracking-[-0.055em] text-neutral-950 sm:text-[clamp(4.25rem,10vw,7.5rem)] lg:text-[clamp(3.25rem,7.4vw,7.5rem)]">
+            Safe<br /> Reliable<br />Autonomous
+          </h1>
+        </div>
+        <div className="max-w-2xl">
+          <p className="w-full text-xl leading-[1.28] text-neutral-700 sm:text-2xl sm:leading-[1.25] lg:text-right">
+            <span className="lg:hidden">{RESEARCH_HERO_COPY}</span>
+            <BottomHeavyText className="hidden lg:block">
+              {RESEARCH_HERO_COPY}
+            </BottomHeavyText>
           </p>
         </div>
-      )}
+      </section>
 
-      <hr className="my-12" />
+      <section className="relative left-1/2 mt-6 grid w-screen -translate-x-1/2 gap-0 sm:mt-8">
+        {RESEARCH_POSTS.map((post, index) => (
+          <Link
+            key={post.id}
+            to={post.path}
+            className={
+              "group transition-colors " +
+              RESEARCH_POST_TONES[index % RESEARCH_POST_TONES.length]
+            }
+          >
+            <div className="mx-auto grid min-h-72 w-full max-w-[92rem] gap-8 px-10 py-14 sm:px-14 sm:py-16 lg:grid-cols-[0.28fr_1fr_auto] lg:items-start lg:px-16">
+              <div className="flex items-center gap-3 text-sm opacity-60">
+                <span className="tabular-nums">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span>{post.date}</span>
+              </div>
 
-      <JoinUs />
-    </>
+              <InViewFade>
+                <h2 className="max-w-4xl text-3xl font-semibold leading-[1.02] tracking-[-0.035em] sm:text-5xl">
+                  {post.title}
+                </h2>
+                <p className="mt-5 max-w-3xl text-base leading-7 opacity-75 sm:text-lg sm:leading-8">
+                  {post.description}
+                </p>
+                <p className="mt-6 text-sm opacity-55">
+                  {post.author}
+                </p>
+              </InViewFade>
+
+              <ArrowUpRightIcon className="h-7 w-7 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            </div>
+          </Link>
+        ))}
+      </section>
+    </main>
   );
 }
