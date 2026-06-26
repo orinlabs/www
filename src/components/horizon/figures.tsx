@@ -44,7 +44,7 @@ import {
   RESULTS,
   TASK_DIMENSIONS,
 } from "./data";
-import { agentColor, useIsDark } from "./theme";
+import { agentColor, horizonChartColor, useIsDark } from "./theme";
 
 // ---------------------------------------------------------------------------
 // Shared primitives: a figure frame with caption, plus recharts axis/grid
@@ -65,8 +65,8 @@ function usePalette() {
     muted: isDark ? "#a3a3a3" : "#737373",
     faint: isDark ? "#404040" : "#e5e5e5",
     ref: isDark ? "#525252" : "#cbd5e1",
-    neg: isDark ? "#f87171" : "#dc2626",
-    pos: isDark ? "#34d399" : "#059669",
+    neg: horizonChartColor(5),
+    pos: horizonChartColor(3),
     surface: isDark ? "#0a0a0a" : "#ffffff",
     grid: isDark ? "#404040" : "#e5e5e5",
     axis: isDark ? "#737373" : "#a3a3a3",
@@ -85,8 +85,8 @@ function useChartStyle() {
     surface: isDark ? "#0a0a0a" : "#ffffff",
     ink: isDark ? "#e5e5e5" : "#171717",
     muted: isDark ? "#a3a3a3" : "#737373",
-    neg: isDark ? "#f87171" : "#dc2626",
-    pos: isDark ? "#34d399" : "#059669",
+    neg: horizonChartColor(5),
+    pos: horizonChartColor(3),
     axisProps: {
       axisLine: { stroke: axisStroke, strokeWidth: AXIS_WIDTH },
       tickLine: { stroke: axisStroke, strokeWidth: AXIS_WIDTH },
@@ -2039,7 +2039,7 @@ export function ConvergenceFigure() {
 // RESULTS on load. Hover snaps to the closest dot.
 export function RecencyByDifficultyFigure() {
   const s = useChartStyle();
-  const { isDark, surface } = s;
+  const { surface } = s;
   const [hoveredBucket, setHoveredBucket] = useState<DifficultyBucket | null>(
     null,
   );
@@ -2051,9 +2051,9 @@ export function RecencyByDifficultyFigure() {
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const bucketColor: Record<DifficultyBucket, string> = {
-    easy: isDark ? "#34d399" : "#059669",
-    medium: isDark ? "#fbbf24" : "#d97706",
-    hard: isDark ? "#f87171" : "#dc2626",
+    easy: horizonChartColor(3),
+    medium: horizonChartColor(1),
+    hard: horizonChartColor(5),
   };
 
   const { series, ticks, domain } = useMemo(() => {
@@ -2122,7 +2122,7 @@ export function RecencyByDifficultyFigure() {
     }
 
     return { series, ticks, domain };
-  }, [isDark]);
+  }, []);
 
   const allPts = useMemo(() => series.flatMap((sr) => sr.data), [series]);
   const dimBucket = (b: DifficultyBucket) =>

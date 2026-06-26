@@ -20,7 +20,7 @@ const RESEARCH_POSTS: ResearchPost[] = [
     description:
       "Today, we're releasing a preview of Horizon, our benchmark that measures an agent's ability to acquire learnings from a long history and apply them to a task.",
     date: "June 2026",
-    author: "Orin Labs",
+    author: "Bryan Houlton · Aayush Gupta",
     path: "/research/horizon",
   },
   {

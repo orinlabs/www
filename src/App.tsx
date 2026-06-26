@@ -109,7 +109,7 @@ function App() {
         <Route
           path="/research/long-horizon-agents"
           element={
-            <Layout>
+            <Layout footerDark>
               <LongHorizonAgents />
             </Layout>
           }
@@ -117,7 +117,7 @@ function App() {
         <Route
           path="/research/conversationality"
           element={
-            <Layout>
+            <Layout footerDark>
               <ProactiveVoiceAgents />
             </Layout>
           }
@@ -125,7 +125,7 @@ function App() {
         <Route
           path="/research/horizon"
           element={
-            <Layout>
+            <Layout footerDark>
               <Horizon />
             </Layout>
           }

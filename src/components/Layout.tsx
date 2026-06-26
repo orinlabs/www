@@ -226,7 +226,7 @@ export default function Layout({ children, hero, footerDark = false }: LayoutPro
   return (
     <div
       className={cn(
-        "bg-white flex flex-col items-center",
+        "flex w-full flex-col items-center overflow-x-clip bg-white",
         hero
           ? "min-h-screen p-0 md:p-8 md:pt-12 gap-6 sm:gap-8"
           : isWide

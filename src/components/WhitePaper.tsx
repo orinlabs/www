@@ -35,51 +35,46 @@ export function ResearchArticle({
 
   return (
     <article className="research-article flex w-full flex-col px-8 pb-24 pt-14 sm:px-10 sm:pb-32 sm:pt-20 lg:px-12">
-      <header className="grid min-h-[48svh] gap-10 lg:grid-cols-[1.12fr_0.88fr] lg:items-end">
-        <div>
-          <Link
-            to="/research"
-            className="text-sm font-medium text-primary-700 transition-colors hover:text-primary-900 flex items-center gap-2 group"
-          >
+      <header className="max-w-6xl">
+        <Link
+          to="/research"
+          className="flex items-center gap-2 text-sm font-medium text-primary-700 transition-colors hover:text-primary-900 group"
+        >
           <ArrowLeftIcon className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-            Research
-          </Link>
-          <h1 className="secondary-page-title mt-5 max-w-6xl text-neutral-950">
-            {title}
-          </h1>
+          Research
+        </Link>
+        <h1 className="secondary-page-title mt-5 text-neutral-950">
+          {title}
+        </h1>
+        <p className="mt-8 max-w-3xl text-xl font-medium leading-[1.28] text-neutral-950 sm:text-2xl">
+          {abstract}
+        </p>
+        <div className="mt-6 flex flex-wrap items-center gap-2 text-sm text-neutral-500 sm:text-base">
+          {authors.map((author, i) => (
+            <Fragment key={author}>
+              {author === "Orin Labs" ? (
+                <Link
+                  to="/"
+                  className="text-neutral-700 underline underline-offset-4 decoration-neutral-300 transition-colors hover:text-neutral-950 hover:decoration-neutral-950"
+                >
+                  {author}
+                </Link>
+              ) : (
+                <span>{author}</span>
+              )}
+              {i < authors.length - 1 && (
+                <span aria-hidden className="select-none text-neutral-300">
+                  ·
+                </span>
+              )}
+            </Fragment>
+          ))}
+          <span aria-hidden className="text-neutral-300">
+            ·
+          </span>
+          <span>{date}</span>
         </div>
-
-        <div className="max-w-2xl">
-          <p className="text-xl font-medium leading-[1.28] text-neutral-950 sm:text-2xl">
-            {abstract}
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-2 text-sm text-neutral-500 sm:text-base">
-            {authors.map((author, i) => (
-              <Fragment key={author}>
-                {author === "Orin Labs" ? (
-                  <Link
-                    to="/"
-                    className="text-neutral-700 underline underline-offset-4 decoration-neutral-300 transition-colors hover:text-neutral-950 hover:decoration-neutral-950"
-                  >
-                    {author}
-                  </Link>
-                ) : (
-                  <span>{author}</span>
-                )}
-                {i < authors.length - 1 && (
-                  <span aria-hidden className="select-none text-neutral-300">
-                    ·
-                  </span>
-                )}
-              </Fragment>
-            ))}
-            <span aria-hidden className="text-neutral-300">
-              ·
-            </span>
-            <span>{date}</span>
-          </div>
-
-        </div>
+        <div className="orin-hero-bar mt-10 h-1.5 w-full rounded-full bg-neutral-950 sm:w-[60%]" />
       </header>
 
       {image && (

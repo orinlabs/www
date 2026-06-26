@@ -45,16 +45,16 @@ const PLATFORM_STEPS = [
 ];
 
 const AGENTS = [
-  { name: 'EV install agent', state: 'Calling contractor', risk: 'Low', tone: 'bg-primary-500' },
-  { name: 'Permit agent', state: 'Waiting on city reply', risk: 'Watch', tone: 'bg-warning-500' },
-  { name: 'Bid-out agent', state: 'Comparing quotes', risk: 'Approval', tone: 'bg-secondary-500' },
-  { name: 'Materials agent', state: 'Flagged late delivery', risk: 'High', tone: 'bg-error-500' },
+  { name: 'EV install agent', state: 'Calling contractor', risk: 'Low', tone: 'bg-effect-rag' },
+  { name: 'Permit agent', state: 'Waiting on city reply', risk: 'Watch', tone: 'bg-effect-claude' },
+  { name: 'Bid-out agent', state: 'Comparing quotes', risk: 'Approval', tone: 'bg-effect-codex' },
+  { name: 'Materials agent', state: 'Flagged late delivery', risk: 'High', tone: 'bg-effect-openclaw' },
 ];
 
 const AGENT_TIMELINE: Array<{ phase: string; label: string; time: string; tone: string }> = [
   { phase: 'Done', label: 'Found the gate code in kickoff notes', time: '06:36', tone: 'text-success-600 dark:text-success-300' },
   { phase: 'Done', label: 'Called the contractor and shared access', time: '06:39', tone: 'text-success-600 dark:text-success-300' },
-  { phase: 'Doing now', label: 'Posting revised inspection window for approval', time: 'Now', tone: 'text-primary-600 dark:text-primary-300' },
+  { phase: 'Doing now', label: 'Posting revised inspection window for approval', time: 'Now', tone: 'text-effect-rag' },
   { phase: 'Planned', label: 'Confirm crew ETA, then update the schedule', time: 'Next', tone: 'text-neutral-500 dark:text-neutral-400' },
 ];
 
@@ -77,9 +77,9 @@ const MONITORS: Array<{ name: string; scope: string; trigger: string; severity: 
 ];
 
 const SEVERITY_TONE: Record<string, string> = {
-  High: 'bg-error-500',
-  Medium: 'bg-warning-500',
-  Low: 'bg-primary-500',
+  High: 'bg-effect-openclaw',
+  Medium: 'bg-effect-claude',
+  Low: 'bg-effect-rag',
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -101,7 +101,7 @@ function OverviewView({ activeIndex }: { activeIndex: number }) {
               className={
                 'border p-3 transition-colors ' +
                 (index === 0
-                  ? 'border-primary-300 bg-primary-50 dark:border-primary-700 dark:bg-primary-950/40'
+                  ? 'border-effect-rag/30 bg-effect-rag/10'
                   : 'border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900')
               }
             >
@@ -123,7 +123,7 @@ function OverviewView({ activeIndex }: { activeIndex: number }) {
               className={
                 'grid grid-cols-[1fr_10rem_6rem] items-center border-t px-3 py-3 text-sm transition-colors dark:border-neutral-800 ' +
                 (index === activeIndex
-                  ? 'border-primary-200 bg-primary-50/80 dark:bg-primary-950/20'
+                  ? 'border-effect-rag/20 bg-effect-rag/10'
                   : 'border-neutral-200')
               }
             >
@@ -174,7 +174,7 @@ function OverviewView({ activeIndex }: { activeIndex: number }) {
                 className="border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <AlertIcon className="h-4 w-4 text-primary-500" />
+                  <AlertIcon className="h-4 w-4 text-effect-rag" />
                   <span className="text-xs text-neutral-500">{status as string}</span>
                 </div>
                 <p className="mt-3 text-sm font-medium">{title as string}</p>
@@ -192,13 +192,13 @@ function AgentDetailView() {
     <div className="flex-1 overflow-hidden p-5">
       <div className="flex items-center justify-between border-b border-neutral-200 pb-4 dark:border-neutral-800">
         <div className="flex items-center gap-3">
-          <span className="h-2.5 w-2.5 rounded-full bg-primary-500" />
+          <span className="h-2.5 w-2.5 rounded-full bg-effect-rag" />
           <div>
             <p className="text-base font-semibold">EV install agent</p>
             <p className="text-xs text-neutral-500">Riverside DC fast-charge site</p>
           </div>
         </div>
-        <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700 dark:bg-primary-950/40 dark:text-primary-300">
+        <span className="rounded-full bg-effect-rag/10 px-3 py-1 text-xs font-medium text-effect-rag">
           Active
         </span>
       </div>
@@ -256,13 +256,13 @@ function AccessView() {
                 className={
                   'inline-flex items-center gap-1.5 text-xs font-medium ' +
                   (granted
-                    ? 'text-primary-600 dark:text-primary-300'
+                    ? 'text-effect-rag'
                     : 'text-neutral-400 dark:text-neutral-500')
                 }
               >
                 <span
                   className={
-                    'h-2 w-2 rounded-full ' + (granted ? 'bg-primary-500' : 'bg-neutral-300 dark:bg-neutral-600')
+                    'h-2 w-2 rounded-full ' + (granted ? 'bg-effect-rag' : 'bg-neutral-300 dark:bg-neutral-600')
                   }
                 />
                 {tool.status}
@@ -387,11 +387,11 @@ export function PlatformScrollSection() {
             className={
               'p-6 ' +
               (index === 0
-                ? 'bg-primary-300 text-neutral-950'
+                ? 'bg-effect-rag text-white'
                 : index === 1
                   ? 'bg-neutral-100 text-neutral-950'
                   : index === 2
-                    ? 'bg-[#24f4ff] text-neutral-950'
+                    ? 'bg-effect-codex text-white'
                     : 'bg-neutral-950 text-white')
             }
           >
@@ -445,7 +445,7 @@ export function PlatformScrollSection() {
               <div className="grid h-full grid-cols-[14rem_1fr] text-neutral-950 dark:text-neutral-50">
                 <aside className="relative border-r border-neutral-200 bg-neutral-950 p-4 text-white dark:border-neutral-800">
                   <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-full bg-primary-400" />
+                    <div className="h-7 w-7 rounded-full bg-effect-rag" />
                     <div>
                       <p className="text-sm font-semibold">Orin</p>
                       <p className="text-xs text-white/45">Control</p>

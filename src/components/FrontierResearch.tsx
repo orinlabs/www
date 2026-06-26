@@ -1,30 +1,12 @@
 import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { EFFECT_COLORS } from '../effectColors';
-
 export function FrontierResearch() {
-  const [clay, marigold, moss, sea, dusk, berry] = EFFECT_COLORS;
-
   return (
     <section className="bg-white text-neutral-950">
       <div className="grid gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
         <div className="relative min-h-[32rem] overflow-hidden bg-neutral-950 p-6 text-white sm:p-8">
-          <div
-            className="absolute inset-x-0 top-0 h-1"
-            style={{
-              backgroundImage:
-                "linear-gradient(90deg, " +
-                clay +
-                ", " +
-                marigold +
-                ", " +
-                sea +
-                ", " +
-                berry +
-                ")",
-            }}
-          />
+          <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--color-effect-claude),var(--color-effect-hermes),var(--color-effect-rag),var(--color-effect-openclaw))]" />
 
           <div className="flex h-full min-h-[28rem] flex-col justify-between">
             <div className="flex items-start justify-between gap-6">
@@ -33,7 +15,7 @@ export function FrontierResearch() {
                   Horizon
                 </p>
                 <h3 className="mt-3 max-w-md text-4xl font-semibold leading-[0.98] tracking-[-0.04em] md:text-6xl">
-                  Research visual template
+                  Frontier Research
                 </h3>
               </div>
               <p className="shrink-0 font-mono text-sm text-white/35">001</p>
@@ -42,16 +24,16 @@ export function FrontierResearch() {
             <div className="grid gap-3">
               <div className="h-16 bg-white" />
               <div className="grid grid-cols-[1fr_0.64fr] gap-3">
-                <div className="h-16" style={{ backgroundColor: sea }} />
-                <div className="h-16" style={{ backgroundColor: marigold }} />
+                <div className="h-16 bg-effect-rag" />
+                <div className="h-16 bg-effect-hermes" />
               </div>
               <div className="grid grid-cols-[0.42fr_1fr] gap-3">
-                <div className="h-16" style={{ backgroundColor: moss }} />
-                <div className="h-16" style={{ backgroundColor: dusk }} />
+                <div className="h-16 bg-effect-rlm" />
+                <div className="h-16 bg-effect-codex" />
               </div>
               <div className="grid grid-cols-[0.7fr_1fr] gap-3">
-                <div className="h-16" style={{ backgroundColor: clay }} />
-                <div className="h-16" style={{ backgroundColor: berry }} />
+                <div className="h-16 bg-effect-claude" />
+                <div className="h-16 bg-effect-openclaw" />
               </div>
             </div>
           </div>

@@ -60,7 +60,7 @@ export const HANDBOOK_PAGES = [
     "lastEditor": {
       "name": "Bryan Houlton",
       "email": "brhoulton@gmail.com",
-      "date": "2026-06-23T15:11:27-07:00"
+      "date": "2026-06-26T00:37:31-07:00"
     }
   },
   {
@@ -88,7 +88,7 @@ export const HANDBOOK_PAGES = [
     "lastEditor": {
       "name": "Bryan Houlton",
       "email": "brhoulton@gmail.com",
-      "date": "2026-06-23T15:10:47-07:00"
+      "date": "2026-06-26T00:37:31-07:00"
     }
   },
   {
@@ -116,7 +116,7 @@ export const HANDBOOK_PAGES = [
     "lastEditor": {
       "name": "Bryan Houlton",
       "email": "brhoulton@gmail.com",
-      "date": "2026-06-23T15:46:22-07:00"
+      "date": "2026-06-26T00:37:31-07:00"
     }
   },
   {
@@ -159,7 +159,7 @@ export const HANDBOOK_PAGES = [
     "lastEditor": {
       "name": "Bryan Houlton",
       "email": "brhoulton@gmail.com",
-      "date": "2026-06-22T22:37:28-07:00"
+      "date": "2026-06-26T00:37:31-07:00"
     }
   }
 ] satisfies HandbookPage[];

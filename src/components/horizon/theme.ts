@@ -1,18 +1,31 @@
 import { useEffect, useState } from "react";
 
-// Color per agent type, with light/dark variants. Shared by the scatter,
-// the results table, and the Tufte figures so every view stays consistent.
+import { EFFECT_COLORS } from "../../effectColors";
+
+export const HORIZON_CHART_COLORS = EFFECT_COLORS;
+
+export function horizonChartColor(index: number) {
+  return HORIZON_CHART_COLORS[index % HORIZON_CHART_COLORS.length] ?? "#525252";
+}
+
+function colorPair(index: number) {
+  const color = horizonChartColor(index);
+  return { light: color, dark: color };
+}
+
+// Color per agent type. Shared by the scatter, the results table, and the Tufte
+// figures so every Horizon view stays consistent with the site effect palette.
 export const AGENT_TYPE_COLORS: Record<string, { light: string; dark: string }> =
   {
-    RAG: { light: "#00845e", dark: "#10b981" },
-    "Claude Code": { light: "#c2410c", dark: "#fb923c" },
-    Codex: { light: "#1d4ed8", dark: "#60a5fa" },
-    Hermes: { light: "#171717", dark: "#fafafa" },
-    RLM: { light: "#7c3aed", dark: "#a78bfa" },
-    OpenClaw: { light: "#be185d", dark: "#f472b6" },
+    "Claude Code": colorPair(0),
+    Hermes: colorPair(1),
+    RLM: colorPair(2),
+    RAG: colorPair(3),
+    Codex: colorPair(4),
+    OpenClaw: colorPair(5),
   };
 
-export const FALLBACK_COLOR = { light: "#525252", dark: "#a3a3a3" };
+export const FALLBACK_COLOR = colorPair(0);
 
 export function agentColor(agentType: string, isDark: boolean) {
   const c = AGENT_TYPE_COLORS[agentType] ?? FALLBACK_COLOR;

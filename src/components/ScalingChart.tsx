@@ -161,7 +161,7 @@ export default function ScalingChart() {
             <Line
               type="monotone"
               dataKey="withLongTerm"
-              stroke="#00845e"
+              stroke="var(--color-effect-rag)"
               strokeWidth={3}
               name="with long term: O(N) slow"
               dot={false}
@@ -169,7 +169,7 @@ export default function ScalingChart() {
             <Line
               type="monotone"
               dataKey="withVariable"
-              stroke="#8be0c3"
+              stroke="var(--color-effect-rlm)"
               strokeWidth={3}
               name="with variable: O(log N)"
               dot={false}
