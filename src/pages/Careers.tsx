@@ -1,27 +1,27 @@
-import { GlitchText } from '../components/GlitchText';
-import { JoinUs } from '../components/Hiring';
+import { GlitchText } from "../components/GlitchText";
+import { JoinUs } from "../components/Hiring";
 
 const PRINCIPLES = [
   {
-    title: 'Be clear',
-    body:
-      'Clear thoughts leads to clear decisions. We write a lot.',
-    className: 'rounded-br-[1.75rem] rounded-tl-[1.75rem] bg-effect-rag text-white lg:col-span-5',
-    bodyClassName: 'text-white/75',
+    title: "Be clear",
+    body: "Clear thoughts leads to clear decisions. We write a lot.",
+    className:
+      "rounded-br-[1.75rem] rounded-tl-[1.75rem] bg-effect-rag text-white lg:col-span-5",
+    bodyClassName: "text-white/75",
   },
   {
-    title: 'Care deeply',
-    body:
-      'We take the mission seriously while staying fun and nimble.',
-    className: 'rounded-bl-[1.75rem] rounded-tr-[1.75rem] bg-white text-neutral-950 lg:col-span-4',
-    bodyClassName: 'text-neutral-600',
+    title: "Care deeply",
+    body: "We take the mission seriously while staying fun and nimble.",
+    className:
+      "rounded-bl-[1.75rem] rounded-tr-[1.75rem] bg-white text-neutral-950 lg:col-span-4",
+    bodyClassName: "text-neutral-600",
   },
   {
-    title: 'Move fast',
-    body:
-      'We move fast, step on toes, and work without ego.',
-    className: 'rounded-bl-[1.75rem] rounded-tr-[1.75rem] bg-neutral-950 text-white lg:col-span-3',
-    bodyClassName: 'text-white/70',
+    title: "Move fast",
+    body: "We move fast, step on toes, and work without ego.",
+    className:
+      "rounded-bl-[1.75rem] rounded-tr-[1.75rem] bg-neutral-950 text-white lg:col-span-3",
+    bodyClassName: "text-white/70",
   },
 ];
 
@@ -34,11 +34,17 @@ export default function Careers() {
             <h1 className="max-w-none text-[clamp(3.85rem,17vw,6rem)] leading-[0.86] tracking-[-0.055em] text-neutral-950 sm:text-[clamp(4.25rem,10vw,7.5rem)] lg:text-[clamp(3.25rem,7.4vw,7.5rem)]">
               <span className="block">Build the</span>
               <span className="block pl-[12vw]">
-                <GlitchText underline={false}>agents</GlitchText>
+                <GlitchText underline={false} glitchOnMount idleGlitchChance={0.1}>
+                  agents
+                </GlitchText>
               </span>
               <span className="block">that build</span>
               <span className="block pl-[6vw]">
-                the <GlitchText underline={false}>world</GlitchText>.
+                the{" "}
+                <GlitchText underline={false} glitchOnMount idleGlitchChance={0.1}>
+                  world
+                </GlitchText>
+                .
               </span>
             </h1>
           </div>
@@ -47,8 +53,7 @@ export default function Careers() {
         <div className="relative flex justify-end">
           <div className="w-full max-w-3xl text-right">
             <p className="text-2xl leading-[1.2] text-neutral-950 sm:text-3xl">
-              We are training AI to run
-              megaprojects.
+              We are training AI to run megaprojects.
             </p>
             <div className="orin-hero-bar orin-hero-bar-right mt-8 h-1.5 w-full rounded-full bg-neutral-950" />
           </div>
@@ -64,7 +69,8 @@ export default function Careers() {
               High bar.
             </h2>
             <p className="max-w-2xl text-2xl leading-[1.16] tracking-[-0.025em] text-white/78 sm:text-3xl">
-            A team who can work anywhere, <br />but choses to work here.
+              A team who can work anywhere, <br />
+              but choses to work here.
             </p>
           </div>
 
@@ -72,7 +78,7 @@ export default function Careers() {
             <div className="min-h-56 rounded-bl-[1.75rem] rounded-tr-[1.75rem] bg-effect-rag" />
             <div className="flex min-h-56 items-end rounded-br-[1.75rem] rounded-tl-[1.75rem] bg-white p-7 sm:p-10">
               <p className="max-w-md text-3xl font-semibold leading-[1] tracking-[-0.04em] text-neutral-950 sm:text-4xl underline">
-              Our Values
+                Our Values
               </p>
             </div>
           </div>
@@ -82,12 +88,20 @@ export default function Careers() {
           {PRINCIPLES.map((principle) => (
             <article
               key={principle.title}
-              className={'flex min-h-[18rem] flex-col justify-end p-7 sm:p-9 ' + principle.className}
+              className={
+                "flex min-h-[18rem] flex-col justify-end p-7 sm:p-9 " +
+                principle.className
+              }
             >
               <h3 className="text-2xl font-semibold leading-[0.98] tracking-[-0.04em] sm:text-3xl">
                 {principle.title}
               </h3>
-              <p className={'mt-2 max-w-sm text-base leading-7 sm:text-lg sm:leading-8 ' + principle.bodyClassName}>
+              <p
+                className={
+                  "mt-2 max-w-sm text-base leading-7 sm:text-lg sm:leading-8 " +
+                  principle.bodyClassName
+                }
+              >
                 {principle.body}
               </p>
             </article>
@@ -95,7 +109,7 @@ export default function Careers() {
         </div>
       </section>
 
-        <JoinUs padded={false} />
+      <JoinUs padded={false} />
     </main>
   );
 }

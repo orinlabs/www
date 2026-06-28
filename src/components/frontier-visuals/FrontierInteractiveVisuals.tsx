@@ -8,7 +8,7 @@ type CellState = {
 };
 
 type TrailState = {
-  agentIndex: number;
+  agents: number[];
   unresolved: boolean[];
   completed: number[];
 };
@@ -72,29 +72,71 @@ function makeProbabilityCells(activeIndex: number | null) {
   });
 }
 
+function edgeFade(index: number, columns: number, rows: number) {
+  const x = index % columns;
+  const y = Math.floor(index / columns);
+  const distance = Math.min(x, y, columns - 1 - x, rows - 1 - y);
+  return Math.min(1, distance / 3);
+}
+
+function clampInterior(value: number, length: number) {
+  return Math.min(length - 2, Math.max(1, value));
+}
+
+function centerIndex(columns: number, rows: number) {
+  return Math.floor(rows / 2) * columns + Math.floor(columns / 2);
+}
+
+function randomInteriorIndex(columns: number, rows: number) {
+  if (columns <= 2 || rows <= 2) {
+    return centerIndex(columns, rows);
+  }
+
+  const x = 1 + Math.floor(Math.random() * (columns - 2));
+  const y = 1 + Math.floor(Math.random() * (rows - 2));
+  return y * columns + x;
+}
+
 function makeInitialTrailState(columns: number, rows: number): TrailState {
   const cells = columns * rows;
+  const diamondCount = Math.max(3, Math.round(cells / 80));
 
-  return {
-    agentIndex: Math.floor(cells / 2),
-    unresolved: Array.from({ length: cells }, () => Math.random() > 0.94),
+  let state: TrailState = {
+    agents: [agentHome(0, columns, rows), agentHome(1, columns, rows)],
+    unresolved: Array(cells).fill(false),
     completed: Array(cells).fill(0),
   };
+
+  for (let i = 0; i < diamondCount; i += 1) {
+    state = addLooseEnd(
+      state,
+      randomInteriorIndex(columns, rows),
+      columns,
+      rows,
+    );
+  }
+
+  return state;
 }
 
 function stepTowardTarget(
   currentIndex: number,
   targetIndex: number,
   columns: number,
+  rows: number,
 ) {
   const currentX = currentIndex % columns;
   const currentY = Math.floor(currentIndex / columns);
   const targetX = targetIndex % columns;
   const targetY = Math.floor(targetIndex / columns);
-  const nextX =
-    currentX === targetX ? currentX : currentX + Math.sign(targetX - currentX);
-  const nextY =
-    currentY === targetY ? currentY : currentY + Math.sign(targetY - currentY);
+  const nextX = clampInterior(
+    currentX === targetX ? currentX : currentX + Math.sign(targetX - currentX),
+    columns,
+  );
+  const nextY = clampInterior(
+    currentY === targetY ? currentY : currentY + Math.sign(targetY - currentY),
+    rows,
+  );
 
   return nextY * columns + nextX;
 }
@@ -103,6 +145,7 @@ function closestUnresolvedIndex(
   agentIndex: number,
   unresolved: boolean[],
   columns: number,
+  exclude?: Set<number>,
 ) {
   let closestIndex: number | null = null;
   let closestDistance = Number.POSITIVE_INFINITY;
@@ -110,7 +153,7 @@ function closestUnresolvedIndex(
   const agentY = Math.floor(agentIndex / columns);
 
   unresolved.forEach((isUnresolved, index) => {
-    if (!isUnresolved) {
+    if (!isUnresolved || exclude?.has(index)) {
       return;
     }
 
@@ -127,33 +170,67 @@ function closestUnresolvedIndex(
   return closestIndex;
 }
 
+function litFraction(state: TrailState, columns: number, rows: number) {
+  const interior = Math.max(1, (columns - 2) * (rows - 2));
+  let lit = 0;
+
+  for (let index = 0; index < state.unresolved.length; index += 1) {
+    if (state.unresolved[index] || state.completed[index] > 0.1) {
+      lit += 1;
+    }
+  }
+
+  return lit / interior;
+}
+
+function agentHome(slot: number, columns: number, rows: number) {
+  const midRow = Math.floor(rows / 2);
+  const fraction = (slot + 1) / 3;
+  return midRow * columns + clampInterior(Math.round(columns * fraction), columns);
+}
+
 function stepTrailState(
   state: TrailState,
   columns: number,
   rows: number,
 ): TrailState {
-  const cells = columns * rows;
-  const targetIndex = closestUnresolvedIndex(
-    state.agentIndex,
-    state.unresolved,
-    columns,
-  );
-  const agentIndex =
-    targetIndex === null
-      ? (state.agentIndex + 1) % cells
-      : stepTowardTarget(state.agentIndex, targetIndex, columns);
   const unresolved = [...state.unresolved];
   const completed = state.completed.map((value) => value * TRAIL_DECAY);
+  const takenTargets = new Set<number>();
+  const occupied = new Set<number>();
 
-  completed[state.agentIndex] = 1;
-  completed[agentIndex] = 1;
+  const agents = state.agents.map((agentIndex, slot) => {
+    const targetIndex = closestUnresolvedIndex(
+      agentIndex,
+      unresolved,
+      columns,
+      takenTargets,
+    );
 
-  if (unresolved[agentIndex]) {
-    unresolved[agentIndex] = false;
+    if (targetIndex !== null) {
+      takenTargets.add(targetIndex);
+    }
+
+    const goal = targetIndex ?? agentHome(slot, columns, rows);
+    let nextIndex = stepTowardTarget(agentIndex, goal, columns, rows);
+
+    if (occupied.has(nextIndex)) {
+      nextIndex = agentIndex;
+    }
+
+    occupied.add(nextIndex);
     completed[agentIndex] = 1;
-  }
+    completed[nextIndex] = 1;
 
-  return { agentIndex, unresolved, completed };
+    if (unresolved[nextIndex]) {
+      unresolved[nextIndex] = false;
+      completed[nextIndex] = 1;
+    }
+
+    return nextIndex;
+  });
+
+  return { agents, unresolved, completed };
 }
 
 function addLooseEnd(
@@ -178,7 +255,7 @@ function addLooseEnd(
     const nextX = x + xOffset;
     const nextY = y + yOffset;
 
-    if (nextX >= 0 && nextX < columns && nextY >= 0 && nextY < rows) {
+    if (nextX >= 1 && nextX < columns - 1 && nextY >= 1 && nextY < rows - 1) {
       const nextIndex = nextY * columns + nextX;
       unresolved[nextIndex] = true;
       completed[nextIndex] = Math.max(completed[nextIndex], 0.35);
@@ -186,6 +263,14 @@ function addLooseEnd(
   }
 
   return { ...state, unresolved, completed };
+}
+
+function addRandomLooseEnd(
+  state: TrailState,
+  columns: number,
+  rows: number,
+): TrailState {
+  return addLooseEnd(state, randomInteriorIndex(columns, rows), columns, rows);
 }
 
 
@@ -249,6 +334,11 @@ export function CellularAutomaton() {
   const [trailState, setTrailState] = useState<TrailState>(() =>
     makeInitialTrailState(24, 14),
   );
+  const trailRef = useRef(trailState);
+
+  useEffect(() => {
+    trailRef.current = trailState;
+  }, [trailState]);
 
   useEffect(() => {
     const element = containerRef.current;
@@ -257,15 +347,16 @@ export function CellularAutomaton() {
     }
 
     const measure = () => {
-      const innerWidth = element.clientWidth - DOT_PADDING * 2;
-      const innerHeight = element.clientHeight - DOT_PADDING * 2;
-      const columns = Math.max(1, Math.floor((innerWidth + DOT_GAP) / DOT_PITCH));
-      const rows = Math.max(1, Math.floor((innerHeight + DOT_GAP) / DOT_PITCH));
+      // Keep the grid square: size it to the height, clamped to the available
+      // width so it never overflows the column.
+      const side =
+        Math.min(element.clientWidth, element.clientHeight) - DOT_PADDING * 2;
+      const count = Math.max(1, Math.floor((side + DOT_GAP) / DOT_PITCH));
 
       setDims((current) =>
-        current.columns === columns && current.rows === rows
+        current.columns === count && current.rows === count
           ? current
-          : { columns, rows },
+          : { columns: count, rows: count },
       );
     };
 
@@ -290,53 +381,71 @@ export function CellularAutomaton() {
     return () => window.clearInterval(interval);
   }, [dims.columns, dims.rows]);
 
-  const seedCell = (index: number) => {
-    setTrailState((currentState) =>
-      addLooseEnd(currentState, index, dims.columns, dims.rows),
-    );
-  };
+  useEffect(() => {
+    let timeoutId = 0;
+
+    const tick = () => {
+      setTrailState((currentState) =>
+        addRandomLooseEnd(currentState, dims.columns, dims.rows),
+      );
+      // Aim for ~30% of the interior lit: spawn quickly while below target,
+      // then trickle once at/above it so the snakes can keep pace.
+      const target = 0.3;
+      const fraction = litFraction(trailRef.current, dims.columns, dims.rows);
+      const delay =
+        fraction >= target
+          ? 1600
+          : 80 + (fraction / target) * 620;
+      timeoutId = window.setTimeout(tick, delay);
+    };
+
+    timeoutId = window.setTimeout(tick, 1000);
+    return () => window.clearTimeout(timeoutId);
+  }, [dims.columns, dims.rows]);
+
+  const gameSize = dims.columns * DOT_PITCH - DOT_GAP + DOT_PADDING * 2;
 
   return (
     <div
       ref={containerRef}
-      className="relative h-[32rem] w-full overflow-hidden bg-white"
+      className="relative h-[32rem] w-full overflow-hidden"
     >
       <div
-        className="absolute inset-0 grid content-center justify-center overflow-hidden"
+        className="absolute right-0 top-1/2 grid -translate-y-1/2 place-content-center overflow-hidden bg-white"
         style={{
+          width: gameSize,
+          height: gameSize,
           padding: DOT_PADDING,
           gap: DOT_GAP,
           gridTemplateColumns: `repeat(${dims.columns}, ${DOT_SIZE}px)`,
         }}
       >
         {trailState.completed.map((completedValue, index) => {
-          const isAgent = index === trailState.agentIndex;
+          const isAgent = trailState.agents.includes(index);
           const isUnresolved = trailState.unresolved[index];
           const isCompleted = completedValue > 0.06;
           const cellColor = colorAt(index);
+          const baseOpacity = isAgent
+            ? 1
+            : isUnresolved
+              ? 0.72
+              : isCompleted
+                ? 0.1 + completedValue * 0.34
+                : 1;
 
           return (
-            <button
+            <div
               key={index}
-              type="button"
-              aria-label="Add loose end for agent trail"
-              className="bg-white transition-[background-color,box-shadow,opacity] duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-neutral-950/20"
+              aria-hidden="true"
+              className="bg-white transition-[background-color,box-shadow,opacity] duration-200 ease-out"
               style={{
                 width: DOT_SIZE,
                 height: DOT_SIZE,
                 backgroundColor:
                   isAgent || isUnresolved || isCompleted ? cellColor : 'white',
                 boxShadow: isAgent ? '0 0 0 2px #171717' : undefined,
-                opacity: isAgent
-                  ? 1
-                  : isUnresolved
-                    ? 0.72
-                    : isCompleted
-                      ? 0.1 + completedValue * 0.34
-                      : 1,
+                opacity: baseOpacity * edgeFade(index, dims.columns, dims.rows),
               }}
-              onMouseEnter={() => seedCell(index)}
-              onFocus={() => seedCell(index)}
             />
           );
         })}

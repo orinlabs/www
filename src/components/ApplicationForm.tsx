@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ArrowRight } from 'lucide-react';
 import {
-  Button,
   TextArea,
   TextInput,
 } from 'slate-ui';
@@ -30,10 +29,59 @@ const INITIAL_STATE: FormState = {
   pitch: "",
 };
 
+// Identity fields are shared across every role; the pitch is role-specific.
+const PROFILE_KEY = "orin:application-profile";
+const pitchKey = (slug: string) => `orin:application-pitch:${slug}`;
+
+function loadInitialState(roleSlug: string): FormState {
+  if (typeof window === "undefined") {
+    return INITIAL_STATE;
+  }
+
+  try {
+    const profileRaw = window.localStorage.getItem(PROFILE_KEY);
+    const profile = profileRaw
+      ? (JSON.parse(profileRaw) as Partial<FormState>)
+      : {};
+    return {
+      name: profile.name ?? "",
+      email: profile.email ?? "",
+      links: profile.links ?? "",
+      resumeUrl: profile.resumeUrl ?? "",
+      pitch: window.localStorage.getItem(pitchKey(roleSlug)) ?? "",
+    };
+  } catch {
+    return INITIAL_STATE;
+  }
+}
+
 export function ApplicationForm({ roleSlug, roleTitle }: ApplicationFormProps) {
-  const [form, setForm] = useState<FormState>(INITIAL_STATE);
+  const [form, setForm] = useState<FormState>(() => loadInitialState(roleSlug));
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | undefined>();
+
+  // Persist the applicant's input so a refresh or navigating between roles
+  // doesn't lose their progress.
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      const { name, email, links, resumeUrl, pitch } = form;
+      window.localStorage.setItem(
+        PROFILE_KEY,
+        JSON.stringify({ name, email, links, resumeUrl }),
+      );
+      if (pitch.trim().length > 0) {
+        window.localStorage.setItem(pitchKey(roleSlug), pitch);
+      } else {
+        window.localStorage.removeItem(pitchKey(roleSlug));
+      }
+    } catch {
+      // Ignore storage failures (private mode, quota, etc.).
+    }
+  }, [form, roleSlug]);
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -42,6 +90,8 @@ export function ApplicationForm({ roleSlug, roleTitle }: ApplicationFormProps) {
     form.name.trim().length > 0 &&
     form.email.includes("@") &&
     form.pitch.trim().length > 0;
+
+  const hasInput = Object.values(form).some((v) => v.trim().length > 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +117,9 @@ export function ApplicationForm({ roleSlug, roleTitle }: ApplicationFormProps) {
       }
 
       setStatus("success");
-      setForm(INITIAL_STATE);
+      // Keep their saved profile for future applications, but clear this
+      // role's pitch now that it's been submitted.
+      setForm((prev) => ({ ...prev, pitch: "" }));
     } catch (err) {
       setStatus("error");
       setError(
@@ -80,7 +132,7 @@ export function ApplicationForm({ roleSlug, roleTitle }: ApplicationFormProps) {
 
   if (status === "success") {
     return (
-      <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-[#f4f5f0] dark:bg-neutral-900 p-6 sm:p-8">
+      <div className="border border-neutral-200 dark:border-neutral-800 bg-[#f4f5f0] dark:bg-neutral-900 p-6 sm:p-8">
         <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
           Thanks — we'll be in touch.
         </h3>
@@ -139,16 +191,21 @@ export function ApplicationForm({ roleSlug, roleTitle }: ApplicationFormProps) {
         <p className="text-sm text-error-500">{error}</p>
       )}
 
-      <div>
-        <Button
+      <div className="flex flex-col gap-3">
+        <button
           type="submit"
-          variant="primary"
-          disabled={!isValid}
-          loading={status === "submitting"}
-          iconRight={ArrowRight}
+          disabled={!isValid || status === "submitting"}
+          className="group inline-flex w-fit cursor-pointer items-center gap-2 rounded-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-neutral-950"
         >
           {status === "submitting" ? "Sending" : "Submit application"}
-        </Button>
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </button>
+
+        {hasInput && (
+          <p className="text-xs text-neutral-400">
+            Your application has saved in your browser storage.
+          </p>
+        )}
       </div>
     </form>
   );

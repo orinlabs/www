@@ -3,21 +3,25 @@ import { Link } from 'react-router-dom';
 
 export default function NotFound() {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center text-center py-24 sm:py-32">
-      <p className="font-mono text-sm tracking-widest text-primary mb-4">404</p>
-      <h1 className="text-4xl sm:text-5xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">
-        Page not found
-      </h1>
-      <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-md mb-8 leading-relaxed">
-        The page you&apos;re looking for doesn&apos;t exist or may have moved.
-      </p>
-      <Link
-        to="/"
-        className="inline-flex items-center gap-2 rounded-lg bg-primary text-anti-primary px-5 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity"
-      >
-        <ArrowLeftIcon className="w-4 h-4" />
-        Back home
-      </Link>
-    </div>
+    <main className="flex w-full flex-1 flex-col px-8 sm:px-10 lg:px-12">
+      <section className="flex min-h-[calc(100svh-7rem)] flex-col justify-center gap-8 pb-12 pt-8 sm:min-h-[calc(100svh-8rem)] sm:pb-16 sm:pt-10">
+        <div className="flex max-w-2xl flex-col gap-5">
+          <h1 className="text-5xl font-semibold tracking-[-0.02em] text-neutral-950 sm:text-6xl">
+            Page not found
+          </h1>
+          <p className="text-lg leading-[1.5] text-neutral-600">
+            This page doesn&apos;t exist or has moved.
+          </p>
+        </div>
+
+        <Link
+          to="/"
+          className="group inline-flex w-fit items-center gap-2 rounded-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
+        >
+          <ArrowLeftIcon className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          Back home
+        </Link>
+      </section>
+    </main>
   );
 }

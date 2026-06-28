@@ -161,8 +161,55 @@
 
 html {
   overflow-x: clip;
-  overscroll-behavior-x: none;
   overscroll-behavior-y: none;
+}
+
+/* Vertical "agent output" stream: green dots flowing down a faint track,
+   continuing the AgentWorkLoop spine into the Slack thread below. */
+.orin-output-flow {
+  position: relative;
+  width: 2px;
+  overflow: hidden;
+  background: #e4e4e4;
+}
+
+.orin-output-flow::after {
+  content: "";
+  position: absolute;
+  inset: -24px 0 0 0;
+  background-image: linear-gradient(
+    to bottom,
+    #16a34a 0 5px,
+    transparent 5px 24px
+  );
+  background-size: 2px 24px;
+  background-repeat: repeat-y;
+  animation: orin-output-flow-move 0.9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orin-output-flow::after {
+    animation: none;
+  }
+}
+
+@keyframes orin-output-flow-move {
+  to {
+    transform: translateY(24px);
+  }
+}
+
+@keyframes orin-typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-2px);
+    opacity: 1;
+  }
 }
 
 @keyframes beacon-pulse {

@@ -1,70 +1,64 @@
 import {
   type MouseEvent,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
 
+import Cal, { getCalApi } from '@calcom/embed-react';
 import { ArrowRight } from 'lucide-react';
 import { cn } from 'slate-ui';
 
-const CALENDLY_URL = 'https://calendly.com/bryan-orinlabs-kwpy/30min';
-const CALENDLY_SCRIPT_SRC = 'https://assets.calendly.com/assets/external/widget.js';
-let calendlyScriptPromise: Promise<boolean> | null = null;
+// ---------------------------------------------------------------------------
+// Cal.com configuration
+//
+// `CAL_LINK` is your public booking link in the form "<username-or-team>/<event>".
+// `CAL_NAMESPACE` isolates this embed instance (any stable string works).
+//
+// Custom booking fields (company, team size, use case, etc.) are defined per
+// event type in the Cal.com dashboard under "Advanced -> Booking questions".
+// Once defined there, you can prefill or hard-set them here via `CAL_PREFILL`
+// keyed by the field's slug. The scheduling availability comes from Cal.com,
+// so nothing about availability changes.
+// ---------------------------------------------------------------------------
+const CAL_LINK = 'team/orin-labs/orin-labs-demo';
+const CAL_NAMESPACE = 'book-demo';
 
-type CalendlyWidget = {
-  initInlineWidget: (options: {
-    url: string;
-    parentElement: HTMLElement;
-  }) => void;
-};
+// Prefill values for built-in and custom booking fields, keyed by field slug.
+// Example custom field: `{ company: 'Acme', 'team-size': '10-50' }`.
+const CAL_PREFILL: Record<string, string | string[]> = {};
 
-declare global {
-  interface Window {
-    Calendly?: CalendlyWidget;
+// Brand styling for the embedded booker. Cal.com themes the scheduler from a
+// single brand color plus a set of CSS variables, so we match the site here.
+const BRAND_COLOR = '#0a0a0a';
+
+let calUiConfigured = false;
+
+async function configureCalUi() {
+  if (calUiConfigured) {
+    return;
   }
-}
 
-function loadCalendlyScript() {
-  if (typeof document === 'undefined') {
-    return Promise.resolve(false);
-  }
+  const cal = await getCalApi({ namespace: CAL_NAMESPACE });
 
-  if (window.Calendly) {
-    return Promise.resolve(true);
-  }
-
-  if (calendlyScriptPromise) {
-    return calendlyScriptPromise;
-  }
-
-  calendlyScriptPromise = new Promise((resolve) => {
-    const existingScript = document.querySelector<HTMLScriptElement>(
-      'script[src="' + CALENDLY_SCRIPT_SRC + '"]',
-    );
-
-    const resolveLoaded = () => resolve(Boolean(window.Calendly));
-    const resolveFailed = () => {
-      calendlyScriptPromise = null;
-      resolve(false);
-    };
-
-    if (existingScript) {
-      existingScript.addEventListener('load', resolveLoaded, { once: true });
-      existingScript.addEventListener('error', resolveFailed, { once: true });
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = CALENDLY_SCRIPT_SRC;
-    script.async = true;
-    script.addEventListener('load', resolveLoaded, { once: true });
-    script.addEventListener('error', resolveFailed, { once: true });
-    document.body.appendChild(script);
+  cal('ui', {
+    theme: 'light',
+    layout: 'month_view',
+    hideEventTypeDetails: false,
+    cssVarsPerTheme: {
+      light: {
+        'cal-brand': BRAND_COLOR,
+      },
+      dark: {
+        'cal-brand': '#ffffff',
+      },
+    },
+    styles: {
+      branding: { brandColor: BRAND_COLOR },
+    },
   });
 
-  return calendlyScriptPromise;
+  calUiConfigured = true;
 }
 
 interface BookDemoButtonProps {
@@ -81,16 +75,17 @@ export function BookDemoButton({
   tabIndex,
 }: BookDemoButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const calendlyWidgetRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    void loadCalendlyScript();
+    void configureCalUi();
   }, []);
 
   useEffect(() => {
     if (!isModalOpen) {
       return;
     }
+
+    void configureCalUi();
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -109,37 +104,6 @@ export function BookDemoButton({
     };
   }, [isModalOpen]);
 
-  useEffect(() => {
-    const widget = calendlyWidgetRef.current;
-    if (!isModalOpen || !widget) {
-      return;
-    }
-
-    const initializeWidget = () => {
-      if (!window.Calendly || !widget.isConnected) {
-        return;
-      }
-
-      widget.innerHTML = '';
-      window.Calendly.initInlineWidget({
-        url: CALENDLY_URL,
-        parentElement: widget,
-      });
-    };
-
-    let cancelled = false;
-
-    void loadCalendlyScript().then((loaded) => {
-      if (!cancelled && loaded) {
-        initializeWidget();
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isModalOpen]);
-
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     onClick?.();
@@ -155,13 +119,22 @@ export function BookDemoButton({
         onClick={() => setIsModalOpen(false)}
       />
       <div
-        ref={calendlyWidgetRef}
-        className="calendly-inline-widget relative h-[700px] max-h-[calc(100svh-1.5rem)] w-full max-w-4xl min-w-[320px]"
-        data-url={CALENDLY_URL}
+        className="relative h-[700px] max-h-[calc(100svh-1.5rem)] w-full max-w-4xl min-w-[320px]"
         role="dialog"
         aria-modal="true"
         aria-label="Book a demo"
-      />
+      >
+        <Cal
+          namespace={CAL_NAMESPACE}
+          calLink={CAL_LINK}
+          style={{ width: '100%', height: '100%', overflow: 'auto' }}
+          config={{
+            layout: 'month_view',
+            theme: 'light',
+            ...CAL_PREFILL,
+          }}
+        />
+      </div>
     </div>
   ) : null;
 

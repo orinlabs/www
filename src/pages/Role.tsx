@@ -1,5 +1,6 @@
-import { ArrowLeftIcon } from 'lucide-react';
-import { type ReactNode } from 'react';
+import { ArrowLeftIcon, ArrowRight, X } from 'lucide-react';
+import { type ReactNode, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Link,
   Navigate,
@@ -17,27 +18,95 @@ import {
 export default function Role() {
   const { slug } = useParams<{ slug: string }>();
   const role = getRoleBySlug(slug);
+  const [isApplyOpen, setIsApplyOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isApplyOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsApplyOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isApplyOpen]);
 
   if (!role) {
     return <Navigate to="/careers" replace />;
   }
 
+  const applyDrawer = (
+    <>
+      <button
+        type="button"
+        aria-hidden="true"
+        tabIndex={-1}
+        onClick={() => setIsApplyOpen(false)}
+        className={
+          "fixed inset-0 z-[70] bg-neutral-950/40 transition-opacity duration-300 " +
+          (isApplyOpen ? "opacity-100" : "pointer-events-none opacity-0")
+        }
+      />
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={"Apply for " + role.title}
+        className={
+          "fixed inset-y-0 right-0 z-[80] flex w-full max-w-xl flex-col overflow-y-auto bg-white shadow-2xl shadow-neutral-950/20 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] " +
+          (isApplyOpen ? "translate-x-0" : "pointer-events-none translate-x-full")
+        }
+      >
+        <div className="flex items-start justify-between gap-6 px-7 pt-7 sm:px-10 sm:pt-10">
+          <div>
+            <h2 className="text-3xl font-semibold tracking-[-0.035em] text-neutral-950 sm:text-4xl">
+              {role.title} Application
+            </h2>
+            <p className="mt-3 max-w-md text-base leading-7 text-neutral-600">
+              We read every application and will reply to you within 3 days.
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label="Close application"
+            onClick={() => setIsApplyOpen(false)}
+            tabIndex={isApplyOpen ? undefined : -1}
+            className="shrink-0 rounded-lg p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="px-7 pb-10 pt-8 sm:px-10">
+          <ApplicationForm roleSlug={role.slug} roleTitle={role.title} />
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <article className="flex w-full flex-col px-8 pb-24 pt-10 sm:px-10 sm:pb-32 sm:pt-14 lg:px-12">
-      <Link
-        to="/careers"
-        className="inline-flex w-fit items-center gap-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-950"
-      >
-        <ArrowLeftIcon className="h-4 w-4" />
-        All open roles
-      </Link>
-
-      <header className="mt-10 grid min-h-[48svh] gap-10 border-b border-neutral-200 pb-14 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
+      <header className="grid min-h-[48svh] gap-10 pb-14 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
         <div>
-          <p className="text-sm font-medium text-primary-700">
-            Careers
-          </p>
-          <h1 className="secondary-page-title mt-5 max-w-5xl text-neutral-950">
+          <Link
+            to="/careers"
+            className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-neutral-500 transition-colors hover:text-neutral-950"
+          >
+            <ArrowLeftIcon className="h-4 w-4" />
+            All roles
+          </Link>
+          <h1 className="secondary-page-title mt-6 max-w-5xl text-neutral-950">
             {role.title}
           </h1>
         </div>
@@ -64,21 +133,20 @@ export default function Role() {
               </>
             )}
           </div>
-          <a
-            href="#apply"
-            className="mt-8 inline-flex w-fit items-center rounded-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+          <button
+            type="button"
+            onClick={() => setIsApplyOpen(true)}
+            className="group mt-8 inline-flex w-fit cursor-pointer items-center gap-2 rounded-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
           >
             Apply for this role
-          </a>
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </button>
         </div>
       </header>
 
       <div className="grid gap-10 py-16 sm:py-24 lg:grid-cols-[0.34fr_1fr]">
-        <aside className="h-fit rounded-[2rem] border border-neutral-200 p-6 lg:sticky lg:top-8">
-          <p className="text-sm font-medium text-primary-700">
-            Role
-          </p>
-          <dl className="mt-6 grid gap-5 text-sm">
+        <aside className="h-fit lg:sticky lg:top-8">
+          <dl className="grid gap-5 text-sm">
             <div>
               <dt className="text-neutral-400">Location</dt>
               <dd className="mt-1 text-neutral-950">{role.location}</dd>
@@ -101,37 +169,30 @@ export default function Role() {
             <RoleSection key={section.heading} section={section} />
           ))}
 
-          <section
-            className="mt-8 rounded-[2rem] border border-neutral-200 bg-neutral-50 p-6 sm:p-8 lg:p-10"
-            id="apply"
+          <button
+            type="button"
+            onClick={() => setIsApplyOpen(true)}
+            className="group mt-2 inline-flex w-fit cursor-pointer items-center gap-2 rounded-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
           >
-            <div className="mb-8">
-              <p className="text-sm font-medium text-primary-700">
-                Apply
-              </p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em] text-neutral-950 sm:text-5xl">
-                Tell us what you want to build.
-              </h2>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-neutral-600">
-                We read every application. Expect a reply within a week.
-              </p>
-            </div>
-            <ApplicationForm roleSlug={role.slug} roleTitle={role.title} />
-          </section>
+            Apply for this role
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </button>
 
-          <div className="flex flex-col gap-3 border-t border-neutral-200 pt-6 text-sm leading-relaxed text-neutral-500">
+          <div className="mt-6 flex flex-col gap-3 border-t border-neutral-200 pt-6 text-sm leading-relaxed text-neutral-500">
             <p>{VISA_NOTE}</p>
             <p>{EEO_STATEMENT}</p>
           </div>
         </div>
       </div>
+
+      {typeof document !== "undefined" && createPortal(applyDrawer, document.body)}
     </article>
   );
 }
 
 function RoleSection({ section }: { section: RoleType["sections"][number] }) {
   return (
-    <section className="rounded-[2rem] border border-neutral-200 bg-white p-6 sm:p-8 lg:p-10">
+    <section className="bg-white py-2 sm:py-3 lg:py-4">
       <h2 className="text-2xl font-semibold tracking-[-0.025em] text-neutral-950 sm:text-4xl">
         {section.heading}
       </h2>

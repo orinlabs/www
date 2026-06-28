@@ -1,5 +1,7 @@
 import {
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -11,6 +13,10 @@ interface GlitchTextProps {
   children: string;
   className?: string;
   underline?: boolean;
+  /** Trigger a glitch pass once when the component mounts. */
+  glitchOnMount?: boolean;
+  /** Probability (0-1) of spontaneously glitching, checked once per second. */
+  idleGlitchChance?: number;
 }
 
 interface CharacterState {
@@ -28,8 +34,14 @@ function pick<T>(items: T[]) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-export function GlitchText({ children, className, underline = true }: GlitchTextProps) {
-  const originalCharacters = Array.from(children);
+export function GlitchText({
+  children,
+  className,
+  underline = true,
+  glitchOnMount = false,
+  idleGlitchChance,
+}: GlitchTextProps) {
+  const originalCharacters = useMemo(() => Array.from(children), [children]);
   const [characters, setCharacters] = useState<CharacterState[]>(() =>
     originalCharacters.map((value) => ({
       value,
@@ -39,12 +51,12 @@ export function GlitchText({ children, className, underline = true }: GlitchText
   );
   const timersRef = useRef<number[]>([]);
 
-  const clearTimers = () => {
+  const clearTimers = useCallback(() => {
     timersRef.current.forEach((timer) => window.clearTimeout(timer));
     timersRef.current = [];
-  };
+  }, []);
 
-  const resetCharacters = () => {
+  const resetCharacters = useCallback(() => {
     setCharacters(
       originalCharacters.map((value) => ({
         value,
@@ -52,9 +64,9 @@ export function GlitchText({ children, className, underline = true }: GlitchText
         isSpace: value.trim() === '',
       })),
     );
-  };
+  }, [originalCharacters]);
 
-  const startGlitch = () => {
+  const startGlitch = useCallback(() => {
     clearTimers();
     resetCharacters();
 
@@ -101,14 +113,33 @@ export function GlitchText({ children, className, underline = true }: GlitchText
 
       timersRef.current.push(resetTimer);
     });
-  };
+  }, [clearTimers, originalCharacters, resetCharacters]);
 
   useEffect(() => {
     resetCharacters();
     return clearTimers;
-    // Rebuild character state when the text changes.
+  }, [resetCharacters, clearTimers]);
+
+  useEffect(() => {
+    if (!glitchOnMount) {
+      return;
+    }
+    startGlitch();
+    // Only fire once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [children]);
+  }, []);
+
+  useEffect(() => {
+    if (!idleGlitchChance || idleGlitchChance <= 0) {
+      return;
+    }
+    const interval = window.setInterval(() => {
+      if (Math.random() < idleGlitchChance) {
+        startGlitch();
+      }
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [idleGlitchChance, startGlitch]);
 
   return (
     <span

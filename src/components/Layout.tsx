@@ -237,16 +237,16 @@ export default function Layout({ children, hero, footerDark = false }: LayoutPro
       {hero ? (
         <div className="relative w-full overflow-hidden border-b border-neutral-200 bg-[#f4f3ef] md:rounded-2xl md:border">
           {hero}
-          <div className="absolute inset-x-0 top-0 z-20 px-6 sm:px-8 pt-8 pb-5 md:py-5">
+          <div className="absolute inset-x-0 top-0 z-30 px-6 sm:px-8 pt-8 pb-5 md:py-5">
             <Navbar />
           </div>
         </div>
       ) : isWide ? (
-        <div className="relative z-10 w-full border-b border-neutral-200 dark:border-neutral-800 px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="relative z-30 w-full border-b border-neutral-200 dark:border-neutral-800 px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <Navbar />
         </div>
       ) : (
-        <div className="relative z-10 w-full bg-white px-8 py-4 sm:px-10 sm:py-5 lg:px-12">
+        <div className="relative z-30 w-full bg-white px-8 py-4 sm:px-10 sm:py-5 lg:px-12">
           <div className="w-full">
             <Navbar />
           </div>

@@ -2,17 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import type { ComponentType } from 'react';
 
 import {
-  AutodeskRevitLogo,
   GmailLogo,
-  GoogleDriveLogo,
   MicrosoftTeamsLogo,
   PhoneLogo,
   ProcoreLogo,
-  SalesforceLogo,
   SitetrackerLogo,
   SlackLogo,
   SmsLogo,
-  ZoomLogo,
 } from './AgentToolLogos';
 
 const TOOLS: Array<{
@@ -24,13 +20,9 @@ const TOOLS: Array<{
   { name: 'Email', Logo: GmailLogo, color: '#EA4335' },
   { name: 'SMS', Logo: SmsLogo, color: '#0EA5A4' },
   { name: 'Teams', Logo: MicrosoftTeamsLogo, color: '#6264A7' },
-  { name: 'Drive', Logo: GoogleDriveLogo, color: '#1967D2' },
-  { name: 'Salesforce', Logo: SalesforceLogo, color: '#00A1E0' },
   { name: 'Procore', Logo: ProcoreLogo, color: '#F4641E' },
   { name: 'Sitetracker', Logo: SitetrackerLogo, color: '#34495E' },
-  { name: 'Revit', Logo: AutodeskRevitLogo, color: '#0696D7' },
   { name: 'Phone', Logo: PhoneLogo, color: '#16A34A' },
-  { name: 'Zoom', Logo: ZoomLogo, color: '#0B5CFF' },
 ];
 
 // Arc geometry, in a 0–100 coordinate space. The arc center sits low and the
@@ -52,9 +44,7 @@ const ARC = {
 // corner radius is a true, undistorted 20px.
 const BADGE_DROP = 5.6;
 const CENTER_INDEX = (TOOLS.length - 1) / 2;
-const JOIN_BASE_Y = 30; // where the innermost pair meets the spine
-const JOIN_STEP_Y = 6.75; // each step further from center joins this much lower
-const TRUNK_END_Y = 62; // keep the tail below the lowest merge very short
+const JOIN_GAP = 6; // minimum vertical gap between an icon and its horizontal line
 const CORNER_RADIUS = 20; // px
 const FLOW_SPEED = 150; // px per second the dots travel
 const FLOW_DOT_SPACING = 26; // px between dots on the shared trunk
@@ -70,9 +60,21 @@ function arcPoint(frac: number) {
 
 const SPINE_TOP_Y = arcPoint(0.5).y + BADGE_DROP;
 
+// Equally spaced horizontal lines: the innermost and outermost rings each sit a
+// fixed gap below their own icons, and the rings in between are interpolated
+// linearly by ring distance. Because the icon arc is convex, this guarantees the
+// lines are evenly spaced while every icon keeps at least JOIN_GAP of clearance
+// and outer icons (lower on the arc) still join lower than inner ones.
+const MAX_DISTANCE = CENTER_INDEX;
+const MIN_DISTANCE = TOOLS.length % 2 === 0 ? 0.5 : 1;
+const LINE_OUTER_Y = arcPoint(0).y + BADGE_DROP + JOIN_GAP;
+const LINE_INNER_Y =
+  arcPoint((CENTER_INDEX - MIN_DISTANCE) / (TOOLS.length - 1)).y + BADGE_DROP + JOIN_GAP;
 function joinYForIndex(index: number) {
-  const distanceFromCenter = Math.abs(index - CENTER_INDEX);
-  return JOIN_BASE_Y + (distanceFromCenter - 1) * JOIN_STEP_Y;
+  const distance = Math.abs(index - CENTER_INDEX);
+  if (MAX_DISTANCE <= MIN_DISTANCE) return LINE_OUTER_Y;
+  const t = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
+  return LINE_INNER_Y + t * (LINE_OUTER_Y - LINE_INNER_Y);
 }
 
 // Builds a connector in pixel space: drop, rounded corner, horizontal run, then
@@ -202,7 +204,9 @@ export function AgentWorkLoop() {
       })
     : [];
 
-  const trunkEndPx = pxY(TRUNK_END_Y);
+  // One continuous trunk: every branch funnels into a single line that runs all
+  // the way to the bottom of the diagram and into the Slack thread below.
+  const trunkEndPx = h;
   const spineTopPx = pxY(SPINE_TOP_Y);
   const spineD = `M ${centerX.toFixed(1)} ${spineTopPx.toFixed(1)} L ${centerX.toFixed(1)} ${trunkEndPx.toFixed(1)}`;
 
@@ -269,8 +273,8 @@ export function AgentWorkLoop() {
   });
 
   return (
-    <section className="bg-white px-6 py-20 sm:px-10 sm:py-28 lg:px-12">
-      <div ref={containerRef} className="relative mx-auto h-[26rem] w-full max-w-5xl sm:h-[30rem] lg:h-[34rem]">
+    <section className="bg-white px-6 pb-0 pt-20 sm:px-10 sm:pt-28 lg:px-12">
+      <div ref={containerRef} className="relative mx-auto h-[28rem] w-full max-w-5xl sm:h-[33rem] lg:h-[37rem]">
         <svg
           className="pointer-events-none absolute inset-0 h-full w-full"
           viewBox={`0 0 ${w || 100} ${h || 100}`}
@@ -373,7 +377,14 @@ export function AgentWorkLoop() {
           />
         ))}
 
-        <div className="absolute inset-x-0 top-[66%] flex flex-col items-center px-4 text-center">
+        <div
+          className="absolute inset-x-0 flex -translate-y-1/2 flex-col items-center px-4 py-20 text-center sm:py-28"
+          style={{
+            top: '64%',
+            background:
+              'linear-gradient(to bottom, rgba(255,255,255,0) 0%, #ffffff 30%, #ffffff 70%, rgba(255,255,255,0) 100%)',
+          }}
+        >
           <h2 className="max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-neutral-950 sm:text-5xl">
             Perfect attention for every project
           </h2>

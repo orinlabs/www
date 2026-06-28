@@ -83,9 +83,6 @@ export default function Research() {
           >
             <div className="grid min-h-72 w-full gap-8 px-10 py-14 sm:px-14 sm:py-16 lg:grid-cols-[0.28fr_1fr_auto] lg:items-start lg:px-16">
               <div className="flex items-center gap-3 text-sm opacity-60">
-                <span className="tabular-nums">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
                 <span>{post.date}</span>
               </div>
 
@@ -95,9 +92,6 @@ export default function Research() {
                 </h2>
                 <p className="mt-5 max-w-3xl text-base leading-7 opacity-75 sm:text-lg sm:leading-8">
                   {post.description}
-                </p>
-                <p className="mt-6 text-sm opacity-55">
-                  {post.author}
                 </p>
               </InViewFade>
 

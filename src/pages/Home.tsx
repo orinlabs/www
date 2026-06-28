@@ -2,6 +2,7 @@ import { AgentWorkLoop } from '../components/AgentWorkLoop';
 import { BookDemoButton } from '../components/BookDemoButton';
 import { DeploymentsGallery } from '../components/DeploymentsGallery';
 import { FrontierResearch } from '../components/FrontierResearch';
+import { InTheLoopDemo } from '../components/InTheLoopDemo';
 
 function scrollToDeployments(e: React.MouseEvent) {
   const target = document.getElementById('deployments');
@@ -33,11 +34,15 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="w-full overflow-x-clip bg-white py-20 sm:py-28">
+      <section className="w-full overflow-x-clip bg-white py-20 pt-10 sm:pb-48 sm:pt-0">
         <div className="flex w-full flex-col gap-20 sm:gap-28">
           <DeploymentsGallery />
 
-          <AgentWorkLoop />
+          <div className="flex flex-col">
+            <AgentWorkLoop />
+
+            <InTheLoopDemo />
+          </div>
 
           <FrontierResearch />
         </div>
@@ -46,26 +51,14 @@ export default function Home() {
       <section className="relative -mx-8 overflow-hidden bg-black px-8 text-white sm:-mx-10 sm:px-10 lg:-mx-12 lg:px-12">
         <div className="relative z-10 grid min-h-[72svh] w-full gap-8 py-40 md:grid-cols-[1fr_auto] md:items-center">
           <div>
-            <p className="text-sm font-medium text-primary-200">
-              Contact
-            </p>
             <h2 className="mt-4 max-w-3xl text-5xl font-semibold leading-[0.98] md:text-7xl">
-              Put agents to work inside your operations.
+              Put AI to work inside your operations
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-white/70">
-              Book a call with our team to scope your first deployment — or jump
-              back up to watch an agent work.
+              Book a call with our team to scope your first deployment.
             </p>
-          </div>
-          <div className="flex w-fit flex-wrap items-center gap-3">
-            <BookDemoButton variant="light" />
-            <a
-              href="#deployments"
-              onClick={scrollToDeployments}
-              className="inline-flex w-fit items-center gap-2 rounded-full border border-white/30 px-5 py-3 text-sm font-medium text-white transition-colors hover:border-white/60 hover:bg-white/10"
-            >
-              See it in action
-            </a>
+            <BookDemoButton variant="light" className="mt-6" />
+
           </div>
         </div>
       </section>

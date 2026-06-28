@@ -12,6 +12,7 @@ import { BrandBanner } from "./BrandBanner";
 import { BookDemoButton } from "./BookDemoButton";
 
 const NAV_ITEMS = [
+  // { label: "Customers", path: "/customers" },
   { label: "Research", path: "/research" },
   { label: "Careers", path: "/careers" },
 ];

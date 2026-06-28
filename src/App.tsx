@@ -12,6 +12,7 @@ import {
 
 import Layout from './components/Layout';
 import Careers from './pages/Careers';
+import EvChargerBuild from './pages/EvChargerBuild';
 import Handbook from './pages/Handbook';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
@@ -133,7 +134,7 @@ function App() {
         <Route
           path="/roles/:slug"
           element={
-            <Layout>
+            <Layout footerDark>
               <Role />
             </Layout>
           }
@@ -171,10 +172,12 @@ function App() {
           }
         />
         <Route path="/og-horizon-capture" element={<OgHorizonCapture />} />
+        <Route path="/ev-charger" element={<EvChargerBuild />} />
+        <Route path="/ev-charger" element={<EvChargerBuild />} />
         <Route
           path="*"
           element={
-            <Layout>
+            <Layout footerDark>
               <NotFound />
             </Layout>
           }
