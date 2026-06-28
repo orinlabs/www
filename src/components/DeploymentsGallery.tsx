@@ -1,7 +1,7 @@
 import {
   BatteryCharging,
   FileCheck2,
-  Gavel,
+  PlugZap,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -27,7 +27,7 @@ const DEPLOYMENTS: Deployment[] = [
   {
     id: 'ev',
     industry: 'EV Chargers',
-    icon: BatteryCharging,
+    icon: PlugZap,
     title: 'L2 chargers built at scale',
     collapsedTitle: 'Chargers',
     collapsedTitleClass: 'tracking-[-0.01em]',
@@ -45,21 +45,21 @@ const DEPLOYMENTS: Deployment[] = [
     collapsedTitleClass: 'tracking-[-0.01em]',
     summary:
       'Permits, sites, and commissioning run by autonomous agents.',
-    image: 'https://coldwellenergy.com/wp-content/uploads/2022/03/solar-panels-on-commercial-building.jpg',
+    image: 'https://www.electronicafinance.com/wp-content/uploads/2024/07/is-it-a-smart-decision-to-invest-in-a-solar-rooftop-system.webp',
     imagePosition: 'center',
   },
   {
     id: 'gc',
-    industry: 'General contracting',
-    icon: Gavel,
-    title: 'Bid-out cycles',
-    collapsedTitle: 'Bids',
+    industry: 'Storage',
+    icon: BatteryCharging,
+    title: 'Batteries that install themselves',
+    collapsedTitle: 'Storage',
     collapsedTitleClass: 'tracking-[-0.01em]',
     summary:
-      'Scopes, vendor follow-ups, and quote comparisons handled cleanly.',
-    image: '/project-backgrounds/permitting.jpg',
+      'Approvals, coordination, and installations run by autonomous agents.',
+    image: 'https://bslbatt.com/wp-content/uploads/BSLBATT-Commercial-Battery-Storage-System-Series.webp',
     imagePosition: 'center',
-  },
+  },  
 ];
 
 function DeploymentBadge({

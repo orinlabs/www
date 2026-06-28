@@ -74,7 +74,6 @@ export function ResearchArticle({
           </span>
           <span>{date}</span>
         </div>
-        <div className="orin-hero-bar mt-10 h-1.5 w-full rounded-full bg-neutral-950 sm:w-[60%]" />
       </header>
 
       {image && (

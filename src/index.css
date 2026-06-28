@@ -516,6 +516,10 @@ html {
   animation: orin-hero-bar-draw 0.9s cubic-bezier(0.65, 0, 0.35, 1) 0.18s both;
 }
 
+.orin-hero-bar-right {
+  transform-origin: right center;
+}
+
 /* Shared centered column for nav/content/footer. Mirrors the old
    `max-w-3xl xl:max-w-4xl` reading width, but the max-width is animated so the
    layout can expand cleanly into the wide handbook view when switching routes

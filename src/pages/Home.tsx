@@ -1,7 +1,7 @@
+import { AgentWorkLoop } from '../components/AgentWorkLoop';
 import { BookDemoButton } from '../components/BookDemoButton';
 import { DeploymentsGallery } from '../components/DeploymentsGallery';
 import { FrontierResearch } from '../components/FrontierResearch';
-import { PlatformScrollSection } from '../components/PlatformScrollSection';
 
 function scrollToDeployments(e: React.MouseEvent) {
   const target = document.getElementById('deployments');
@@ -17,7 +17,7 @@ export default function Home() {
       <section className="relative h-[calc(100svh-4.5rem)] overflow-hidden bg-white pb-8 pt-8 sm:h-[calc(100svh-5.25rem)] sm:pb-10 sm:pt-10 lg:pb-12 lg:pt-12">
         <div className="flex h-full min-h-0 w-full flex-col justify-between gap-10">
           <div className="relative z-10">
-            <h1 className="max-w-[82rem] text-[clamp(4.25rem,13.2vw,12.75rem)] font-semibold leading-[0.82] tracking-[-0.045em] text-neutral-950">
+            <h1 className="max-w-[82rem] text-[clamp(3.825rem,11.88vw,11.475rem)] font-semibold leading-[0.82] tracking-[-0.045em] text-neutral-950">
               <span className="block">Scale operations</span>
               <span className="block">with agents</span>
             </h1>
@@ -37,7 +37,7 @@ export default function Home() {
         <div className="flex w-full flex-col gap-20 sm:gap-28">
           <DeploymentsGallery />
 
-          <PlatformScrollSection />
+          <AgentWorkLoop />
 
           <FrontierResearch />
         </div>

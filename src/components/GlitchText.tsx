@@ -10,6 +10,7 @@ import { EFFECT_COLORS } from '../effectColors';
 interface GlitchTextProps {
   children: string;
   className?: string;
+  underline?: boolean;
 }
 
 interface CharacterState {
@@ -27,7 +28,7 @@ function pick<T>(items: T[]) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-export function GlitchText({ children, className }: GlitchTextProps) {
+export function GlitchText({ children, className, underline = true }: GlitchTextProps) {
   const originalCharacters = Array.from(children);
   const [characters, setCharacters] = useState<CharacterState[]>(() =>
     originalCharacters.map((value) => ({
@@ -133,7 +134,9 @@ export function GlitchText({ children, className }: GlitchTextProps) {
             {character.isSpace ? ' ' : character.value}
           </span>
         ))}
-        <span className="absolute -bottom-0.5 left-0 hidden h-0.5 w-full origin-left scale-x-0 bg-current transition-transform duration-[360ms] ease-[cubic-bezier(0.65,0,0.35,1)] group-hover/glitch:scale-x-100 group-focus/glitch:scale-x-100 sm:block" />
+        {underline && (
+          <span className="absolute -bottom-0.5 left-0 hidden h-0.5 w-full origin-left scale-x-0 bg-current transition-transform duration-[360ms] ease-[cubic-bezier(0.65,0,0.35,1)] group-hover/glitch:scale-x-100 group-focus/glitch:scale-x-100 sm:block" />
+        )}
       </span>
     </span>
   );
