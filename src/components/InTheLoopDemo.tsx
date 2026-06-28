@@ -360,7 +360,14 @@ export function InTheLoopDemo() {
     } else if (state.status === 'awaiting') {
       timer = window.setTimeout(() => dispatch({ type: 'APPROVE' }), AUTO_APPROVE_MS);
     } else if (state.status === 'finished') {
-      timer = window.setTimeout(() => dispatch({ type: 'RESET' }), FINISHED_PAUSE_MS);
+      timer = window.setTimeout(
+        () =>
+          dispatch({
+            type: 'SET_SCENARIO',
+            index: (state.scenario + 1) % SCENARIOS.length,
+          }),
+        FINISHED_PAUSE_MS,
+      );
     }
     return () => window.clearTimeout(timer);
   }, [active, state.playing, state.scenario, state.step, state.status]);
