@@ -4,14 +4,6 @@ import { DeploymentsGallery } from '../components/DeploymentsGallery';
 import { FrontierResearch } from '../components/FrontierResearch';
 import { InTheLoopDemo } from '../components/InTheLoopDemo';
 
-function scrollToDeployments(e: React.MouseEvent) {
-  const target = document.getElementById('deployments');
-  if (target) {
-    e.preventDefault();
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-}
-
 export default function Home() {
   return (
     <main className="flex w-full flex-col px-8 sm:px-10 lg:px-12">

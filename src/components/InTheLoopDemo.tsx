@@ -55,32 +55,32 @@ const SCENARIOS: Scenario[] = [
         id: 'gen',
         author: 'orin',
         time: '9:14 AM',
-        text: 'Received project approval for 1400 Olive St — generating POs.',
+        text: 'Just saw 1400 Olive St got approved in Procore. Generating the POs now.',
       },
       {
         id: 'detail',
         author: 'orin',
         time: '9:14 AM',
-        text: 'This project needs 3 POs. Confirmed with Bright Electric (vendor 2) to ship to the Oakland yard, not their main warehouse — it’s down for repairs.',
+        text: 'Do we need to ship the units to the Oakland yard like last time? @Marcus',
       },
       {
         id: 'pm',
         author: 'marcus',
         time: '9:15 AM',
-        text: 'Confirm the Q3 price increase hasn’t hit yet before you send.',
+        text: 'Yeah, the main yard is still being repaired.',
       },
       {
         id: 'confirm',
         author: 'orin',
         time: '9:15 AM',
         approval: true,
-        text: 'Confirmed — still on May pricing. Ready to send all 3.',
+        text: 'Got it, I\'ll use the Oakland address. Ready to send the [[POs]].',
       },
       {
         id: 'sent',
         author: 'orin',
         time: '9:16 AM',
-        text: 'Sent. Logged to Procore with the approvals attached.',
+        text: 'Sent. I copied you and logged them to Procore.',
       },
     ],
   },
@@ -93,7 +93,7 @@ const SCENARIOS: Scenario[] = [
         id: 'approved',
         author: 'orin',
         time: '11:02 AM',
-        text: 'Fremont approved the permit for the Mission Blvd site. Scheduling the inspection.',
+        text: 'Fremont emailed us the approval for Mission Blvd site, so I\'m scheduling the inspection.',
       },
       {
         id: 'slot',
@@ -105,39 +105,39 @@ const SCENARIOS: Scenario[] = [
         id: 'push',
         author: 'marcus',
         time: '11:04 AM',
-        text: 'Push a day — the conduit won’t pass till Friday.',
+        text: 'Push a day — the conduit won\'t pass till Friday.',
       },
       {
         id: 'rebook',
         author: 'orin',
         time: '11:04 AM',
         approval: true,
-        text: 'Rebooked for Friday 7/12 at 9 AM. Confirm with the inspector?',
+        text: 'Rebooked for Friday 7/12 at 9 AM. Can I text the inspector to confirm?',
       },
       {
         id: 'done',
         author: 'orin',
         time: '11:05 AM',
-        text: 'Confirmed. Calendar invites sent to the crew and the inspector.',
+        text: 'Confirmed. I texted to the crew and the inspector, everything\'s on track.',
       },
     ],
   },
   {
     id: 'change-order',
-    channel: 'vendor-coordination',
+    channel: 'olive-st-site',
     members: 15,
     beats: [
       {
         id: 'flag',
         author: 'orin',
         time: '2:31 PM',
-        text: 'Bright Electric flagged a $3,200 change order on Olive St — extra trenching.',
+        text: 'Bright Electric flagged a $3,200 [[change order]] on Olive St. Extra trenching.',
       },
       {
         id: 'check',
         author: 'orin',
         time: '2:31 PM',
-        text: 'Contract allows billing for trenching over 40 ft. They’re claiming 52 ft.',
+        text: 'Our [[contract]] allows billing for trenching over 40 ft. They\'re claiming 52 ft.',
       },
       {
         id: 'photo',
@@ -150,13 +150,13 @@ const SCENARIOS: Scenario[] = [
         author: 'orin',
         time: '2:34 PM',
         approval: true,
-        text: 'They sent site photos confirming 52 ft. Approve the change order?',
+        text: 'They sent [[site photos]] confirming 52 ft. Can I approve the change order?',
       },
       {
         id: 'updated',
         author: 'orin',
         time: '2:35 PM',
-        text: 'Approved. Budget updated in Procore and Bright Electric notified.',
+        text: 'Great, sent them an [[email]]. I updated the budget in Procore and notified Bright Electric.',
       },
     ],
   },
@@ -254,6 +254,43 @@ function Avatar({ author }: { author: AuthorId }) {
       )}
     </div>
   );
+}
+
+// Inline markup, Slack-blue:
+//   • wrap any span in [[ ]] for a blue link  → "Logged to [[Procore]]."
+//   • @mentions render as blue mention pills   → "...like last time? @Marcus"
+function renderRichText(text: string): ReactNode[] {
+  const parts: ReactNode[] = [];
+  const regex = /\[\[(.+?)\]\]|(@[\w-]+)/g;
+  let lastIndex = 0;
+  let key = 0;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    if (match[1] !== undefined) {
+      parts.push(
+        <span key={key++} className="cursor-pointer text-[#1264a3] hover:underline">
+          {match[1]}
+        </span>,
+      );
+    } else {
+      parts.push(
+        <span
+          key={key++}
+          className="cursor-pointer rounded-[3px] bg-[#1264a3]/10 px-0.5 font-medium text-[#1264a3] hover:underline"
+        >
+          {match[2]}
+        </span>,
+      );
+    }
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  return parts;
 }
 
 function TypingDots() {
@@ -420,7 +457,7 @@ export function InTheLoopDemo() {
                         </div>
                       )}
                       <p className="text-[15px] font-normal leading-[22px] text-[#1d1c1d]">
-                        {beat.text}
+                        {renderRichText(beat.text)}
                       </p>
 
                       {beat.approval && (
