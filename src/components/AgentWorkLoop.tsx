@@ -459,7 +459,7 @@ export function AgentWorkLoop() {
             Perfect attention for every project
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-neutral-600">
-            AI agents read your team's communications and keep track of every project.
+            AI agents learn every aspect of each project and keep your team on track.
           </p>
         </div>
       </div>

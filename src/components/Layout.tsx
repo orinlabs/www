@@ -55,11 +55,11 @@ const FOOTER_WORD_VISIBLE_RATIO = 0.6;
 const FOOTER_WORD_OFFSET_RATIO = 0.1;
 
 // Multi-stop green gradients that fill the giant ORIN LABS wordmark in the
-// footer. On the light footer the letters fade from light green (bottom) up to
-// the primary color (top); on the dark footer they fade from the primary color
+// footer. On the light footer the letters fade from white (bottom) up to the
+// primary color (top); on the dark footer they fade from the primary color
 // (bottom) up into a deep green (top).
 const FOOTER_GRADIENT_STOPS_LIGHT =
-  "linear-gradient(to top, #e6f7f1 0%, #8be0c3 30%, #4fc99e 60%, #00a071 100%)";
+  "linear-gradient(to top, #ffffff 0%, #ffffff 18%, #c2f0df 45%, #4fc99e 74%, #00a071 100%)";
 const FOOTER_GRADIENT_STOPS_DARK =
   "linear-gradient(to top, #00a071 0%, #00694b 55%, #003324 100%)";
 

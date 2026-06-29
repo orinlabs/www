@@ -19,7 +19,7 @@ export default function Home() {
 
           <div className="flex w-full flex-col gap-6">
             <p className="max-w-2xl text-2xl leading-[1.25] text-neutral-700">
-              Safe, autonomous agents that run physical build-outs
+              Safe, autonomous agents that help run physical build-outs
             </p>
             <div className="orin-hero-bar h-1.5 w-full rounded-full bg-neutral-950 sm:w-[60%]" />
           </div>
