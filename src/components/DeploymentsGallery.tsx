@@ -99,6 +99,7 @@ function DeploymentPanel({
   deployment,
   isActive,
   isCollapsedLabelExiting,
+  fillMode,
   imageWidth,
   imageHeight,
   imageOffset,
@@ -110,6 +111,7 @@ function DeploymentPanel({
   deployment: Deployment;
   isActive: boolean;
   isCollapsedLabelExiting: boolean;
+  fillMode: boolean;
   imageWidth: number;
   imageHeight: number;
   imageOffset: number;
@@ -118,7 +120,9 @@ function DeploymentPanel({
   labelAnchorRight: boolean;
   onActivate: () => void;
 }) {
-  const measured = imageWidth > 0 && imageHeight > 0;
+  // In fillMode (stacked small screens) the card just shows its own image at
+  // full size. Otherwise we wait for the measured panorama dimensions.
+  const measured = !fillMode && imageWidth > 0 && imageHeight > 0;
 
   // Anchor the collapsed vertical title to the card edge that stays fixed while
   // this card collapses (the edge away from the newly-opened card), then center
@@ -164,7 +168,8 @@ function DeploymentPanel({
             width: measured ? imageWidth + 'px' : '100%',
             height: measured ? imageHeight + 'px' : '100%',
             transform: 'translateX(' + -imageOffset + 'px)',
-            backgroundImage: measured ? 'url(' + deployment.image + ')' : 'none',
+            backgroundImage:
+              measured || fillMode ? 'url(' + deployment.image + ')' : 'none',
             backgroundPosition: deployment.imagePosition,
           }}
         />
@@ -225,13 +230,13 @@ function DeploymentPanel({
       <div className="absolute inset-0 z-10 grid p-6 md:p-8">
         <div
           className={
-            'col-start-1 row-start-1 w-[36rem] max-w-[calc(100vw-3rem)] self-end transition-[opacity,transform] duration-500 ' +
+            'col-start-1 row-start-1 w-full max-w-[36rem] self-end transition-[opacity,transform] duration-500 ' +
             (isActive
               ? 'delay-150 translate-y-0 opacity-100'
               : 'pointer-events-none translate-y-1 opacity-0 delay-0')
           }
         >
-          <h3 className="max-w-xl whitespace-nowrap !font-['Body'] text-3xl font-semibold leading-[1.04] drop-shadow md:text-5xl">
+          <h3 className="max-w-xl whitespace-normal !font-['Body'] text-3xl font-semibold leading-[1.04] drop-shadow md:text-5xl lg:whitespace-nowrap">
             {deployment.title}
           </h3>
           <p className="mt-4 text-base leading-7 text-white/85 drop-shadow">
@@ -308,8 +313,10 @@ export function DeploymentsGallery() {
   }, [gridWidth, isHorizontal]);
 
   function imagePlacement(index: number): { width: number; offset: number } {
+    // When stacked (small screens) each card just fills its own panel, so skip
+    // the measured panorama math and let the image use 100% width/height.
     if (!isHorizontal || gridWidth === 0) {
-      return { width: gridWidth, offset: 0 };
+      return { width: 0, offset: 0 };
     }
 
     const count = DEPLOYMENTS.length;
@@ -370,10 +377,11 @@ export function DeploymentsGallery() {
             <DeploymentPanel
               key={deployment.id}
               deployment={deployment}
-              isActive={index === activeIndex}
-              isCollapsedLabelExiting={index === exitingCollapsedIndex}
+              isActive={isHorizontal ? index === activeIndex : true}
+              isCollapsedLabelExiting={isHorizontal && index === exitingCollapsedIndex}
+              fillMode={!isHorizontal}
               imageWidth={placement.width}
-              imageHeight={gridHeight}
+              imageHeight={isHorizontal ? gridHeight : 0}
               imageOffset={placement.offset}
               imageTransition={imageTransition}
               collapsedWidth={collapsedWidth}

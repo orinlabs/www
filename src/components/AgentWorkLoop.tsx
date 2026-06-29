@@ -49,32 +49,56 @@ const CORNER_RADIUS = 20; // px
 const FLOW_SPEED = 150; // px per second the dots travel
 const FLOW_DOT_SPACING = 26; // px between dots on the shared trunk
 
-function arcPoint(frac: number) {
-  const angleDeg = ARC.startDeg + frac * (ARC.endDeg - ARC.startDeg);
+type Arc = typeof ARC;
+
+// On narrow screens the convex desktop fan crowds its outer icons into each
+// other (hiding some entirely) and drops them low enough to collide with the
+// heading. The compact arc takes a near-linear slice around the top of a much
+// wider circle, which spreads all seven icons evenly across the width and keeps
+// the whole row high and clear of the copy below.
+const COMPACT_ARC: Arc = {
+  cx: 50,
+  cy: 70.5,
+  rx: 103,
+  ry: 46.5,
+  startDeg: 246,
+  endDeg: 294,
+};
+const COMPACT_MAX_WIDTH = 520; // px: below this we switch to the compact arc
+
+function arcPoint(arc: Arc, frac: number) {
+  const angleDeg = arc.startDeg + frac * (arc.endDeg - arc.startDeg);
   const angleRad = (angleDeg * Math.PI) / 180;
   return {
-    x: ARC.cx + ARC.rx * Math.cos(angleRad),
-    y: ARC.cy + ARC.ry * Math.sin(angleRad),
+    x: arc.cx + arc.rx * Math.cos(angleRad),
+    y: arc.cy + arc.ry * Math.sin(angleRad),
   };
 }
 
-const SPINE_TOP_Y = arcPoint(0.5).y + BADGE_DROP;
-
 // Equally spaced horizontal lines: the innermost and outermost rings each sit a
 // fixed gap below their own icons, and the rings in between are interpolated
-// linearly by ring distance. Because the icon arc is convex, this guarantees the
-// lines are evenly spaced while every icon keeps at least JOIN_GAP of clearance
-// and outer icons (lower on the arc) still join lower than inner ones.
+// linearly by ring distance. This guarantees the lines are evenly spaced while
+// every icon keeps at least JOIN_GAP of clearance and outer icons (lower on the
+// arc) still join lower than inner ones.
 const MAX_DISTANCE = CENTER_INDEX;
 const MIN_DISTANCE = TOOLS.length % 2 === 0 ? 0.5 : 1;
-const LINE_OUTER_Y = arcPoint(0).y + BADGE_DROP + JOIN_GAP;
-const LINE_INNER_Y =
-  arcPoint((CENTER_INDEX - MIN_DISTANCE) / (TOOLS.length - 1)).y + BADGE_DROP + JOIN_GAP;
-function joinYForIndex(index: number) {
-  const distance = Math.abs(index - CENTER_INDEX);
-  if (MAX_DISTANCE <= MIN_DISTANCE) return LINE_OUTER_Y;
-  const t = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
-  return LINE_INNER_Y + t * (LINE_OUTER_Y - LINE_INNER_Y);
+
+// Geometry that depends on the active arc, computed per-render so the compact
+// and desktop arcs can share all the connector/spine logic below.
+function geometryFor(arc: Arc) {
+  const spineTopY = arcPoint(arc, 0.5).y + BADGE_DROP;
+  const lineOuterY = arcPoint(arc, 0).y + BADGE_DROP + JOIN_GAP;
+  const lineInnerY =
+    arcPoint(arc, (CENTER_INDEX - MIN_DISTANCE) / (TOOLS.length - 1)).y +
+    BADGE_DROP +
+    JOIN_GAP;
+  const joinYForIndex = (index: number) => {
+    const distance = Math.abs(index - CENTER_INDEX);
+    if (MAX_DISTANCE <= MIN_DISTANCE) return lineOuterY;
+    const t = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
+    return lineInnerY + t * (lineOuterY - lineInnerY);
+  };
+  return { spineTopY, joinYForIndex };
 }
 
 // Builds a connector in pixel space: drop, rounded corner, horizontal run, then
@@ -104,18 +128,20 @@ function connectorPathPx(
 function ToolBadge({
   name,
   Logo,
-  frac,
+  x,
+  y,
   index,
   revealed,
+  sizePx,
 }: {
   name: string;
   Logo: ComponentType<{ className?: string }>;
-  frac: number;
+  x: number;
+  y: number;
   index: number;
   revealed: boolean;
+  sizePx?: number;
 }) {
-  const { x, y } = arcPoint(frac);
-
   return (
     <div
       className={
@@ -124,7 +150,24 @@ function ToolBadge({
       }
       style={{ left: `${x}%`, top: `${y}%`, transitionDelay: `${index * 90}ms` }}
     >
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-neutral-200/80 bg-white p-3 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.25)] transition-transform duration-200 ease-out group-hover:-translate-y-0.5 sm:h-16 sm:w-16 sm:rounded-[1.125rem] sm:p-3.5">
+      <div
+        className={
+          'flex items-center justify-center border border-neutral-200/80 bg-white shadow-[0_8px_24px_-12px_rgba(0,0,0,0.25)] transition-transform duration-200 ease-out group-hover:-translate-y-0.5 ' +
+          (sizePx
+            ? ''
+            : 'h-14 w-14 rounded-2xl p-3 sm:h-16 sm:w-16 sm:rounded-[1.125rem] sm:p-3.5')
+        }
+        style={
+          sizePx
+            ? {
+                width: sizePx,
+                height: sizePx,
+                padding: Math.round(sizePx * 0.2),
+                borderRadius: Math.round(sizePx * 0.28),
+              }
+            : undefined
+        }
+      >
         <Logo className="h-full w-full object-contain" />
       </div>
       <span
@@ -186,10 +229,32 @@ export function AgentWorkLoop() {
   const pxY = (pct: number) => (pct / 100) * h;
   const ready = w > 0 && h > 0;
 
+  // Narrow containers use the evenly-spread compact arc; everything else keeps
+  // the original convex fan.
+  const compact = w > 0 && w < COMPACT_MAX_WIDTH;
+  const arc = compact ? COMPACT_ARC : ARC;
+  const { spineTopY: SPINE_TOP_Y, joinYForIndex } = geometryFor(arc);
+
+  // On the compact arc the badges are sized to the icon spacing so they never
+  // overlap, however narrow the screen gets.
+  const compactBadgePx = compact
+    ? Math.round(
+        Math.max(
+          26,
+          Math.min(
+            54,
+            ((arcPoint(arc, 1 / (TOOLS.length - 1)).x - arcPoint(arc, 0).x) / 100) *
+              w *
+              0.84,
+          ),
+        ),
+      )
+    : undefined;
+
   const branches = ready
     ? TOOLS.map((tool, index) => {
         if (index === CENTER_INDEX) return null;
-        const { x, y } = arcPoint(index / (TOOLS.length - 1));
+        const { x, y } = arcPoint(arc, index / (TOOLS.length - 1));
         return {
           key: tool.name,
           maskId: `awl-draw-${index}`,
@@ -224,7 +289,7 @@ export function AgentWorkLoop() {
 
   const flows = ready
     ? TOOLS.map((tool, index) => {
-        const { x, y } = arcPoint(index / (TOOLS.length - 1));
+        const { x, y } = arcPoint(arc, index / (TOOLS.length - 1));
         const startX = (x / 100) * w;
         const startY = pxY(y + BADGE_DROP);
 
@@ -366,16 +431,21 @@ export function AgentWorkLoop() {
           )}
         </svg>
 
-        {TOOLS.map((tool, index) => (
-          <ToolBadge
-            key={tool.name}
-            name={tool.name}
-            Logo={tool.Logo}
-            frac={index / (TOOLS.length - 1)}
-            index={index}
-            revealed={revealed}
-          />
-        ))}
+        {TOOLS.map((tool, index) => {
+          const { x, y } = arcPoint(arc, index / (TOOLS.length - 1));
+          return (
+            <ToolBadge
+              key={tool.name}
+              name={tool.name}
+              Logo={tool.Logo}
+              x={x}
+              y={y}
+              index={index}
+              revealed={revealed}
+              sizePx={compactBadgePx}
+            />
+          );
+        })}
 
         <div
           className="absolute inset-x-0 flex -translate-y-1/2 flex-col items-center px-4 py-20 text-center sm:py-28"

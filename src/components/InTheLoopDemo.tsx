@@ -391,15 +391,15 @@ export function InTheLoopDemo() {
     });
 
   return (
-    <section className="-mt-16 bg-white px-6 pb-20 pt-0 sm:-mt-24 sm:px-10 sm:pb-28 lg:px-12">
+    <section className="mt-4 bg-white px-3 pb-20 pt-0 sm:-mt-24 sm:px-10 sm:pb-28 lg:px-12">
       <div ref={containerRef} className="mx-auto w-full max-w-2xl">
         {/* Slack window — sits above the diagram line behind it */}
         <div
-          className="relative z-10 overflow-hidden rounded-2xl border border-[#e2e2e2] bg-white text-[#1d1c1d] shadow-[0_24px_60px_-24px_rgba(0,0,0,0.28)]"
+          className="relative z-10 overflow-hidden rounded-2xl border border-[#e2e2e2] bg-white text-[#1d1c1d] shadow-[0_16px_34px_-22px_rgba(0,0,0,0.28)] sm:shadow-[0_24px_60px_-24px_rgba(0,0,0,0.28)]"
           style={{ fontFamily: SLACK_FONT }}
         >
           {/* channel header */}
-          <div className="flex items-center gap-2 border-b border-[#e8e8e8] px-4 py-3">
+          <div className="flex items-center gap-2 border-b border-[#e8e8e8] bg-white px-4 py-3">
             <span className="text-[15px] font-extrabold text-[#1d1c1d]">
               <span className="text-[#616061]">#</span> {scenario.channel}
             </span>

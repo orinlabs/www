@@ -4,7 +4,6 @@ import { LinkedinIcon, TwitterIcon } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "slate-ui";
 
-import { EFFECT_COLORS } from "../effectColors";
 import { Navbar } from "./Navbar";
 
 interface LayoutProps {
@@ -55,15 +54,21 @@ const FOOTER_SECTIONS: FooterSection[] = [
 const FOOTER_WORD_VISIBLE_RATIO = 0.6;
 const FOOTER_WORD_OFFSET_RATIO = 0.1;
 
+// Multi-stop green gradients that fill the giant ORIN LABS wordmark in the
+// footer. On the light footer the letters fade from light green (bottom) up to
+// the primary color (top); on the dark footer they fade from the primary color
+// (bottom) up into a deep green (top).
+const FOOTER_GRADIENT_STOPS_LIGHT =
+  "linear-gradient(to top, #e6f7f1 0%, #8be0c3 30%, #4fc99e 60%, #00a071 100%)";
+const FOOTER_GRADIENT_STOPS_DARK =
+  "linear-gradient(to top, #00a071 0%, #00694b 55%, #003324 100%)";
+
 export default function Layout({ children, hero, footerDark = false }: LayoutProps) {
   const { pathname } = useLocation();
   const footerRef = useRef<HTMLElement | null>(null);
   const footerSpacerRef = useRef<HTMLDivElement | null>(null);
   const footerWordRef = useRef<HTMLDivElement | null>(null);
-  const footerWordVisibleRef = useRef(false);
-  const footerRevealInitializedRef = useRef(false);
   const [footerHeight, setFooterHeight] = useState(0);
-  const [footerColorIndex, setFooterColorIndex] = useState(0);
   const [footerWordFontSize, setFooterWordFontSize] = useState<number | null>(null);
 
   // The handbook owns its own scroll container. Public pages stay on a single
@@ -167,62 +172,6 @@ export default function Layout({ children, hero, footerDark = false }: LayoutPro
     };
   }, [isWide]);
 
-  useEffect(() => {
-    if (isWide || footerHeight === 0) {
-      return;
-    }
-
-    let frame: number | null = null;
-
-    const updateFooterReveal = () => {
-      frame = null;
-      const spacer = footerSpacerRef.current;
-      const footerWord = footerWordRef.current;
-      if (!spacer || !footerWord) {
-        return;
-      }
-
-      const spacerRect = spacer.getBoundingClientRect();
-      const wordRect = footerWord.getBoundingClientRect();
-      const isRevealed = spacerRect.top <= wordRect.bottom - 8;
-
-      if (!footerRevealInitializedRef.current) {
-        footerRevealInitializedRef.current = true;
-        footerWordVisibleRef.current = isRevealed;
-        return;
-      }
-
-      if (isRevealed === footerWordVisibleRef.current) {
-        return;
-      }
-
-      footerWordVisibleRef.current = isRevealed;
-      if (isRevealed) {
-        setFooterColorIndex((index) => (index + 1) % EFFECT_COLORS.length);
-      }
-    };
-
-    const scheduleFooterRevealUpdate = () => {
-      if (frame !== null) {
-        return;
-      }
-
-      frame = window.requestAnimationFrame(updateFooterReveal);
-    };
-
-    updateFooterReveal();
-    window.addEventListener("scroll", scheduleFooterRevealUpdate, { passive: true });
-    window.addEventListener("resize", scheduleFooterRevealUpdate);
-
-    return () => {
-      if (frame !== null) {
-        window.cancelAnimationFrame(frame);
-      }
-      window.removeEventListener("scroll", scheduleFooterRevealUpdate);
-      window.removeEventListener("resize", scheduleFooterRevealUpdate);
-    };
-  }, [footerHeight, isWide]);
-
   return (
     <div
       className={cn(
@@ -311,13 +260,9 @@ export default function Layout({ children, hero, footerDark = false }: LayoutPro
           aria-hidden="true"
           className="pointer-events-none absolute left-1/2 top-0 z-0 whitespace-nowrap bg-clip-text font-['Geist'] text-[clamp(5rem,22vw,24rem)] font-semibold uppercase leading-none tracking-[-0.08em] text-transparent"
           style={{
+            backgroundImage: footerDark ? FOOTER_GRADIENT_STOPS_DARK : FOOTER_GRADIENT_STOPS_LIGHT,
             fontSize: footerWordFontSize === null ? undefined : footerWordFontSize + "px",
             transform: "translate(-50%, calc(var(--footer-word-hidden-size, 2rem) * -1 - (var(--footer-word-visible-size, 3rem) * 0.4)))",
-            backgroundImage:
-              "linear-gradient(180deg, " +
-              (footerDark
-                ? "#000000 0%, " + EFFECT_COLORS[footerColorIndex] + " 56%, " + EFFECT_COLORS[footerColorIndex] + " 100%)"
-                : EFFECT_COLORS[footerColorIndex] + " 0%, rgba(255,255,255,0.78) 78%, #ffffff 100%)"),
           }}
         >
           ORIN LABS
