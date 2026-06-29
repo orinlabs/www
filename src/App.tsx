@@ -12,7 +12,6 @@ import {
 
 import Layout from './components/Layout';
 import Careers from './pages/Careers';
-import EvChargerBuild from './pages/EvChargerBuild';
 import Handbook from './pages/Handbook';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
@@ -23,6 +22,7 @@ import Horizon from './pages/research/Horizon';
 import LongHorizonAgents from './pages/research/LongHorizonAgents';
 import ProactiveVoiceAgents from './pages/research/ProactiveVoiceAgents';
 import Role from './pages/Role';
+import Solution from './pages/Solution';
 import TermsOfService from './pages/TermsOfService';
 
 function useSmoothScroll() {
@@ -140,6 +140,14 @@ function App() {
           }
         />
         <Route
+          path="/solutions/:slug"
+          element={
+            <Layout footerDark>
+              <Solution />
+            </Layout>
+          }
+        />
+        <Route
           path="/handbook"
           element={
             <Layout>
@@ -172,7 +180,6 @@ function App() {
           }
         />
         <Route path="/og-horizon-capture" element={<OgHorizonCapture />} />
-        <Route path="/ev-charger" element={<EvChargerBuild />} />
         <Route
           path="*"
           element={

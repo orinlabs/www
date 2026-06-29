@@ -5,6 +5,7 @@
 // "structured data" and "citation readiness" scores.
 
 import { ROLES, type Role } from "./data/roles.ts";
+import { SOLUTIONS, type Solution } from "./data/solutions.ts";
 import {
   HANDBOOK_PAGES,
   type HandbookPage,
@@ -251,6 +252,28 @@ function roleMeta(role: Role): RouteMeta {
   };
 }
 
+function solutionMeta(solution: Solution): RouteMeta {
+  const description =
+    solution.tagline.length > 280
+      ? `${solution.tagline.slice(0, 277)}…`
+      : solution.tagline;
+  const url = `${SITE_URL}/solutions/${solution.slug}`;
+  return {
+    title: `${solution.title} — Orin Labs`,
+    description,
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: solution.title,
+      description,
+      provider: ORGANIZATION,
+      url,
+      areaServed: "US",
+      serviceType: solution.title,
+    },
+  };
+}
+
 function handbookMeta(page: HandbookPage): RouteMeta {
   return {
     title: `${page.title} — Handbook — Orin Labs`,
@@ -261,6 +284,13 @@ function handbookMeta(page: HandbookPage): RouteMeta {
 
 const ROLE_META: Record<string, RouteMeta> = Object.fromEntries(
   ROLES.map((role) => [`/roles/${role.slug}`, roleMeta(role)]),
+);
+
+const SOLUTION_META: Record<string, RouteMeta> = Object.fromEntries(
+  SOLUTIONS.map((solution) => [
+    `/solutions/${solution.slug}`,
+    solutionMeta(solution),
+  ]),
 );
 
 const HANDBOOK_META: Record<string, RouteMeta> = Object.fromEntries(
@@ -278,6 +308,7 @@ export const ROUTES: string[] = [
   ...Object.keys(STATIC_META),
   ...HANDBOOK_PAGES.map((page) => `/handbook/${page.slug}`),
   ...ROLES.map((role) => `/roles/${role.slug}`),
+  ...SOLUTIONS.map((solution) => `/solutions/${solution.slug}`),
 ].filter((route) => route !== "/404");
 
 function metaFor(pathname: string): RouteMeta {
@@ -285,6 +316,7 @@ function metaFor(pathname: string): RouteMeta {
     STATIC_META[pathname] ??
     HANDBOOK_META[pathname] ??
     ROLE_META[pathname] ??
+    SOLUTION_META[pathname] ??
     DEFAULT_META
   );
 }

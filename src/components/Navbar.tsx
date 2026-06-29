@@ -1,21 +1,146 @@
 import {
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { createPortal } from "react-dom";
 
-import { Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "slate-ui";
 
 import { BrandBanner } from "./BrandBanner";
 import { BookDemoButton } from "./BookDemoButton";
 
-const NAV_ITEMS = [
+type NavLeaf = { label: string; path: string; description?: string };
+type NavItem =
+  | { label: string; path: string }
+  | { label: string; children: NavLeaf[] };
+
+const NAV_ITEMS: NavItem[] = [
   // { label: "Customers", path: "/customers" },
+  {
+    label: "Solutions",
+    children: [
+      { label: "Field Data Capture", path: "/solutions/field-data-capture" },
+      { label: "Close out", path: "/solutions/close-out" },
+      { label: "Commissioning (QC)", path: "/solutions/commissioning" },
+      { label: "Purchase Order", path: "/solutions/purchase-order" },
+      { label: "Bidding", path: "/solutions/bidding" },
+      { label: "Permitting", path: "/solutions/permitting" },
+    ],
+  },
   { label: "Research", path: "/research" },
   { label: "Careers", path: "/careers" },
 ];
+
+// Desktop nav entry that opens a dropdown on hover/focus when it has children.
+function DesktopNavItem({
+  item,
+  linkColor,
+  onNavClick,
+}: {
+  item: NavItem;
+  linkColor: string;
+  onNavClick: (e: React.MouseEvent<HTMLAnchorElement>, path: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const closeTimeout = useRef<number | null>(null);
+
+  const cancelClose = () => {
+    if (closeTimeout.current !== null) {
+      window.clearTimeout(closeTimeout.current);
+      closeTimeout.current = null;
+    }
+  };
+
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimeout.current = window.setTimeout(() => setOpen(false), 120);
+  };
+
+  useEffect(() => cancelClose, []);
+
+  if (!("children" in item)) {
+    return (
+      <Link
+        to={item.path}
+        onClick={(e) => onNavClick(e, item.path)}
+        className={cn(
+          "cursor-pointer text-sm transition-colors hover:underline md:text-base font-semibold",
+          linkColor,
+        )}
+      >
+        {item.label}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => {
+        cancelClose();
+        setOpen(true);
+      }}
+      onMouseLeave={scheduleClose}
+    >
+      <button
+        type="button"
+        className={cn(
+          "flex cursor-pointer items-center gap-1 text-sm transition-colors md:text-base font-semibold",
+          linkColor,
+        )}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={() => setOpen((prev) => !prev)}
+        onFocus={() => setOpen(true)}
+      >
+        {item.label}
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 transition-transform duration-200",
+            open && "rotate-180",
+          )}
+        />
+      </button>
+
+      <div
+        className={cn(
+          "absolute left-1/2 top-full z-50 -translate-x-1/2 pt-3 transition-all duration-200 ease-out",
+          open
+            ? "visible translate-y-0 opacity-100"
+            : "pointer-events-none invisible -translate-y-1 opacity-0",
+        )}
+        onMouseEnter={cancelClose}
+        onMouseLeave={scheduleClose}
+      >
+        <div className="w-72 rounded-2xl border border-neutral-200 bg-white p-2 shadow-2xl shadow-neutral-900/10">
+          {item.children.map((child) => (
+            <Link
+              key={child.label}
+              to={child.path}
+              onClick={(e) => {
+                setOpen(false);
+                onNavClick(e, child.path);
+              }}
+              className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-neutral-100"
+            >
+              <span className="block text-sm font-semibold text-neutral-900">
+                {child.label}
+              </span>
+              {child.description && (
+                <span className="mt-0.5 block text-xs leading-snug text-neutral-500">
+                  {child.description}
+                </span>
+              )}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Shared site nav. `overlay` switches to light-on-image styling so it can sit
 // inside a hero image; `className` lets the caller constrain width/alignment.
@@ -143,19 +268,40 @@ export function Navbar({
           <X className="h-5 w-5" />
         </button>
 
-        {NAV_ITEMS.map((item) => (
-          <Link
-            to={item.path}
-            key={item.path}
-            onClick={(e) => handleNavClick(e, item.path)}
-            tabIndex={isMenuOpen ? undefined : -1}
-            className={cn(
-              "w-fit shrink-0 text-lg font-semibold text-neutral-700 transition-colors hover:text-neutral-950",
-            )}
-          >
-            {item.label}
-          </Link>
-        ))}
+        {NAV_ITEMS.map((item) =>
+          "children" in item ? (
+            <div key={item.label} className="flex flex-col gap-3">
+              <span className="text-lg font-semibold text-neutral-700">
+                {item.label}
+              </span>
+              <div className="flex flex-col gap-3 border-l border-neutral-200 pl-3">
+                {item.children.map((child) => (
+                  <Link
+                    to={child.path}
+                    key={child.label}
+                    onClick={(e) => handleNavClick(e, child.path)}
+                    tabIndex={isMenuOpen ? undefined : -1}
+                    className="w-fit shrink-0 text-base font-medium text-neutral-600 transition-colors hover:text-neutral-950"
+                  >
+                    {child.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <Link
+              to={item.path}
+              key={item.label}
+              onClick={(e) => handleNavClick(e, item.path)}
+              tabIndex={isMenuOpen ? undefined : -1}
+              className={cn(
+                "w-fit shrink-0 text-lg font-semibold text-neutral-700 transition-colors hover:text-neutral-950",
+              )}
+            >
+              {item.label}
+            </Link>
+          ),
+        )}
         <BookDemoButton
           variant="dark"
           onClick={() => setIsMenuOpen(false)}
@@ -202,17 +348,12 @@ export function Navbar({
 
           <div className="hidden md:flex items-center gap-8">
             {NAV_ITEMS.map((item) => (
-              <Link
-                to={item.path}
-                key={item.path}
-                onClick={(e) => handleNavClick(e, item.path)}
-                className={cn(
-                  "cursor-pointer text-sm transition-colors hover:underline md:text-base font-semibold",
-                  linkColor,
-                )}
-              >
-                {item.label}
-              </Link>
+              <DesktopNavItem
+                key={item.label}
+                item={item}
+                linkColor={linkColor}
+                onNavClick={handleNavClick}
+              />
             ))}
             <BookDemoButton variant="dark" />
           </div>
