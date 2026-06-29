@@ -173,7 +173,6 @@ function App() {
         />
         <Route path="/og-horizon-capture" element={<OgHorizonCapture />} />
         <Route path="/ev-charger" element={<EvChargerBuild />} />
-        <Route path="/ev-charger" element={<EvChargerBuild />} />
         <Route
           path="*"
           element={

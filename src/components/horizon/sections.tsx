@@ -121,7 +121,7 @@ export function TakeawaysSection() {
       The clearest takeaway from Horizon is that when learnings are not predictable, both search and accumulation strategies fail. None of Horizon's tasks are cognitively challenging, and while models are getting better at searching traces, we are also excited about representation learning and harness research as potential solutions.
     </p>
     
-    <p>Future versions of Horizon will focus on low predictability pattern matching tasks, as we believe this is the most important remaining capability for agents to operate autonomously in the messy real world. If you're interested in working on this with us, <a href="orinlabs.ai" className="underline hover:text-neutral-700 dark:hover:text-neutral-300">we're hiring</a>.
+    <p>Future versions of Horizon will focus on low predictability pattern matching tasks, as we believe this is the most important remaining capability for agents to operate autonomously in the messy real world. If you're interested in working on this with us, <a href="/#join-us" className="underline hover:text-neutral-700 dark:hover:text-neutral-300">we're hiring</a>.
     </p>
     </Section>
   );
