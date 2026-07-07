@@ -5,6 +5,7 @@
 // "structured data" and "citation readiness" scores.
 
 import { ROLES, type Role } from "./data/roles.ts";
+import { SOLUTIONS, type Solution } from "./data/solutions.ts";
 import {
   HANDBOOK_PAGES,
   type HandbookPage,
@@ -80,6 +81,28 @@ const STATIC_META: Record<string, RouteMeta> = {
     description:
       "Open roles at Orin Labs, building autonomous agents for long-running operational work.",
     jsonLd: webPageJsonLd("Careers", `${SITE_URL}/careers`),
+  },
+  "/solutions": {
+    title: "Solutions — Orin Labs",
+    description:
+      "Autonomous agents across the lifecycle of a build: bidding, permitting, purchase orders, field data capture, commissioning, and closeout.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: "Solutions",
+      url: `${SITE_URL}/solutions`,
+      description:
+        "Autonomous agents across the lifecycle of a build, from the first bid to the final closeout packet.",
+      publisher: ORGANIZATION,
+      mainEntity: {
+        "@type": "ItemList",
+        itemListElement: SOLUTIONS.map((solution, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          item: solutionJsonLd(solution),
+        })),
+      },
+    },
   },
   "/research/horizon": {
     title: "Introducing Horizon | Orin Labs",
@@ -248,6 +271,19 @@ function roleMeta(role: Role): RouteMeta {
       url: `${SITE_URL}/roles/${role.slug}`,
       directApply: true,
     },
+  };
+}
+
+// Each solution renders as an anchored section of the combined /solutions page.
+function solutionJsonLd(solution: Solution): object {
+  return {
+    "@type": "Service",
+    name: solution.title,
+    description: solution.tagline,
+    provider: ORGANIZATION,
+    url: `${SITE_URL}/solutions#${solution.slug}`,
+    areaServed: "US",
+    serviceType: solution.title,
   };
 }
 
