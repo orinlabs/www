@@ -318,7 +318,7 @@ export function Navbar({
           "w-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
           floating &&
             (isScrolled || isMenuOpen
-              ? "rounded-[2rem] border border-neutral-200/80 bg-neutral-50/88 px-4 py-3 shadow-2xl shadow-neutral-900/10 backdrop-blur-xl dark:border-neutral-800/80 dark:bg-neutral-950/82"
+              ? "rounded-[2rem] border border-neutral-200/80 bg-neutral-50/92 px-4 py-3 shadow-2xl shadow-neutral-900/10 backdrop-blur-md dark:border-neutral-800/80 dark:bg-neutral-950/88"
               : "rounded-[2rem] border border-transparent bg-transparent px-4 py-3 shadow-none"),
           floating && isHidden && "-translate-y-[150%] opacity-0",
           className,

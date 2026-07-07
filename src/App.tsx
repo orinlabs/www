@@ -1,9 +1,5 @@
-import {
-  useEffect,
-  useRef,
-} from 'react';
+import { useEffect } from 'react';
 
-import Lenis from 'lenis';
 import {
   Route,
   Routes,
@@ -25,60 +21,23 @@ import Role from './pages/Role';
 import Solution from './pages/Solution';
 import TermsOfService from './pages/TermsOfService';
 
-function useSmoothScroll() {
-  const lenisRef = useRef<Lenis | null>(null);
-  const rafRef = useRef<number>(0);
+// The handbook owns its own scroll container, so only reset window scroll on
+// the public pages.
+function useScrollToTopOnNavigate() {
   const { pathname } = useLocation();
   const isHandbook = pathname.startsWith('/handbook');
 
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return;
-    }
-
-    if (isHandbook) {
-      if (lenisRef.current) {
-        cancelAnimationFrame(rafRef.current);
-        lenisRef.current.destroy();
-        lenisRef.current = null;
-      }
-      return;
-    }
-
-    const lenis = new Lenis({
-      // Higher lerp = snappier catch-up = even less smoothing.
-      lerp: 0.4,
-    });
-    lenisRef.current = lenis;
-
-    function raf(time: number) {
-      lenis.raf(time);
-      rafRef.current = requestAnimationFrame(raf);
-    }
-    rafRef.current = requestAnimationFrame(raf);
-
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      lenis.destroy();
-      lenisRef.current = null;
-    };
-  }, [isHandbook]);
-
-  useEffect(() => {
     if (isHandbook) {
       return;
     }
 
-    if (lenisRef.current) {
-      lenisRef.current.scrollTo(0, { immediate: true });
-    } else {
-      window.scrollTo(0, 0);
-    }
+    window.scrollTo(0, 0);
   }, [isHandbook, pathname]);
 }
 
 function App() {
-  useSmoothScroll();
+  useScrollToTopOnNavigate();
 
   return (
     <>
