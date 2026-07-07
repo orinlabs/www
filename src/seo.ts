@@ -82,6 +82,28 @@ const STATIC_META: Record<string, RouteMeta> = {
       "Open roles at Orin Labs, building autonomous agents for long-running operational work.",
     jsonLd: webPageJsonLd("Careers", `${SITE_URL}/careers`),
   },
+  "/solutions": {
+    title: "Solutions — Orin Labs",
+    description:
+      "Autonomous agents across the lifecycle of a build: bidding, permitting, purchase orders, field data capture, commissioning, and closeout.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: "Solutions",
+      url: `${SITE_URL}/solutions`,
+      description:
+        "Autonomous agents across the lifecycle of a build, from the first bid to the final closeout packet.",
+      publisher: ORGANIZATION,
+      mainEntity: {
+        "@type": "ItemList",
+        itemListElement: SOLUTIONS.map((solution, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          item: solutionJsonLd(solution),
+        })),
+      },
+    },
+  },
   "/research/horizon": {
     title: "Introducing Horizon | Orin Labs",
     description: HORIZON_META_DESCRIPTION,
@@ -252,25 +274,16 @@ function roleMeta(role: Role): RouteMeta {
   };
 }
 
-function solutionMeta(solution: Solution): RouteMeta {
-  const description =
-    solution.tagline.length > 280
-      ? `${solution.tagline.slice(0, 277)}…`
-      : solution.tagline;
-  const url = `${SITE_URL}/solutions/${solution.slug}`;
+// Each solution renders as an anchored section of the combined /solutions page.
+function solutionJsonLd(solution: Solution): object {
   return {
-    title: `${solution.title} — Orin Labs`,
-    description,
-    jsonLd: {
-      "@context": "https://schema.org",
-      "@type": "Service",
-      name: solution.title,
-      description,
-      provider: ORGANIZATION,
-      url,
-      areaServed: "US",
-      serviceType: solution.title,
-    },
+    "@type": "Service",
+    name: solution.title,
+    description: solution.tagline,
+    provider: ORGANIZATION,
+    url: `${SITE_URL}/solutions#${solution.slug}`,
+    areaServed: "US",
+    serviceType: solution.title,
   };
 }
 
@@ -284,13 +297,6 @@ function handbookMeta(page: HandbookPage): RouteMeta {
 
 const ROLE_META: Record<string, RouteMeta> = Object.fromEntries(
   ROLES.map((role) => [`/roles/${role.slug}`, roleMeta(role)]),
-);
-
-const SOLUTION_META: Record<string, RouteMeta> = Object.fromEntries(
-  SOLUTIONS.map((solution) => [
-    `/solutions/${solution.slug}`,
-    solutionMeta(solution),
-  ]),
 );
 
 const HANDBOOK_META: Record<string, RouteMeta> = Object.fromEntries(
@@ -308,7 +314,6 @@ export const ROUTES: string[] = [
   ...Object.keys(STATIC_META),
   ...HANDBOOK_PAGES.map((page) => `/handbook/${page.slug}`),
   ...ROLES.map((role) => `/roles/${role.slug}`),
-  ...SOLUTIONS.map((solution) => `/solutions/${solution.slug}`),
 ].filter((route) => route !== "/404");
 
 function metaFor(pathname: string): RouteMeta {
@@ -316,7 +321,6 @@ function metaFor(pathname: string): RouteMeta {
     STATIC_META[pathname] ??
     HANDBOOK_META[pathname] ??
     ROLE_META[pathname] ??
-    SOLUTION_META[pathname] ??
     DEFAULT_META
   );
 }

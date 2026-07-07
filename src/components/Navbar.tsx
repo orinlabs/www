@@ -22,12 +22,12 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: "Solutions",
     children: [
-      { label: "Field Data Capture", path: "/solutions/field-data-capture" },
-      { label: "Close out", path: "/solutions/close-out" },
-      { label: "Commissioning (QC)", path: "/solutions/commissioning" },
-      { label: "Purchase Order", path: "/solutions/purchase-order" },
-      { label: "Bidding", path: "/solutions/bidding" },
-      { label: "Permitting", path: "/solutions/permitting" },
+      { label: "Bidding", path: "/solutions#bidding" },
+      { label: "Permitting", path: "/solutions#permitting" },
+      { label: "Purchase Order", path: "/solutions#purchase-order" },
+      { label: "Field Data Capture", path: "/solutions#field-data-capture" },
+      { label: "Commissioning (QC)", path: "/solutions#commissioning" },
+      { label: "Close Out", path: "/solutions#close-out" },
     ],
   },
   { label: "Research", path: "/research" },

@@ -18,22 +18,23 @@ import Horizon from './pages/research/Horizon';
 import LongHorizonAgents from './pages/research/LongHorizonAgents';
 import ProactiveVoiceAgents from './pages/research/ProactiveVoiceAgents';
 import Role from './pages/Role';
-import Solution from './pages/Solution';
+import Solutions, { SolutionRedirect } from './pages/Solutions';
 import TermsOfService from './pages/TermsOfService';
 
 // The handbook owns its own scroll container, so only reset window scroll on
-// the public pages.
+// the public pages. Navigations targeting an anchor (e.g. /solutions#bidding)
+// are left alone so the destination page can scroll to it.
 function useScrollToTopOnNavigate() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   const isHandbook = pathname.startsWith('/handbook');
 
   useEffect(() => {
-    if (isHandbook) {
+    if (isHandbook || hash) {
       return;
     }
 
     window.scrollTo(0, 0);
-  }, [isHandbook, pathname]);
+  }, [isHandbook, hash, pathname]);
 }
 
 function App() {
@@ -99,13 +100,14 @@ function App() {
           }
         />
         <Route
-          path="/solutions/:slug"
+          path="/solutions"
           element={
             <Layout footerDark>
-              <Solution />
+              <Solutions />
             </Layout>
           }
         />
+        <Route path="/solutions/:slug" element={<SolutionRedirect />} />
         <Route
           path="/handbook"
           element={
