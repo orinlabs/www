@@ -183,6 +183,7 @@ function ToolBadge({
 export function AgentWorkLoop() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const [inView, setInView] = useState(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
 
   useEffect(() => {
@@ -204,20 +205,23 @@ export function AgentWorkLoop() {
 
     if (typeof IntersectionObserver === 'undefined') {
       setRevealed(true);
+      setInView(true);
       return;
     }
 
+    // Stays connected after the one-shot reveal so the flowing dots (SMIL
+    // animations, which otherwise run forever) can be unmounted whenever the
+    // section is scrolled off-screen.
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
+          setInView(entry.isIntersecting);
+          if (entry.intersectionRatio >= 0.35) {
             setRevealed(true);
-            observer.disconnect();
-            break;
           }
         }
       },
-      { threshold: 0.35 }
+      { threshold: [0, 0.35] }
     );
 
     observer.observe(node);
@@ -413,7 +417,7 @@ export function AgentWorkLoop() {
                 mask="url(#awl-draw-spine)"
               />
 
-              {revealed &&
+              {revealed && inView &&
                 flows.map((flow) =>
                   Array.from({ length: flow.dotCount }).map((_, dotIndex) => (
                     <circle key={`${flow.motionId}-${dotIndex}`} r={2.4} fill={flow.color}>
