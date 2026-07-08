@@ -36,9 +36,9 @@ const FOOTER_SECTIONS: FooterSection[] = [
   {
     title: "Research",
     links: [
-      { label: "Horizon", to: "/research/horizon" },
-      { label: "Long-horizon agents", to: "/research/long-horizon-agents" },
-      { label: "Conversationality", to: "/research/conversationality" },
+      { label: "Horizon benchmark", to: "/research/horizon" },
+      { label: "Building long-horizon agents", to: "/research/long-horizon-agents" },
+      { label: "Voice agent conversationality", to: "/research/conversationality" },
     ],
   },
   {

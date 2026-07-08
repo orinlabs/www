@@ -50,7 +50,7 @@ const RESEARCH_POST_TONES = [
 ];
 
 const RESEARCH_HERO_COPY =
-  "We are training AI to run megaprojects. We research continual learning, long-horizon tasks, and agent coordination.";
+  "We're building AI that can run a megaproject: remembering everything, planning over months, and coordinating across teams.";
 
 export default function Research() {
   return (
