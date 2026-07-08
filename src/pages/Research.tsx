@@ -16,7 +16,7 @@ interface ResearchPost {
 const RESEARCH_POSTS: ResearchPost[] = [
   {
     id: "horizon",
-    title: "Introducing Horizon",
+    title: "Horizon: Our Agent Learning Benchmark",
     description:
       "Today, we're releasing a preview of Horizon, our benchmark that measures an agent's ability to acquire learnings from a long history and apply them to a task.",
     date: "June 2026",
@@ -34,7 +34,7 @@ const RESEARCH_POSTS: ResearchPost[] = [
   },
   {
     id: "conversationality",
-    title: "Conversationality",
+    title: "Designing Conversationality in Voice Agents",
     description:
       "We explore how to build proactive voice agents that work independently of user input. By flipping the traditional voice pipeline, we create agents that can speak first, handle interruptions, and maintain natural conversation flow.",
     date: "November 2025",
@@ -50,7 +50,7 @@ const RESEARCH_POST_TONES = [
 ];
 
 const RESEARCH_HERO_COPY =
-  "We are training AI to run megaprojects. We research continual learning, long-horizon tasks, and agent coordination.";
+  "We're building AI that can run a megaproject: remembering everything, planning over months, and coordinating across teams.";
 
 export default function Research() {
   return (
