@@ -435,7 +435,7 @@ function SolutionBlock({
   );
 
   return (
-    <section id={solution.slug} className="scroll-mt-24">
+    <section id={solution.slug} className="scroll-mt-12">
       <div className="flex items-baseline gap-4">
         <span className="font-mono text-sm text-neutral-400">
           {String(index + 1).padStart(2, '0')}
@@ -453,7 +453,7 @@ function SolutionBlock({
           src={`/solutions/${solution.slug}.png`}
           alt={`${solution.title} stage of a build`}
           loading="lazy"
-          className="aspect-[16/10] w-full rounded-[1.75rem] border border-neutral-200 bg-neutral-100 object-cover"
+          className="aspect-[16/10] w-full rounded-[1.75rem] border border-neutral-200 bg-neutral-100 object-cover sm:aspect-[21/9]"
         />
       </InViewFade>
 
