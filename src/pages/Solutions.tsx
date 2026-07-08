@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Check } from 'lucide-react';
 import {
@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom';
 
 import { BookDemoButton } from '../components/BookDemoButton';
+import { InViewFade } from '../components/InViewFade';
 import { SOLUTIONS, type Solution } from '../data/solutions';
 
 // The six solutions in build-lifecycle order: winning the work, clearing the
@@ -55,6 +56,25 @@ function useScrollToHash() {
   }, [hash]);
 }
 
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') {
+      return;
+    }
+
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduced(query.matches);
+
+    const onChange = (event: MediaQueryListEvent) => setReduced(event.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+
+  return reduced;
+}
+
 function useActiveSection(slugs: string[]) {
   const [active, setActive] = useState(slugs[0]);
 
@@ -63,12 +83,23 @@ function useActiveSection(slugs: string[]) {
       return;
     }
 
+    // Track everything currently in the band and pick the earliest stage in
+    // lifecycle order. On first load (before lazy images expand the layout)
+    // several compressed sections can intersect at once; without this the
+    // last entry would win and the strip would highlight the wrong stage.
+    const intersecting = new Set<string>();
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            setActive(entry.target.id);
+            intersecting.add(entry.target.id);
+          } else {
+            intersecting.delete(entry.target.id);
           }
+        }
+        const current = slugs.find((slug) => intersecting.has(slug));
+        if (current) {
+          setActive(current);
         }
       },
       // A narrow band around the upper third of the viewport decides which
@@ -89,19 +120,238 @@ function useActiveSection(slugs: string[]) {
   return active;
 }
 
+// Geometry and flow tuning for the hero lifecycle strip. The line and node
+// markers share a fixed-height row so the SVG line runs through the center of
+// every dot; the flow constants echo AgentWorkLoop at a calmer pace.
+const STRIP_ROW_HEIGHT = 24; // px: the row the line and node dots share
+const STRIP_FLOW_SPEED = 80; // px per second the flowing dots travel
+const STRIP_DOT_SPACING = 90; // px between flowing dots on the line
+
+// Animated hero strip: a horizontal line "draws on" left-to-right (same
+// stroke-dashoffset mask technique as AgentWorkLoop), the six lifecycle nodes
+// reveal with a stagger, and small dots flow continuously along the line via
+// SMIL animateMotion while the strip is on screen.
+function LifecycleStrip({ active }: { active: string }) {
+  const containerRef = useRef<HTMLElement | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const [revealed, setRevealed] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [width, setWidth] = useState(0);
+  const reduceMotion = usePrefersReducedMotion();
+
+  useEffect(() => {
+    const node = trackRef.current;
+    if (!node) return;
+
+    const measure = () => setWidth(node.clientWidth);
+    measure();
+
+    if (typeof ResizeObserver === 'undefined') return;
+    const resizeObserver = new ResizeObserver(measure);
+    resizeObserver.observe(node);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      setRevealed(true);
+      setInView(true);
+      return;
+    }
+
+    // Stays connected after the one-shot reveal so the flowing dots (SMIL
+    // animations, which otherwise run forever) can be unmounted whenever the
+    // strip is scrolled off-screen.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          setInView(entry.isIntersecting);
+          if (entry.intersectionRatio >= 0.35) {
+            setRevealed(true);
+          }
+        }
+      },
+      { threshold: [0, 0.35] },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const count = ORDERED_SOLUTIONS.length;
+  const lineY = STRIP_ROW_HEIGHT / 2;
+  // Nodes sit at the center of six equal cells; the line spans first to last.
+  const nodeX = (index: number) => ((index + 0.5) / count) * width;
+  const lineStartX = nodeX(0);
+  const lineEndX = nodeX(count - 1);
+  const lineD = `M ${lineStartX.toFixed(1)} ${lineY} L ${lineEndX.toFixed(1)} ${lineY}`;
+  const lineLength = lineEndX - lineStartX;
+  const ready = width > 0;
+
+  const flowDur = lineLength / STRIP_FLOW_SPEED;
+  const flowDotCount = Math.max(1, Math.round(lineLength / STRIP_DOT_SPACING));
+  const drawSettle = (count * 90 + 750) / 1000; // let the line finish drawing first
+
+  // A solid white stroke inside a mask "draws on" via stroke-dashoffset,
+  // progressively revealing the grey line underneath.
+  const drawStyle = {
+    strokeDashoffset: revealed ? 0 : 1,
+    transition: reduceMotion
+      ? undefined
+      : 'stroke-dashoffset 750ms ease-in-out 100ms',
+  };
+
+  return (
+    <nav
+      ref={containerRef}
+      aria-label="Build lifecycle"
+      className="-mx-8 mb-14 overflow-x-auto px-8 [scrollbar-width:none] sm:-mx-10 sm:mb-16 sm:px-10 lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden"
+    >
+      <div ref={trackRef} className="relative min-w-[42rem]">
+        <svg
+          className="pointer-events-none absolute left-0 top-0 w-full"
+          style={{ height: STRIP_ROW_HEIGHT }}
+          viewBox={`0 0 ${width || 100} ${STRIP_ROW_HEIGHT}`}
+          aria-hidden
+        >
+          {ready && (
+            <>
+              <defs>
+                <mask
+                  id="lifecycle-draw"
+                  maskUnits="userSpaceOnUse"
+                  x="0"
+                  y="0"
+                  width={width}
+                  height={STRIP_ROW_HEIGHT}
+                >
+                  <path
+                    d={lineD}
+                    fill="none"
+                    stroke="#fff"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    pathLength={1}
+                    strokeDasharray="1 1"
+                    style={drawStyle}
+                  />
+                </mask>
+                <path id="lifecycle-flow" d={lineD} fill="none" stroke="none" />
+              </defs>
+
+              <path
+                d={lineD}
+                fill="none"
+                stroke="#d4d4d4"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                mask="url(#lifecycle-draw)"
+              />
+
+              {revealed && inView && !reduceMotion &&
+                Array.from({ length: flowDotCount }).map((_, dotIndex) => {
+                  const begin = `${(drawSettle + dotIndex * (flowDur / flowDotCount)).toFixed(3)}s`;
+                  return (
+                    // Hidden until its motion begins: before `begin` fires the
+                    // circle would otherwise sit at the SVG origin as a stray
+                    // dot in the top-left corner of the strip.
+                    <circle key={dotIndex} r={2.4} fill="#16a34a" visibility="hidden">
+                      <set attributeName="visibility" to="visible" begin={begin} />
+                      <animateMotion
+                        dur={`${flowDur.toFixed(3)}s`}
+                        begin={begin}
+                        repeatCount="indefinite"
+                      >
+                        <mpath href="#lifecycle-flow" />
+                      </animateMotion>
+                    </circle>
+                  );
+                })}
+            </>
+          )}
+        </svg>
+
+        <ol className="relative flex">
+          {ORDERED_SOLUTIONS.map((solution, index) => (
+            <li key={solution.slug} className="min-w-0 flex-1">
+              <a
+                href={`#${solution.slug}`}
+                aria-current={active === solution.slug ? 'true' : undefined}
+                className={
+                  'group flex flex-col items-center gap-1.5 px-1 text-center ' +
+                  (reduceMotion
+                    ? ''
+                    : 'transition-all duration-500 ease-out ') +
+                  (revealed
+                    ? 'translate-y-0 opacity-100'
+                    : 'translate-y-2 opacity-0')
+                }
+                style={
+                  reduceMotion
+                    ? undefined
+                    : { transitionDelay: `${index * 90}ms` }
+                }
+              >
+                <span
+                  className="flex items-center"
+                  style={{ height: STRIP_ROW_HEIGHT }}
+                >
+                  <span
+                    className={
+                      'h-2.5 w-2.5 rounded-full border-2 transition-colors ' +
+                      (active === solution.slug
+                        ? 'border-neutral-950 bg-neutral-950'
+                        : 'border-neutral-300 bg-white group-hover:border-neutral-500')
+                    }
+                  />
+                </span>
+                <span
+                  className={
+                    'font-mono text-[11px] transition-colors ' +
+                    (active === solution.slug
+                      ? 'text-neutral-950'
+                      : 'text-neutral-400')
+                  }
+                >
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span
+                  className={
+                    'text-sm font-semibold tracking-[-0.02em] transition-colors ' +
+                    (active === solution.slug
+                      ? 'text-neutral-950'
+                      : 'text-neutral-400 group-hover:text-neutral-700')
+                  }
+                >
+                  {solution.title}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </nav>
+  );
+}
+
 export default function Solutions() {
   useScrollToHash();
   const active = useActiveSection(LIFECYCLE_ORDER);
 
   return (
     <article className="flex w-full flex-col px-8 pb-24 pt-10 sm:px-10 sm:pb-32 sm:pt-14 lg:px-12">
-      <header className="grid gap-10 pb-16 sm:pb-20 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
+      <header className="flex flex-col gap-5 pb-10 sm:pb-12">
         <h1 className="secondary-page-title text-neutral-950">Solutions</h1>
-        <p className="max-w-2xl text-2xl leading-[1.25] text-neutral-700 lg:pb-4">
+        <p className="max-w-2xl text-lg leading-[1.4] text-neutral-600 sm:text-xl">
           One agent platform across the lifecycle of a build — from the first
           bid to the final closeout packet.
         </p>
       </header>
+
+      <LifecycleStrip active={active} />
 
       <div className="grid gap-12 lg:grid-cols-[0.3fr_1fr]">
         <nav
@@ -197,6 +447,15 @@ function SolutionBlock({
       <p className="mt-4 max-w-2xl text-xl leading-[1.35] text-neutral-700">
         {solution.tagline}
       </p>
+
+      <InViewFade className="mt-8">
+        <img
+          src={`/solutions/${solution.slug}.png`}
+          alt={`${solution.title} stage of a build`}
+          loading="lazy"
+          className="aspect-[16/10] w-full rounded-[1.75rem] border border-neutral-200 bg-neutral-100 object-cover"
+        />
+      </InViewFade>
 
       <ul className="mt-8 grid gap-3 sm:grid-cols-2">
         {solution.capabilities.map((capability) => (

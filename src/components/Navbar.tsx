@@ -6,30 +6,22 @@ import {
 import { createPortal } from "react-dom";
 
 import { ChevronDown, Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "slate-ui";
 
 import { BrandBanner } from "./BrandBanner";
 import { BookDemoButton } from "./BookDemoButton";
 
 type NavLeaf = { label: string; path: string; description?: string };
-type NavItem =
-  | { label: string; path: string }
-  | { label: string; children: NavLeaf[] };
+// A parent item can have both a path (label navigates there) and children
+// (rendered as a dropdown on desktop / a group on mobile).
+type NavItem = { label: string; path: string; children?: NavLeaf[] };
 
 const NAV_ITEMS: NavItem[] = [
   // { label: "Customers", path: "/customers" },
-  {
-    label: "Solutions",
-    children: [
-      { label: "Bidding", path: "/solutions#bidding" },
-      { label: "Permitting", path: "/solutions#permitting" },
-      { label: "Purchase Order", path: "/solutions#purchase-order" },
-      { label: "Field Data Capture", path: "/solutions#field-data-capture" },
-      { label: "Commissioning (QC)", path: "/solutions#commissioning" },
-      { label: "Close Out", path: "/solutions#close-out" },
-    ],
-  },
+  // The solutions dropdown is removed for now since /solutions is a single
+  // page; DesktopNavItem still supports `children` if it comes back.
+  { label: "Solutions", path: "/solutions" },
   { label: "Research", path: "/research" },
   { label: "Careers", path: "/careers" },
 ];
@@ -61,7 +53,7 @@ function DesktopNavItem({
 
   useEffect(() => cancelClose, []);
 
-  if (!("children" in item)) {
+  if (!item.children) {
     return (
       <Link
         to={item.path}
@@ -85,25 +77,38 @@ function DesktopNavItem({
       }}
       onMouseLeave={scheduleClose}
     >
-      <button
-        type="button"
-        className={cn(
-          "flex cursor-pointer items-center gap-1 text-sm transition-colors md:text-base font-semibold",
-          linkColor,
-        )}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        onClick={() => setOpen((prev) => !prev)}
-        onFocus={() => setOpen(true)}
-      >
-        {item.label}
-        <ChevronDown
+      <div className="flex items-center gap-1">
+        <Link
+          to={item.path}
+          onClick={(e) => {
+            setOpen(false);
+            onNavClick(e, item.path);
+          }}
+          onFocus={() => setOpen(true)}
           className={cn(
-            "h-4 w-4 transition-transform duration-200",
-            open && "rotate-180",
+            "cursor-pointer text-sm transition-colors hover:underline md:text-base font-semibold",
+            linkColor,
           )}
-        />
-      </button>
+        >
+          {item.label}
+        </Link>
+        <button
+          type="button"
+          className={cn("cursor-pointer transition-colors", linkColor)}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-label={`Toggle ${item.label} menu`}
+          onClick={() => setOpen((prev) => !prev)}
+          onFocus={() => setOpen(true)}
+        >
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 transition-transform duration-200",
+              open && "rotate-180",
+            )}
+          />
+        </button>
+      </div>
 
       <div
         className={cn(
@@ -156,6 +161,7 @@ export function Navbar({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
+  const { pathname } = useLocation();
 
   useEffect(() => {
     if (!floating) {
@@ -221,6 +227,11 @@ export function Navbar({
         setIsMenuOpen(false);
       }
     } else {
+      // Re-clicking a link for the current page won't trigger the app-level
+      // scroll-to-top effect, so scroll explicitly.
+      if (path === pathname) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
       setIsMenuOpen(false);
     }
   };
@@ -269,11 +280,16 @@ export function Navbar({
         </button>
 
         {NAV_ITEMS.map((item) =>
-          "children" in item ? (
+          item.children ? (
             <div key={item.label} className="flex flex-col gap-3">
-              <span className="text-lg font-semibold text-neutral-700">
+              <Link
+                to={item.path}
+                onClick={(e) => handleNavClick(e, item.path)}
+                tabIndex={isMenuOpen ? undefined : -1}
+                className="w-fit shrink-0 text-lg font-semibold text-neutral-700 transition-colors hover:text-neutral-950"
+              >
                 {item.label}
-              </span>
+              </Link>
               <div className="flex flex-col gap-3 border-l border-neutral-200 pl-3">
                 {item.children.map((child) => (
                   <Link
