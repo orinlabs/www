@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Check } from 'lucide-react';
 import {
-  Link,
   Navigate,
   useLocation,
   useParams,
@@ -26,6 +25,34 @@ const LIFECYCLE_ORDER = [
 const ORDERED_SOLUTIONS = LIFECYCLE_ORDER.map(
   (slug) => SOLUTIONS.find((solution) => solution.slug === slug),
 ).filter((solution): solution is Solution => solution !== undefined);
+
+const WHY_ORIN_POINTS = [
+  {
+    lead: 'Runs the whole build, not a single prompt.',
+    body:
+      'It watches every stage for blockers, gaps, and slipping dates, chases the vendor, sub, or approver before the critical path moves, and reroutes the plan when the answer comes back. One agent tracks the people, roles, and dependencies a real project runs on, in the background, and escalates to your PM only when it should.',
+  },
+  {
+    lead: 'Trained on your work, not the internet.',
+    body:
+      'Every correction your team makes teaches the agent your standards, so it gets more right on the next project instead of repeating generic output.',
+  },
+  {
+    lead: 'Reads the physical world.',
+    body:
+      'Leveraging plans, drawings, and site photos, it connects a spec to the evidence that proves it, not just text in, text out.',
+  },
+  {
+    lead: 'Lives inside your existing systems.',
+    body:
+      'Whether you use Site Tracker, Procore, Salesforce, Slack, or Teams, it works where your team already does and keeps a human on every critical step that leaves the building.',
+  },
+  {
+    lead: 'Measured on your process, not a demo.',
+    body:
+      'We build a test bench on your real workflows and tune the models against it, so "it works" means it works on your jobs.',
+  },
+];
 
 // Old per-solution URLs (/solutions/:slug) land on the matching section of the
 // combined page.
@@ -346,8 +373,10 @@ export default function Solutions() {
       <header className="flex flex-col gap-5 pb-10 sm:pb-12">
         <h1 className="secondary-page-title text-neutral-950">Solutions</h1>
         <p className="max-w-2xl text-lg leading-[1.4] text-neutral-600 sm:text-xl">
-          One agent platform across the lifecycle of a build — from the first
-          bid to the final closeout packet.
+          One agent platform across the lifecycle of a build, from the first
+          bid to the final closeout packet. Every agent works inside your
+          systems, drafts the work to the last step, and waits for your
+          sign-off before anything leaves the building.
         </p>
       </header>
 
@@ -394,6 +423,8 @@ export default function Solutions() {
             />
           ))}
 
+          <WhyOrinSection />
+
           <div className="flex flex-col items-start gap-4 rounded-[1.75rem] bg-neutral-950 p-8 text-white sm:p-10">
             <h2 className="max-w-xl text-3xl font-semibold leading-[1.02] tracking-[-0.035em] sm:text-4xl">
               See these agents on your own workflow.
@@ -405,19 +436,46 @@ export default function Solutions() {
             <BookDemoButton variant="light" className="mt-2" />
           </div>
 
-          <p className="text-sm text-neutral-500">
-            Looking for where these run today?{' '}
-            <Link
-              to="/#deployments"
-              className="font-medium text-neutral-950 underline-offset-4 hover:underline"
-            >
-              See deployments
-            </Link>
-            .
-          </p>
         </div>
       </div>
     </article>
+  );
+}
+
+function WhyOrinSection() {
+  const [featuredPoint, ...supportingPoints] = WHY_ORIN_POINTS;
+  const renderPoint = (point: (typeof WHY_ORIN_POINTS)[number], index: number) => (
+    <li
+      key={point.lead}
+      className="rounded-xl border-[0.5px] border-neutral-200 bg-white p-4 text-base leading-7 text-neutral-700"
+    >
+      <span className="mb-3 block font-mono text-xs text-neutral-400">
+        {String(index + 1).padStart(2, '0')}
+      </span>
+      <strong className="font-semibold text-neutral-950">
+        {point.lead}
+      </strong>{' '}
+      {point.body}
+    </li>
+  );
+
+  return (
+    <section className="scroll-mt-12">
+      <h2 className="text-3xl font-semibold tracking-[-0.03em] text-neutral-950 sm:text-4xl">
+        Why Orin, not a generic AI tool
+      </h2>
+      <p className="mt-4 max-w-2xl text-xl leading-[1.35] text-neutral-700">
+        You can connect a chatbot to a folder of documents, but it won't be
+        able to run a build. Here's what Orin does differently.
+      </p>
+
+      <div className="mt-8 grid gap-3">
+        <ul>{featuredPoint && renderPoint(featuredPoint, 0)}</ul>
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {supportingPoints.map((point, index) => renderPoint(point, index + 1))}
+        </ul>
+      </div>
+    </section>
   );
 }
 

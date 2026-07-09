@@ -24,7 +24,7 @@ export const SOLUTIONS: Solution[] = [
     slug: "field-data-capture",
     title: "Field Data Capture",
     tagline:
-      "Turn photos, notes, and field forms into clean records in your system of record — automatically.",
+      "Turn photos, notes, and field forms into clean records in your system of record, automatically.",
     overview:
       "Crews generate a flood of unstructured field data every day: photos, voice notes, scribbled forms, and texts. Most of it never makes it into the system of record cleanly, or it lands there days late and full of gaps. Our agents capture that data the moment it's created and file it where it belongs.",
     capabilities: [
@@ -45,7 +45,7 @@ export const SOLUTIONS: Solution[] = [
       {
         heading: "What the agent does",
         body: [
-          "Ingests captures from the field as they happen — photos, forms, messages, and voice notes.",
+          "Ingests captures from the field as they happen: photos, forms, messages, and voice notes.",
           "Reads each capture, extracts the relevant fields, and identifies the site, asset, and work order it belongs to.",
           "Checks every capture against your requirements and pushes back to the crew when something is missing or unusable.",
           "Writes clean, validated records into your system of record so the source of truth is always current.",
@@ -61,14 +61,14 @@ export const SOLUTIONS: Solution[] = [
     slug: "close-out",
     title: "Close Out",
     tagline:
-      "Assemble and submit closeout packets — photos, sign-offs, and as-builts — without the end-of-job scramble.",
+      "Assemble and submit closeout packets: photos, sign-offs, and as-builts, without the end-of-job scramble.",
     overview:
       "Closeout is where margin leaks. The work is done, but payment waits on a complete packet: inspection sign-offs, labeled photos, as-builts, and warranty docs, each formatted to a customer's spec. Our agents assemble that packet continuously so jobs close the day they finish.",
     capabilities: [
       "Collect closeout artifacts as work is completed, not at the end",
       "Format packets to each customer's exact submission spec",
       "Catch missing items before the packet is submitted",
-      "Submit to portals and track acceptance to completion",
+      "Submit to portals on your approval, and track acceptance to completion",
     ],
     metrics: [
       { value: "Days → hours", label: "to a submitted packet" },
@@ -77,7 +77,7 @@ export const SOLUTIONS: Solution[] = [
     sections: [
       {
         heading: "The problem",
-        body: "Every customer wants a slightly different closeout packet, and the requirements live in a PDF nobody reads until the job is done. Teams reassemble photos and paperwork from scratch, discover gaps too late, and eat days of delay — and delayed closeout means delayed payment.",
+        body: "Every customer wants a slightly different closeout packet, and the requirements live in a PDF nobody reads until the job is done. Teams reassemble photos and paperwork from scratch, discover gaps too late, and eat days of delay. Delayed closeout means delayed payment.",
       },
       {
         heading: "What the agent does",
@@ -85,7 +85,7 @@ export const SOLUTIONS: Solution[] = [
           "Tracks the closeout requirements for each job and customer.",
           "Gathers photos, inspection sign-offs, as-builts, and warranty documents as they're produced.",
           "Assembles the packet in the required format and flags anything missing while the crew is still on site.",
-          "Submits to the customer or permitting portal and follows the packet until it's accepted.",
+          "Submits to the customer or permitting portal on your sign-off, then follows the packet until it's accepted.",
         ],
       },
       {
@@ -114,13 +114,13 @@ export const SOLUTIONS: Solution[] = [
     sections: [
       {
         heading: "The problem",
-        body: "Commissioning quality varies by whoever is on site that day. Checklists get rubber-stamped, evidence is inconsistent, and defects surface after the asset is energized — when they're far more expensive to fix and harder to attribute.",
+        body: "Commissioning quality varies by whoever is on site that day. Checklists get rubber-stamped, evidence is inconsistent, and defects surface after the asset is energized, when they're far more expensive to fix and harder to attribute.",
       },
       {
         heading: "What the agent does",
         body: [
           "Walks each install through its commissioning checklist and required tests.",
-          "Reads submitted evidence — photos, meter readings, test exports — and verifies it against spec.",
+          "Reads submitted evidence such as photos, meter readings, and test exports, then verifies it against spec.",
           "Flags defects, missing steps, and out-of-tolerance results as rework before sign-off.",
           "Compiles a complete QC record for every asset, ready for audit or warranty.",
         ],
@@ -135,7 +135,7 @@ export const SOLUTIONS: Solution[] = [
     slug: "purchase-order",
     title: "Purchase Order",
     tagline:
-      "Draft, route, and reconcile purchase orders with vendors — without the email back-and-forth.",
+      "Draft, route, and reconcile purchase orders with vendors, without the email back-and-forth.",
     overview:
       "POs are where projects stall. Material gets ordered late, quantities are wrong, and invoices don't match what arrived. Our agents own the purchase order lifecycle: drafting from the bill of materials, routing for approval, and reconciling against deliveries and invoices.",
     capabilities: [
@@ -157,7 +157,7 @@ export const SOLUTIONS: Solution[] = [
         heading: "What the agent does",
         body: [
           "Builds purchase orders from the bill of materials and the build schedule.",
-          "Routes each PO for approval and issues it to the correct vendor.",
+          "Routes each PO for your approval, then issues it to the correct vendor.",
           "Follows up on order confirmations, ship dates, and backorders automatically.",
           "Performs a three-way match across PO, delivery, and invoice, and escalates only the true exceptions.",
         ],
@@ -172,9 +172,9 @@ export const SOLUTIONS: Solution[] = [
     slug: "bidding",
     title: "Bidding",
     tagline:
-      "Turn RFPs into accurate, on-time bids — takeoffs, pricing, and proposals assembled for you.",
+      "Turn RFPs into accurate, on-time bids: takeoffs, pricing, and proposals assembled for you.",
     overview:
-      "Winning work depends on bidding fast and bidding right, but every RFP is a research project. Our agents read the RFP, do the takeoff, price the job against your cost data, and assemble a proposal — so you bid more jobs without growing the estimating team.",
+      "Winning work depends on bidding fast and bidding right, but every RFP is a research project. Our agents read the RFP, do the takeoff, price the job against your cost data, and assemble a proposal, so you bid more jobs without growing the estimating team.",
     capabilities: [
       "Read RFPs and extract scope, specs, and submission requirements",
       "Perform quantity takeoffs from plans and drawings",
@@ -209,12 +209,12 @@ export const SOLUTIONS: Solution[] = [
     slug: "permitting",
     title: "Permitting",
     tagline:
-      "Prepare, submit, and track permits across jurisdictions — and keep projects out of permit limbo.",
+      "Prepare, submit, and track permits across jurisdictions, and keep projects out of permit limbo.",
     overview:
       "Permitting is a maze of jurisdiction-specific forms, portals, and review cycles, and a single missed correction can stall a project for weeks. Our agents prepare permit applications to each jurisdiction's requirements, submit them, and stay on top of every review until approval.",
     capabilities: [
       "Assemble applications to each jurisdiction's specific requirements",
-      "Submit through the right portal or channel per AHJ",
+      "Prepare submissions for the right portal or channel per AHJ",
       "Track review status and respond to correction notices",
       "Maintain a live view of permit status across every project",
     ],
@@ -231,7 +231,7 @@ export const SOLUTIONS: Solution[] = [
         heading: "What the agent does",
         body: [
           "Determines the permits and documents each jurisdiction requires for the project.",
-          "Assembles complete applications and submits them through the correct channel.",
+          "Assembles complete applications and submits them through the correct channel once your team signs off.",
           "Monitors review status and turns correction notices around quickly.",
           "Keeps a real-time view of where every permit stands across all active projects.",
         ],
