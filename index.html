@@ -13,6 +13,75 @@
     <link rel="preconnect" href="https://calendly.com" />
     <link rel="preconnect" href="https://assets.calendly.com" />
     <!--app-head-->
+
+    <!-- Snitcher Radar -->
+    <script>
+      !(function (e) {
+        "use strict";
+        var a = e && e.namespace;
+        if (a && e.profileId && e.cdn) {
+          var r = window[a];
+          if ((r && Array.isArray(r)) || (r = window[a] = []), !r.initialized && !r._loaded)
+            if (r._loaded) console && console.warn("[Radar] Duplicate initialization attempted");
+            else {
+              r._loaded = !0;
+              [
+                "track",
+                "page",
+                "identify",
+                "group",
+                "alias",
+                "ready",
+                "debug",
+                "on",
+                "off",
+                "once",
+                "trackClick",
+                "trackSubmit",
+                "trackLink",
+                "trackForm",
+                "pageview",
+                "screen",
+                "reset",
+                "register",
+                "setAnonymousId",
+                "addSourceMiddleware",
+                "addIntegrationMiddleware",
+                "addDestinationMiddleware",
+              ].forEach(function (e) {
+                var i;
+                r[e] = (
+                  (i = e),
+                  function () {
+                    var e = window[a];
+                    if (e.initialized) return e[i].apply(e, arguments);
+                    var r = [].slice.call(arguments);
+                    return r.unshift(i), e.push(r), e;
+                  }
+                );
+              }),
+                (r.bootstrap = function () {
+                  var a = document.createElement("script");
+                  (a.async = !0),
+                    (a.type = "text/javascript"),
+                    (a.id = "__radar__"),
+                    (a.dataset.settings = JSON.stringify(e)),
+                    (a.src = "https://" + e.cdn + "/releases/latest/radar.min.js");
+                  var r = document.scripts[0];
+                  r.parentNode.insertBefore(a, r);
+                }),
+                r.bootstrap();
+            }
+        } else "undefined" != typeof console && console.error("[Radar] Configuration incomplete");
+      })({
+        cdn: "cdn.snitcher.com",
+        apiEndpoint: "radar.snitcher.com",
+        profileId: "ron0VrlCHsJ",
+        namespace: "Monaco",
+        waitForConsent: true,
+      });
+    </script>
+    <!-- End Snitcher Radar -->
   </head>
   <body>
     <div id="root"><!--app-html--></div>
