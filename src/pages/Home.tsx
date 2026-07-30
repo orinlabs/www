@@ -10,15 +10,9 @@ export default function Home() {
       <section className="relative h-[calc(100svh-4.5rem)] overflow-hidden bg-white pb-8 pt-8 sm:h-[calc(100svh-5.25rem)] sm:pb-10 sm:pt-10 lg:pb-12 lg:pt-12">
         <div className="flex h-full min-h-0 w-full flex-col justify-between gap-10">
           <div className="relative z-10">
-            <h1 className="max-w-[82rem] text-[clamp(3.4425rem,10.692vw,10.3275rem)] font-semibold leading-[0.92] tracking-[-0.045em] text-neutral-950">
-              <span className="inline-grid grid-cols-[auto_auto_auto] gap-x-[0.15em] whitespace-nowrap">
-                <span className="tabular-nums">2</span>
-                <span>×</span>
-                <span>deployments</span>
-                <span className="tabular-nums">1</span>
-                <span>×</span>
-                <span>headcount</span>
-              </span>
+            <h1 className="max-w-[82rem] text-[clamp(3.825rem,11.88vw,11.475rem)] font-semibold leading-[0.82] tracking-[-0.045em] text-neutral-950">
+              <span className="block">Scale operations</span>
+              <span className="block">with agents</span>
             </h1>
             <BookDemoButton className="mt-6 md:hidden" />
           </div>
