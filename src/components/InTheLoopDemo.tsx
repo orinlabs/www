@@ -7,8 +7,9 @@ import { Logo } from './Logo';
 // ---------------------------------------------------------------------------
 // "Always in the loop" — faithful Slack threads that play themselves out.
 //
-// Each scenario shows the agent doing real work and pausing at an approval
-// gate before anything is sent. The header has prev / play-pause / next so you
+// Each scenario shows the agent monitoring, checking, and drafting work, then
+// staging it for a human to review and execute — the agent never takes the
+// consequential action itself. The header has prev / play-pause / next so you
 // can step between scenarios.
 // ---------------------------------------------------------------------------
 
@@ -55,7 +56,7 @@ const SCENARIOS: Scenario[] = [
         id: 'gen',
         author: 'orin',
         time: '9:14 AM',
-        text: 'Just saw 1400 Olive St got approved in Procore. Generating the POs now.',
+        text: 'Just saw 1400 Olive St got approved in Procore. Drafting the POs now.',
       },
       {
         id: 'detail',
@@ -74,13 +75,13 @@ const SCENARIOS: Scenario[] = [
         author: 'orin',
         time: '9:15 AM',
         approval: true,
-        text: 'Got it, I\'ll use the Oakland address. Ready to send the [[POs]].',
+        text: 'Got it, I\'ll use the Oakland address. [[Draft POs]] are ready for your review.',
       },
       {
         id: 'sent',
         author: 'orin',
         time: '9:16 AM',
-        text: 'Sent. I copied you and logged them to Procore.',
+        text: 'They\'re staged in your Procore queue with everything filled in — one click to send when you\'re ready.',
       },
     ],
   },
@@ -93,13 +94,13 @@ const SCENARIOS: Scenario[] = [
         id: 'approved',
         author: 'orin',
         time: '11:02 AM',
-        text: 'Fremont emailed us the approval for Mission Blvd site, so I\'m scheduling the inspection.',
+        text: 'Fremont emailed us the approval for Mission Blvd site, so I pulled the city\'s inspection calendar.',
       },
       {
         id: 'slot',
         author: 'orin',
         time: '11:02 AM',
-        text: 'Earliest inspection slot is Thursday 7/11. Holding it for now.',
+        text: 'Earliest inspection slot is Thursday 7/11 — flagging it before it fills up.',
       },
       {
         id: 'push',
@@ -112,13 +113,13 @@ const SCENARIOS: Scenario[] = [
         author: 'orin',
         time: '11:04 AM',
         approval: true,
-        text: 'Rebooked for Friday 7/12 at 9 AM. Can I text the inspector to confirm?',
+        text: 'Friday 7/12 at 9 AM is open. I drafted the [[booking request]] and confirmation texts for the inspector and crew.',
       },
       {
         id: 'done',
         author: 'orin',
         time: '11:05 AM',
-        text: 'Confirmed. I texted to the crew and the inspector, everything\'s on track.',
+        text: 'All set — everything\'s queued for you to send, and I\'ll watch for the confirmations to come back.',
       },
     ],
   },
@@ -150,13 +151,13 @@ const SCENARIOS: Scenario[] = [
         author: 'orin',
         time: '2:34 PM',
         approval: true,
-        text: 'They sent [[site photos]] confirming 52 ft. Can I approve the change order?',
+        text: 'They sent [[site photos]] confirming 52 ft. I put together the [[CO packet]] with the photos and contract clause.',
       },
       {
         id: 'updated',
         author: 'orin',
         time: '2:35 PM',
-        text: 'Great, sent them an [[email]]. I updated the budget in Procore and notified Bright Electric.',
+        text: 'It\'s attached to the change order in Procore with the budget impact calculated — ready for your signature.',
       },
     ],
   },
@@ -169,13 +170,13 @@ const SCENARIOS: Scenario[] = [
         id: 'submittal',
         author: 'orin',
         time: '8:47 AM',
-        text: 'Sent the dry room [[submittal]] back for revision — it specs a -40°C dew point, but our cell line equipment requires -50°C.',
+        text: 'Caught an issue in the dry room [[submittal]] — it specs a -40°C dew point, but our cell line equipment requires -50°C.',
       },
       {
         id: 'infer',
         author: 'orin',
         time: '8:47 AM',
-        text: 'That rework likely pushes dry room certification ~2 weeks, which slips the cell line install past its Oct 6 start. @Marcus',
+        text: 'If that goes back for revision, dry room certification likely pushes ~2 weeks, which slips the cell line install past its Oct 6 start. @Marcus',
       },
       {
         id: 'reply',
@@ -188,13 +189,13 @@ const SCENARIOS: Scenario[] = [
         author: 'orin',
         time: '8:50 AM',
         approval: true,
-        text: 'I\'ll move the cell line install to Oct 20 and cascade the downstream milestones. OK to update the [[schedule of record]]?',
+        text: 'I drafted the revision comments and a [[proposed schedule]] moving the install to Oct 20, with downstream milestones cascaded.',
       },
       {
         id: 'done',
         author: 'orin',
         time: '8:51 AM',
-        text: 'Updated in Sitetracker. I notified the install crew and flagged the slip in the weekly report.',
+        text: 'Both are staged in Sitetracker as pending — nothing changes until you publish, and the slip is flagged in the weekly report draft.',
       },
     ],
   },
@@ -514,7 +515,7 @@ export function InTheLoopDemo() {
                                 onClick={() => dispatch({ type: 'APPROVE' })}
                                 className="rounded-[4px] bg-[#007a5a] px-3 py-[7px] text-[13px] font-bold text-white transition-colors hover:bg-[#148567]"
                               >
-                                Approve &amp; send
+                                Looks good
                               </button>
                               <button
                                 type="button"
