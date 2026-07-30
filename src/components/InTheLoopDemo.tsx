@@ -160,6 +160,44 @@ const SCENARIOS: Scenario[] = [
       },
     ],
   },
+  {
+    id: 'battery-factory',
+    channel: 'cell-plant-buildout',
+    members: 18,
+    beats: [
+      {
+        id: 'submittal',
+        author: 'orin',
+        time: '8:47 AM',
+        text: 'Sent the dry room [[submittal]] back for revision — it specs a -40°C dew point, but our cell line equipment requires -50°C.',
+      },
+      {
+        id: 'infer',
+        author: 'orin',
+        time: '8:47 AM',
+        text: 'That rework likely pushes dry room certification ~2 weeks, which slips the cell line install past its Oct 6 start. @Marcus',
+      },
+      {
+        id: 'reply',
+        author: 'marcus',
+        time: '8:49 AM',
+        text: 'Yeah, that tracks. The install crew can\'t start until the room certifies.',
+      },
+      {
+        id: 'draft',
+        author: 'orin',
+        time: '8:50 AM',
+        approval: true,
+        text: 'I\'ll move the cell line install to Oct 20 and cascade the downstream milestones. OK to update the [[schedule of record]]?',
+      },
+      {
+        id: 'done',
+        author: 'orin',
+        time: '8:51 AM',
+        text: 'Updated in Sitetracker. I notified the install crew and flagged the slip in the weekly report.',
+      },
+    ],
+  },
 ];
 
 // Timings (ms)
