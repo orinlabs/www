@@ -270,7 +270,8 @@ export default function Layout({ children, hero, footerDark = false }: LayoutPro
         <div className="relative z-10 grid w-full gap-10 sm:gap-16 lg:grid-cols-[1.1fr_1fr]">
           <div className="flex min-h-36 max-w-md flex-col justify-between gap-8 sm:min-h-64 sm:gap-16">
             <p className={cn("text-base leading-7", footerDark ? "text-white/70" : "text-neutral-600")}>
-              Scale operations with safe, autonomous agents that run physical build-outs.
+              Scale operations with safe agents that run physical build-outs,
+              with your team in the loop.
             </p>
             <p className={cn("text-sm", footerDark ? "text-white/45" : "text-neutral-500")}>
               &copy; {new Date().getFullYear()} Orin Labs. All rights reserved.
